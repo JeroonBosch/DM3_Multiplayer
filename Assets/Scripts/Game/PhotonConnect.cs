@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using Photon;
+using UnityEngine.SceneManagement;
 
 namespace Com.Hypester.DM3
 {
@@ -17,7 +18,7 @@ namespace Com.Hypester.DM3
 
         private void Update()
         {
-            if (PhotonNetwork.inRoom)
+            if (PhotonNetwork.inRoom && SceneManager.GetActiveScene().name != "NormalGame")
                 if (PhotonNetwork.room.PlayerCount >= 2)
                     PhotonNetwork.LoadLevel("NormalGame");
         }

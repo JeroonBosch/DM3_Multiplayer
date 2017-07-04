@@ -1,22 +1,22 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 namespace Com.Hypester.DM3
 {
-    public class Grid : MonoBehaviour
+    [Serializable]
+    public class Grid
     {
+        public Tile[,] data;
+    }
 
-        // Use this for initialization
-        void Start()
-        {
-
-        }
-
-        // Update is called once per frame
-        void Update()
-        {
-
-        }
+    [Serializable]
+    public class Tile
+    {
+        public int color;
+        public int boosterLevel;
+        public int x;
+        public int y;
     }
 }

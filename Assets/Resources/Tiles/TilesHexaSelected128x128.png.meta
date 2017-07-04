@@ -1,6 +1,6 @@
 fileFormatVersion: 2
 guid: 969685f55daaf7545b2fa19a4e6e5885
-timeCreated: 1499072433
+timeCreated: 1499158039
 licenseType: Free
 TextureImporter:
   fileIDToRecycleName:
@@ -93,12 +93,12 @@ TextureImporter:
       name: TilesHexaSelected128x128_0
       rect:
         serializedVersion: 2
-        x: 0
+        x: 8
         y: 0
-        width: 128
+        width: 112
         height: 128
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       tessellationDetail: 0
@@ -106,12 +106,12 @@ TextureImporter:
       name: TilesHexaSelected128x128_1
       rect:
         serializedVersion: 2
-        x: 128
+        x: 136
         y: 0
-        width: 128
+        width: 112
         height: 128
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       tessellationDetail: 0
@@ -119,12 +119,12 @@ TextureImporter:
       name: TilesHexaSelected128x128_2
       rect:
         serializedVersion: 2
-        x: 256
+        x: 264
         y: 0
-        width: 128
+        width: 112
         height: 128
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       tessellationDetail: 0
@@ -132,12 +132,12 @@ TextureImporter:
       name: TilesHexaSelected128x128_3
       rect:
         serializedVersion: 2
-        x: 384
+        x: 392
         y: 0
-        width: 128
+        width: 112
         height: 128
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       tessellationDetail: 0
