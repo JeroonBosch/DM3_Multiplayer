@@ -1,11 +1,11 @@
-﻿using Photon;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Com.Hypester.DM3
 {
-    public class BaseTile : Photon.MonoBehaviour
+    public class BaseTile : MonoBehaviour
     {
-
+        /*
+         * bool isSelected;
         public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
         {
             if (stream.isWriting)
@@ -18,6 +18,6 @@ namespace Com.Hypester.DM3
                 Vector3 pos = Vector3.zero;
                 stream.Serialize(ref pos);  // pos gets filled-in. must be used somewhere
             }
-        }
+        }*/
     }
 }
