@@ -4,12 +4,19 @@ using UnityEngine.UI;
 using System;
 using Photon;
 using ExitGames.Client.Photon;
+using Lean.Touch;
+using System.Collections.Generic;
+using UnityEngine.EventSystems;
 
 namespace Com.Hypester.DM3
 {
     public class GameHandler : Photon.MonoBehaviour, IPunObservable
     {
-        Grid grid;
+        #region private variables
+        Grid _grid;
+        List<Vector2> _selectedTiles;
+        LeanFinger _finger;
+        #endregion
 
         public delegate byte[] SerializeMethod(object customObject);
         public delegate object DeserializeMethod(byte[] serializedCustomObject);
@@ -21,39 +28,133 @@ namespace Com.Hypester.DM3
 
             GenerateGrid();
             VisualizeGrid();
+
+            _selectedTiles = new List<Vector2>();
         }
 
         void IPunObservable.OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
         {
             if (stream.isWriting)
             {
-                stream.SendNext(grid);
+                stream.SendNext(_grid);
             }
             else
             {
-                grid = (Grid)stream.ReceiveNext();
+                _grid = (Grid)stream.ReceiveNext();
                 VisualizeGrid();
             }
         }
 
         void Update()
         {
+            if (_selectedTiles.Count > 0)
+            {
+                Debug.Log("Tracking finger.");
+                Vector2 vec = FindNearestTileToFinger();
+                if (!_selectedTiles.Contains(vec))
+                    _selectedTiles.Add(vec);
+            }
+
+            foreach (BaseTile tile in FindObjectsOfType<BaseTile>())
+            {
+                tile.GetComponent<Image>().sprite = HexSprite(TileTypes.EColor.yellow + _grid.data[(int)tile.position.x, (int)tile.position.y].color);
+                if (_selectedTiles.Contains(tile.position))
+                {
+                    tile.GetComponent<Image>().sprite = HexSpriteSelected(TileTypes.EColor.yellow + _grid.data[(int)tile.position.x, (int)tile.position.y].color);
+                }
+            }
+        }
+
+        private void OnEnable()
+        {
+            LeanTouch.OnFingerDown += OnFingerDown;
+            LeanTouch.OnFingerUp += OnFingerUp;
+        }
+
+        private void OnDisable()
+        {
+            LeanTouch.OnFingerDown -= OnFingerDown;
+            LeanTouch.OnFingerUp -= OnFingerUp;
+        }
+
+        void OnFingerDown(LeanFinger finger)
+        {
+            Debug.Log("Click.");
+            if (finger.Index == 0)
+            {
+                GameObject interactionObject = null;
+
+                GraphicRaycaster gRaycast = GameObject.Find("PlayScreen").GetComponent<GraphicRaycaster>();
+                PointerEventData ped = new PointerEventData(null);
+                ped.position = finger.GetSnapshotScreenPosition(1f);
+                List<RaycastResult> results = new List<RaycastResult>();
+                gRaycast.Raycast(ped, results);
+
+                if (results != null && results.Count > 0)
+                {
+                    bool resultFound = false;
+                    for (int i = 0; i < results.Count; i++)
+                    {
+                        if (!resultFound)
+                            if (results[i].gameObject.tag == "Tile")
+                                interactionObject = results[i].gameObject;
+                    }
+                }
+
+                if (interactionObject)
+                {
+                    if (interactionObject.tag == "Tile")
+                    {
+                        _selectedTiles.Add(interactionObject.GetComponent<BaseTile>().position);
+                        _finger = finger;
+                        Debug.Log("Should be tracking finger.");
+                    }
+                }
+            }
+        }
+
+        void OnFingerUp(LeanFinger finger)
+        {
+            if (finger.Index == 0)
+            {
+                _selectedTiles.Clear();
+                _finger = null;
+            }
+        }
+
+        private Vector2 FindNearestTileToFinger()
+        {
+            Vector2 tilePos = new Vector2();
+
+            float minDist = Mathf.Infinity;
+            Vector3 currentPos = _finger.GetWorldPosition(1f);
+            foreach (BaseTile tile in FindObjectsOfType<BaseTile>())
+            {
+                float dist = Vector3.Distance(tile.transform.position, currentPos);
+                if (dist < minDist)
+                {
+                    tilePos = tile.position;
+                    minDist = dist;
+                }
+            }
+
+            return tilePos;
         }
 
         void GenerateGrid ()
         {
-            grid = new Grid();
-            grid.data = new Tile[Constants.gridXsize, Constants.gridYsize];
+            _grid = new Grid();
+            _grid.data = new Tile[Constants.gridXsize, Constants.gridYsize];
 
             for (int x = 0; x < Constants.gridXsize; x++)
             {
                 for (int y = 0; y < Constants.gridYsize; y++)
                 {
-                    grid.data[x, y] = new Tile();
-                    grid.data[x, y].boosterLevel = 0;
-                    grid.data[x, y].color = UnityEngine.Random.Range(0, Constants.AmountOfColors);
-                    grid.data[x, y].x = x;
-                    grid.data[x, y].y = y;
+                    _grid.data[x, y] = new Tile();
+                    _grid.data[x, y].boosterLevel = 0;
+                    _grid.data[x, y].color = UnityEngine.Random.Range(0, Constants.AmountOfColors);
+                    _grid.data[x, y].x = x;
+                    _grid.data[x, y].y = y;
                 }
             }
         }
@@ -74,13 +175,14 @@ namespace Com.Hypester.DM3
                     GameObject tile = Instantiate(Resources.Load("Tiles/Tile")) as GameObject;
                     tile.name = "Tile (" + x + "," + y + ")";
                     tile.transform.SetParent(transform, false);
+                    tile.GetComponent<BaseTile>().position = new Vector2(x, y);
                     
                     if (x % 2 == 0)
                         tile.transform.localPosition = new Vector3(x * Constants.tileWidth, y * Constants.tileHeight - Constants.tileHeight / 2, 0f);
                     else
                         tile.transform.localPosition = new Vector3(x * Constants.tileWidth, y * Constants.tileHeight, 0f);
 
-                    tile.GetComponent<Image>().sprite = HexSprite(TileTypes.EColor.yellow + grid.data[x, y].color);
+                    tile.GetComponent<Image>().sprite = HexSprite(TileTypes.EColor.yellow + _grid.data[x, y].color);
                 }
             }
         }

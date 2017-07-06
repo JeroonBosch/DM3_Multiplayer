@@ -4,20 +4,17 @@ namespace Com.Hypester.DM3
 {
     public class BaseTile : MonoBehaviour
     {
+        public Vector2 position { get; set; }
         /*
-         * bool isSelected;
-        public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
+        bool isSelected;
+        if (stream.isWriting)
         {
-            if (stream.isWriting)
-            {
-                Vector3 pos = transform.localPosition;
-                stream.Serialize(ref pos);
-            }
-            else
-            {
-                Vector3 pos = Vector3.zero;
-                stream.Serialize(ref pos);  // pos gets filled-in. must be used somewhere
-            }
-        }*/
+            // We own this player: send the others our data
+            stream.SendNext(isSelected);
+        }else{
+            // Network player, receive data
+            this.isSelected = (bool)stream.ReceiveNext();
+        }
+        */
     }
 }
