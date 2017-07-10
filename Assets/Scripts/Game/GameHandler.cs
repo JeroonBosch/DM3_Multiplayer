@@ -14,8 +14,6 @@ namespace Com.Hypester.DM3
     {
         #region private variables
         Grid _grid;
-        List<Vector2> _selectedTiles;
-        LeanFinger _finger;
         #endregion
 
         public delegate byte[] SerializeMethod(object customObject);
@@ -28,8 +26,6 @@ namespace Com.Hypester.DM3
 
             GenerateGrid();
             VisualizeGrid();
-
-            _selectedTiles = new List<Vector2>();
         }
 
         void IPunObservable.OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
@@ -43,102 +39,6 @@ namespace Com.Hypester.DM3
                 _grid = (Grid)stream.ReceiveNext();
                 VisualizeGrid();
             }
-        }
-
-        void Update()
-        {
-            if (_selectedTiles.Count > 0)
-            {
-                Debug.Log("Tracking finger.");
-                Vector2 vec = FindNearestTileToFinger();
-                if (!_selectedTiles.Contains(vec))
-                    _selectedTiles.Add(vec);
-            }
-
-            foreach (BaseTile tile in FindObjectsOfType<BaseTile>())
-            {
-                tile.GetComponent<Image>().sprite = HexSprite(TileTypes.EColor.yellow + _grid.data[(int)tile.position.x, (int)tile.position.y].color);
-                if (_selectedTiles.Contains(tile.position))
-                {
-                    tile.GetComponent<Image>().sprite = HexSpriteSelected(TileTypes.EColor.yellow + _grid.data[(int)tile.position.x, (int)tile.position.y].color);
-                }
-            }
-        }
-
-        private void OnEnable()
-        {
-            LeanTouch.OnFingerDown += OnFingerDown;
-            LeanTouch.OnFingerUp += OnFingerUp;
-        }
-
-        private void OnDisable()
-        {
-            LeanTouch.OnFingerDown -= OnFingerDown;
-            LeanTouch.OnFingerUp -= OnFingerUp;
-        }
-
-        void OnFingerDown(LeanFinger finger)
-        {
-            Debug.Log("Click.");
-            if (finger.Index == 0)
-            {
-                GameObject interactionObject = null;
-
-                GraphicRaycaster gRaycast = GameObject.Find("PlayScreen").GetComponent<GraphicRaycaster>();
-                PointerEventData ped = new PointerEventData(null);
-                ped.position = finger.GetSnapshotScreenPosition(1f);
-                List<RaycastResult> results = new List<RaycastResult>();
-                gRaycast.Raycast(ped, results);
-
-                if (results != null && results.Count > 0)
-                {
-                    bool resultFound = false;
-                    for (int i = 0; i < results.Count; i++)
-                    {
-                        if (!resultFound)
-                            if (results[i].gameObject.tag == "Tile")
-                                interactionObject = results[i].gameObject;
-                    }
-                }
-
-                if (interactionObject)
-                {
-                    if (interactionObject.tag == "Tile")
-                    {
-                        _selectedTiles.Add(interactionObject.GetComponent<BaseTile>().position);
-                        _finger = finger;
-                        Debug.Log("Should be tracking finger.");
-                    }
-                }
-            }
-        }
-
-        void OnFingerUp(LeanFinger finger)
-        {
-            if (finger.Index == 0)
-            {
-                _selectedTiles.Clear();
-                _finger = null;
-            }
-        }
-
-        private Vector2 FindNearestTileToFinger()
-        {
-            Vector2 tilePos = new Vector2();
-
-            float minDist = Mathf.Infinity;
-            Vector3 currentPos = _finger.GetWorldPosition(1f);
-            foreach (BaseTile tile in FindObjectsOfType<BaseTile>())
-            {
-                float dist = Vector3.Distance(tile.transform.position, currentPos);
-                if (dist < minDist)
-                {
-                    tilePos = tile.position;
-                    minDist = dist;
-                }
-            }
-
-            return tilePos;
         }
 
         void GenerateGrid ()
@@ -185,6 +85,11 @@ namespace Com.Hypester.DM3
                     tile.GetComponent<Image>().sprite = HexSprite(TileTypes.EColor.yellow + _grid.data[x, y].color);
                 }
             }
+        }
+
+        public Tile GetTileAtPosition (Vector2 position)
+        {
+            return _grid.data[(int)position.x, (int)position.y];
         }
 
         #region SpriteRendering
