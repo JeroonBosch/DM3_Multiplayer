@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Com.Hypester.DM3
 {
@@ -19,15 +20,25 @@ namespace Com.Hypester.DM3
         protected override void Update()
         {
             base.Update();
+            Transform textObject = transform.Find("AmountOfPlayersText");
+            int playerCount = 0;
+            if (PhotonNetwork.connected)
+                playerCount = PhotonNetwork.countOfPlayers;
+            if (textObject)
+                textObject.GetComponent<Text>().text = "Current amount of players: " + playerCount;
         }
 
         public override void Show()
         {
             base.Show();
-            if (!PhotonNetwork.connected)
+            if (!PhotonNetwork.connected && !PhotonNetwork.connecting)
                 PhotonNetwork.ConnectUsingSettings("v0.1");
-            PhotonConnect.Instance.Connect();
+            //PhotonConnect.Instance.Connect();
         }
 
+        public void SetReady ()
+        {
+            PhotonConnect.Instance.MatchPlayers();
+        }
     }
 }

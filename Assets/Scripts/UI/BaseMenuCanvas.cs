@@ -6,11 +6,12 @@ namespace Com.Hypester.DM3
 {
     public class BaseMenuCanvas : MonoBehaviour
     {
+        protected bool isShown;
 
         // Use this for initialization
         protected virtual void Start()
         {
-
+            isShown = false;
         }
 
         // Update is called once per frame
@@ -60,11 +61,13 @@ namespace Com.Hypester.DM3
         public virtual void Hide()
         {
             GetComponent<Canvas>().enabled = false;
+            isShown = false;
         }
 
         public virtual void Show()
         {
             GetComponent<Canvas>().enabled = true;
+            isShown = true;
         }
     }
 }

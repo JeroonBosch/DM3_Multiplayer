@@ -6,6 +6,9 @@ namespace Com.Hypester.DM3
 {
     public class PhotonConnect : PunBehaviour
     {
+        public string profileName; //TODO 
+        private bool _connect;
+
         private static PhotonConnect instance;
         public static PhotonConnect Instance
         {
@@ -19,11 +22,19 @@ namespace Com.Hypester.DM3
         private void Update()
         {
             if (PhotonNetwork.inRoom && SceneManager.GetActiveScene().name != "NormalGame")
-                if (PhotonNetwork.room.PlayerCount >= 2)
+                if (PhotonNetwork.room.PlayerCount == 2)
                     PhotonNetwork.LoadLevel("NormalGame");
+
+            if (_connect && !PhotonNetwork.connecting && !PhotonNetwork.connected)
+                PhotonNetwork.ConnectUsingSettings("v0.1");
         }
 
-        public void Connect()
+        public void EnsureConnection ()
+        {
+            _connect = true;
+        }
+
+        public void MatchPlayers()
         {
             // we check if we are connected or not, we join if we are , else we initiate the connection to the server.
             if (PhotonNetwork.connected)
@@ -31,12 +42,12 @@ namespace Com.Hypester.DM3
                 // #Critical we need at this point to attempt joining a Random Room. If it fails, we'll get notified in OnPhotonRandomJoinFailed() and we'll create one.
                 PhotonNetwork.JoinRandomRoom();
             }
-            else
-            {
-                // #Critical, we must first and foremost connect to Photon Online Server.
-                PhotonNetwork.ConnectUsingSettings("v0.1");
-                MainController.Instance.currentScreen.GoToScreen(GameObject.Find("MainmenuScreen").GetComponent<BaseMenuCanvas>());
-            }
+        }
+
+        public void ConnectNormalGameroom ()
+        {
+            PhotonNetwork.JoinLobby(new TypedLobby() { Name = "NormalGame", Type = LobbyType.Default });
+            PhotonNetwork.playerName = profileName;
         }
 
         public override void OnPhotonRandomJoinFailed(object[] codeAndMsg)
@@ -47,9 +58,22 @@ namespace Com.Hypester.DM3
             PhotonNetwork.CreateRoom(null, new RoomOptions() { MaxPlayers = 2 }, null);
         }
 
+        public override void OnPhotonJoinRoomFailed(object[] codeAndMsg)
+        {
+            base.OnPhotonJoinRoomFailed(codeAndMsg);
+        }
+
         public override void OnJoinedRoom()
         {
             Debug.Log("OnJoinedRoom() called by PUN. Now this client is in a room.");
+            foreach (Player player in GameObject.FindObjectsOfType<Player>())
+                Destroy(player.gameObject);
+            CreatePlayer();
+        }
+
+        public void CreatePlayer ()
+        {
+            PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity, 0);
         }
     }
 }

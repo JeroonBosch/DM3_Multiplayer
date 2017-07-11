@@ -14,6 +14,7 @@ namespace Com.Hypester.DM3
     {
         #region private variables
         Grid _grid;
+        List<BaseTile> _baseTiles;
         #endregion
 
         public delegate byte[] SerializeMethod(object customObject);
@@ -68,6 +69,8 @@ namespace Com.Hypester.DM3
             float originY = (Constants.gridXsize * Constants.tileWidth) * -0.5f;
             GameObject.Find("Grid").transform.localPosition = new Vector2(originX, originY);
 
+            _baseTiles = new List<BaseTile>();
+
             for (int x = 0; x < Constants.gridXsize; x++)
             {
                 for (int y = 0; y < Constants.gridYsize; y++)
@@ -76,7 +79,7 @@ namespace Com.Hypester.DM3
                     tile.name = "Tile (" + x + "," + y + ")";
                     tile.transform.SetParent(transform, false);
                     tile.GetComponent<BaseTile>().position = new Vector2(x, y);
-                    
+                    _baseTiles.Add(tile.GetComponent<BaseTile>());
                     if (x % 2 == 0)
                         tile.transform.localPosition = new Vector3(x * Constants.tileWidth, y * Constants.tileHeight - Constants.tileHeight / 2, 0f);
                     else
@@ -87,9 +90,14 @@ namespace Com.Hypester.DM3
             }
         }
 
-        public Tile GetTileAtPosition (Vector2 position)
+        public Tile TileAtPos (Vector2 position)
         {
             return _grid.data[(int)position.x, (int)position.y];
+        }
+
+        public BaseTile BaseTileAtPos (Vector2 position)
+        {
+            return _baseTiles.Find(item => item.position.x == position.x && item.position.y == position.y); ;
         }
 
         #region SpriteRendering

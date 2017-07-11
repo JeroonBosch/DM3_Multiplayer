@@ -6,38 +6,51 @@ using UnityEngine.EventSystems;
 
 namespace Com.Hypester.DM3
 {
-    public class PlayUI : MonoBehaviour
+    public class PlayGameCanvas : BaseMenuCanvas
     {
 
         #region private variables
         List<Vector2> _selectedTiles;
         LeanFinger _finger;
+        GameHandler _game;
         #endregion
 
-        void Start()
+        protected override void Start()
         {
+            base.Start();
             _selectedTiles = new List<Vector2>();
+            _game = GameObject.Find("Grid").GetComponent<GameHandler>();
+
+            foreach (Player player in FindObjectsOfType<Player>())
+                player.transform.SetParent(transform, false);
         }
 
-        void Update()
+        protected override void Update()
         {
+            base.Update();
             if (_selectedTiles.Count > 0)
             {
-                Debug.Log("Tracking finger.");
                 Vector2 vec = FindNearestTileToFinger();
-                if (!_selectedTiles.Contains(vec))
+                if (!_selectedTiles.Contains(vec) && _game.TileAtPos(new Vector2(vec.x, vec.y)).color == _game.TileAtPos(new Vector2(_selectedTiles[0].x, _selectedTiles[0].y)).color && DistanceToBetweenPos(vec, _selectedTiles[_selectedTiles.Count-1]) < 1.5f)
+                {
                     _selectedTiles.Add(vec);
+                    NewSelectedTile(vec);
+                }
             }
 
             foreach (BaseTile tile in FindObjectsOfType<BaseTile>())
             {
-                int color = GameObject.Find("Grid").GetComponent<GameHandler>().GetTileAtPosition(new Vector2 ((int)tile.position.x, (int)tile.position.y)).color;
+                int color = _game.TileAtPos(new Vector2 (tile.position.x, tile.position.y)).color;
                 tile.GetComponent<Image>().sprite = HexSprite(TileTypes.EColor.yellow + color);
                 if (_selectedTiles.Contains(tile.position))
                 {
                     tile.GetComponent<Image>().sprite = HexSpriteSelected(TileTypes.EColor.yellow + color);
                 }
             }
+
+            if (_finger != null)
+                if (GameObject.Find("FingerTracker"))
+                    GameObject.Find("FingerTracker").transform.position = _finger.GetWorldPosition(1f);
         }
 
         private void OnEnable()
@@ -54,7 +67,6 @@ namespace Com.Hypester.DM3
 
         void OnFingerDown(LeanFinger finger)
         {
-            Debug.Log("Click.");
             if (finger.Index == 0)
             {
                 GameObject interactionObject = null;
@@ -82,7 +94,6 @@ namespace Com.Hypester.DM3
                     {
                         _selectedTiles.Add(interactionObject.GetComponent<BaseTile>().position);
                         _finger = finger;
-                        Debug.Log("Should be tracking finger.");
                     }
                 }
             }
@@ -102,7 +113,7 @@ namespace Com.Hypester.DM3
             Vector2 tilePos = new Vector2();
 
             float minDist = Mathf.Infinity;
-            Vector3 currentPos = _finger.GetWorldPosition(1f, Camera.current);
+            Vector3 currentPos = _finger.GetWorldPosition(1f);
             foreach (BaseTile tile in FindObjectsOfType<BaseTile>())
             {
                 float dist = Vector3.Distance(tile.transform.position, currentPos);
@@ -114,6 +125,23 @@ namespace Com.Hypester.DM3
             }
 
             return tilePos;
+        }
+
+        private float DistanceToBetweenPos(Vector2 position, Vector2 position2)
+        {
+            BaseTile newTile = _game.BaseTileAtPos(position);
+            BaseTile prevTile = _game.BaseTileAtPos(position2);
+
+            return Vector3.Distance(newTile.position, prevTile.position);
+        }
+
+        void NewSelectedTile (Vector2 position)
+        {
+            BaseTile newTile = _game.BaseTileAtPos(position);
+            int prevIndex = _selectedTiles.IndexOf(position) - 1;
+            BaseTile prevTile = _game.BaseTileAtPos(_selectedTiles[prevIndex]);
+
+            Debug.Log("Distance: " + Vector3.Distance(newTile.position, prevTile.position));
         }
 
         #region SpriteRendering
