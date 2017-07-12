@@ -18,6 +18,9 @@ namespace Com.Hypester.DM3
 
             if (gameObject.GetComponent<PhotonView>().isMine)
                 transform.Find("FingerTracker").GetComponent<Image>().enabled = false;
+
+            if (GameObject.Find("PlayScreen"))
+                transform.SetParent(GameObject.Find("PlayScreen").transform, false);
         }
 
         void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
