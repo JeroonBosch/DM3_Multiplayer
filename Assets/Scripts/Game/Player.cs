@@ -18,8 +18,6 @@ namespace Com.Hypester.DM3
         // Use this for initialization
         void Start()
         {
-            DontDestroyOnLoad(gameObject);
-
             if (gameObject.GetComponent<PhotonView>().isMine)
                 transform.Find("FingerTracker").GetComponent<Image>().enabled = false;
         }
