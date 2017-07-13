@@ -13,32 +13,72 @@ namespace Com.Hypester.DM3
     public class GameHandler : Photon.MonoBehaviour, IPunObservable
     {
         #region private variables
+        bool _isActive;
         Grid _grid;
+        int _curPlayer = 0;
         List<BaseTile> _baseTiles;
+        Player _myPlayer;
+        List<Vector2> _selectedTiles;
         #endregion
+        public Player MyPlayer { get { return _myPlayer; } }
 
         public delegate byte[] SerializeMethod(object customObject);
         public delegate object DeserializeMethod(byte[] serializedCustomObject);
 
-        void Start()
+        private void Start()
         {
             PhotonPeer.RegisterType(typeof(Tile), (byte)'L', SerializeTile, DeserializeTile);
             PhotonPeer.RegisterType(typeof(Grid), (byte)'G', SerializeGrid, DeserializeGrid);
 
+            _isActive = false;
+            _selectedTiles = new List<Vector2>();
+        }
+
+        private void Update()
+        {
+            foreach (BaseTile tile in FindObjectsOfType<BaseTile>())
+            {
+                int color = TileAtPos(new Vector2(tile.position.x, tile.position.y)).color;
+                tile.GetComponent<Image>().sprite = HexSprite(TileTypes.EColor.yellow + color);
+                if (_selectedTiles.Contains(tile.position))
+                {
+                    tile.GetComponent<Image>().sprite = HexSpriteSelected(TileTypes.EColor.yellow + color);
+                }
+            }
+        }
+        public void Show ()
+        {
+            Player[] players = FindObjectsOfType<Player>();
+            foreach (Player player in players)
+            {
+                if (player.GetComponent<PhotonView>().isMine)
+                    _myPlayer = player;
+            }
+            
+
             GenerateGrid();
             VisualizeGrid();
+
+            _isActive = true;
+
+            if (_myPlayer.localID == 1)
+                transform.rotation = new Quaternion(0f, 0f, 180f, transform.rotation.w);
         }
 
         void IPunObservable.OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
         {
-            if (stream.isWriting)
-            {
-                stream.SendNext(_grid);
-            }
-            else
-            {
-                _grid = (Grid)stream.ReceiveNext();
-                VisualizeGrid();
+            if (_isActive) { 
+                if (stream.isWriting)
+                {
+                    stream.SendNext(_grid);
+                    stream.SendNext(_curPlayer);
+                }
+                else
+                {
+                    _grid = (Grid)stream.ReceiveNext();
+                    _curPlayer = (int)stream.ReceiveNext();
+                    VisualizeGrid();
+                }
             }
         }
 
@@ -65,9 +105,9 @@ namespace Com.Hypester.DM3
             foreach (Transform child in transform)
                 Destroy(child.gameObject);
 
-            float originX = (Constants.gridYsize * Constants.tileHeight) * -0.5f;
-            float originY = (Constants.gridXsize * Constants.tileWidth) * -0.5f;
-            GameObject.Find("Grid").transform.localPosition = new Vector2(originX, originY);
+            //float originX = (Constants.gridYsize * Constants.tileHeight) * -0.5f;
+            //float originY = (Constants.gridXsize * Constants.tileWidth) * -0.5f;
+            //GameObject.Find("Grid").transform.localPosition = new Vector2(originX, originY);
 
             _baseTiles = new List<BaseTile>();
 
@@ -81,9 +121,9 @@ namespace Com.Hypester.DM3
                     tile.GetComponent<BaseTile>().position = new Vector2(x, y);
                     _baseTiles.Add(tile.GetComponent<BaseTile>());
                     if (x % 2 == 0)
-                        tile.transform.localPosition = new Vector3(x * Constants.tileWidth, y * Constants.tileHeight - Constants.tileHeight / 2, 0f);
+                        tile.transform.localPosition = new Vector3((-Constants.gridXsize / 2 + x) * Constants.tileWidth + Constants.tileWidth/2, (-Constants.gridYsize / 2 + y) * Constants.tileHeight + (Constants.tileHeight * .75f), 0f);
                     else
-                        tile.transform.localPosition = new Vector3(x * Constants.tileWidth, y * Constants.tileHeight, 0f);
+                        tile.transform.localPosition = new Vector3((-Constants.gridXsize / 2 + x) * Constants.tileWidth + Constants.tileWidth/2, (-Constants.gridYsize / 2 + y) * Constants.tileHeight + (Constants.tileHeight * 0.25f), 0f);
 
                     tile.GetComponent<Image>().sprite = HexSprite(TileTypes.EColor.yellow + _grid.data[x, y].color);
                 }
@@ -98,6 +138,21 @@ namespace Com.Hypester.DM3
         public BaseTile BaseTileAtPos (Vector2 position)
         {
             return _baseTiles.Find(item => item.position.x == position.x && item.position.y == position.y); ;
+        }
+
+        public void AddToSelection(Vector2 pos)
+        {
+            _selectedTiles.Add(pos);
+        }
+
+        public void RemoveFromSelection (Vector2 pos)
+        {
+            _selectedTiles.Remove(pos);
+        }
+
+        public void RemoveSelections()
+        {
+            _selectedTiles.Clear() ;
         }
 
         #region SpriteRendering

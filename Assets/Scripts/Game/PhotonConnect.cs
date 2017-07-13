@@ -66,14 +66,19 @@ namespace Com.Hypester.DM3
         public override void OnJoinedRoom()
         {
             Debug.Log("OnJoinedRoom() called by PUN. Now this client is in a room.");
-            foreach (Player player in GameObject.FindObjectsOfType<Player>())
+            foreach (Player player in FindObjectsOfType<Player>())
                 Destroy(player.gameObject);
             CreatePlayer();
         }
 
         public void CreatePlayer ()
         {
-            PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity, 0);
+            GameObject playerGO = PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity, 0);
+
+            if (PhotonNetwork.isMasterClient)
+                playerGO.GetComponent<Player>().localID = 0;
+            else
+                playerGO.GetComponent<Player>().localID = 1;
         }
     }
 }

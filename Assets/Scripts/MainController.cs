@@ -27,5 +27,12 @@ namespace Com.Hypester.DM3
         {
             Application.Quit();
         }
+
+        public void StartMatch ()
+        {
+            BaseMenuCanvas firstScreen = GameObject.Find("LoadingScreen").GetComponent<BaseMenuCanvas>();
+            firstScreen.GoToScreen(firstScreen);
+            currentScreen = firstScreen;
+        }
     }
 }

@@ -7,6 +7,8 @@ namespace Com.Hypester.DM3
 {
     public class NormalGameCanvas : BaseMenuCanvas
     {
+        bool _findingMatch;
+        float timeOut = 0f;
 
         // Use this for initialization
         protected override void Start()
@@ -26,19 +28,39 @@ namespace Com.Hypester.DM3
                 playerCount = PhotonNetwork.countOfPlayers;
             if (textObject)
                 textObject.GetComponent<Text>().text = "Current amount of players: " + playerCount;
+
+            if (_findingMatch)
+                timeOut += Time.deltaTime;
+
+            if (timeOut > 10f)
+            {
+                _findingMatch = false;
+                ResetReadyButton();
+            }
         }
 
         public override void Show()
         {
             base.Show();
-            if (!PhotonNetwork.connected && !PhotonNetwork.connecting)
-                PhotonNetwork.ConnectUsingSettings("v0.1");
-            //PhotonConnect.Instance.Connect();
         }
 
         public void SetReady ()
         {
             PhotonConnect.Instance.MatchPlayers();
+            _findingMatch = true;
+            Button readyButton = transform.Find("ReadyButton").GetComponent<Button>();
+            Text buttonText = readyButton.transform.Find("Text").GetComponent<Text>();
+            buttonText.text = "Finding match...";
+            readyButton.interactable = false;
+        }
+
+        private void ResetReadyButton ()
+        {
+            Button readyButton = transform.Find("ReadyButton").GetComponent<Button>();
+            Text buttonText = readyButton.transform.Find("Text").GetComponent<Text>();
+            buttonText.text = "Find match";
+            readyButton.interactable = true;
+            PhotonConnect.Instance.ConnectNormalGameroom();
         }
     }
 }

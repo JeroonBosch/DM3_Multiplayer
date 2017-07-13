@@ -11,6 +11,7 @@ namespace Com.Hypester.DM3
         protected override void Start()
         {
             base.Start();
+
         }
 
         // Update is called once per frame
@@ -25,6 +26,7 @@ namespace Com.Hypester.DM3
         public void PlayNormalGame()
         {
             GoToScreen(GameObject.Find("NormalGameScreen").GetComponent<BaseMenuCanvas>());
+
             if (PhotonNetwork.connected)
                 PhotonConnect.Instance.ConnectNormalGameroom();
             else

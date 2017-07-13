@@ -20,9 +20,6 @@ namespace Com.Hypester.DM3
             base.Start();
             _selectedTiles = new List<Vector2>();
             _game = GameObject.Find("Grid").GetComponent<GameHandler>();
-
-            foreach (Player player in FindObjectsOfType<Player>())
-                player.transform.SetParent(transform, false);
         }
 
         protected override void Update()
@@ -38,19 +35,22 @@ namespace Com.Hypester.DM3
                 }
             }
 
-            foreach (BaseTile tile in FindObjectsOfType<BaseTile>())
-            {
-                int color = _game.TileAtPos(new Vector2 (tile.position.x, tile.position.y)).color;
-                tile.GetComponent<Image>().sprite = HexSprite(TileTypes.EColor.yellow + color);
-                if (_selectedTiles.Contains(tile.position))
-                {
-                    tile.GetComponent<Image>().sprite = HexSpriteSelected(TileTypes.EColor.yellow + color);
-                }
-            }
-
             if (_finger != null)
-                if (GameObject.Find("FingerTracker"))
-                    GameObject.Find("FingerTracker").transform.position = _finger.GetWorldPosition(1f);
+                if (GameObject.Find("FingerTracker")) {
+                    Transform tf = GameObject.Find("FingerTracker").transform;
+                    tf.position = _finger.GetWorldPosition(1f);
+                    tf.localPosition = new Vector2(-tf.localPosition.x, -tf.localPosition.y);
+                }
+        }
+
+        public override void Show()
+        {
+            base.Show();
+
+            foreach (Player player in FindObjectsOfType<Player>())
+                player.transform.SetParent(transform, false);
+
+            _game.Show();
         }
 
         private void OnEnable()
@@ -94,6 +94,7 @@ namespace Com.Hypester.DM3
                     {
                         _selectedTiles.Add(interactionObject.GetComponent<BaseTile>().position);
                         _finger = finger;
+                        _game.MyPlayer.NewSelection(_selectedTiles[0]);
                     }
                 }
             }
@@ -104,6 +105,7 @@ namespace Com.Hypester.DM3
             if (finger.Index == 0)
             {
                 _selectedTiles.Clear();
+                _game.MyPlayer.RemoveAllSelections();
                 _finger = null;
             }
         }
@@ -137,11 +139,10 @@ namespace Com.Hypester.DM3
 
         void NewSelectedTile (Vector2 position)
         {
-            BaseTile newTile = _game.BaseTileAtPos(position);
-            int prevIndex = _selectedTiles.IndexOf(position) - 1;
-            BaseTile prevTile = _game.BaseTileAtPos(_selectedTiles[prevIndex]);
-
-            Debug.Log("Distance: " + Vector3.Distance(newTile.position, prevTile.position));
+            //BaseTile newTile = _game.BaseTileAtPos(position);
+            //int prevIndex = _selectedTiles.IndexOf(position) - 1;
+            //BaseTile prevTile = _game.BaseTileAtPos(_selectedTiles[prevIndex]);
+            _game.MyPlayer.NewSelection(position);
         }
 
         #region SpriteRendering
