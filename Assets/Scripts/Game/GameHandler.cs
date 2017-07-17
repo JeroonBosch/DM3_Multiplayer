@@ -105,9 +105,6 @@ namespace Com.Hypester.DM3
             foreach (Transform child in transform)
                 Destroy(child.gameObject);
 
-            //float originX = (Constants.gridYsize * Constants.tileHeight) * -0.5f;
-            //float originY = (Constants.gridXsize * Constants.tileWidth) * -0.5f;
-            //GameObject.Find("Grid").transform.localPosition = new Vector2(originX, originY);
 
             _baseTiles = new List<BaseTile>();
 
@@ -125,7 +122,10 @@ namespace Com.Hypester.DM3
                     else
                         tile.transform.localPosition = new Vector3((-Constants.gridXsize / 2 + x) * Constants.tileWidth + Constants.tileWidth/2, (-Constants.gridYsize / 2 + y) * Constants.tileHeight + (Constants.tileHeight * 0.25f), 0f);
 
-                    tile.GetComponent<Image>().sprite = HexSprite(TileTypes.EColor.yellow + _grid.data[x, y].color);
+                    if (_grid.data[x, y].color < Constants.AmountOfColors)
+                        tile.GetComponent<Image>().sprite = HexSprite(TileTypes.EColor.yellow + _grid.data[x, y].color);
+                    else
+                        Destroy(tile.gameObject);
                 }
             }
         }
@@ -154,6 +154,18 @@ namespace Com.Hypester.DM3
         {
             _selectedTiles.Clear() ;
         }
+
+        public void InitiateCombo ()
+        {
+            Debug.Log(_selectedTiles.Count + " bla");
+            foreach (Vector2 pos in _selectedTiles) {
+                Destroy(BaseTileAtPos(pos).gameObject);
+                _grid.data[(int)pos.x, (int)pos.y].color = Constants.AmountOfColors;
+            }
+
+            _selectedTiles.Clear();
+        }
+
 
         #region SpriteRendering
         public Sprite HexSprite (TileTypes.EColor color)

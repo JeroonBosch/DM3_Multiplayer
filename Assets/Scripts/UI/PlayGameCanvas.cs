@@ -104,8 +104,14 @@ namespace Com.Hypester.DM3
         {
             if (finger.Index == 0)
             {
+                if (_selectedTiles.Count > 2) {
+                    _game.MyPlayer.InitiateCombo();
+                    Debug.Log("Combo time");
+                } else
+                {
+                    _game.MyPlayer.RemoveAllSelections();
+                }
                 _selectedTiles.Clear();
-                _game.MyPlayer.RemoveAllSelections();
                 _finger = null;
             }
         }

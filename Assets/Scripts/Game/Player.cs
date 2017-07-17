@@ -44,36 +44,47 @@ namespace Com.Hypester.DM3
             PhotonView photonView = PhotonView.Get(this);
             photonView.RPC("RPCAddToSelection", PhotonTargets.All, pos);
         }
-
         [PunRPC]
         void RPCAddToSelection(Vector2 pos)
         {
             GameObject.Find("Grid").GetComponent<GameHandler>().AddToSelection(pos);
         }
 
+
         public void RemoveSelection(Vector2 pos)
         {
             PhotonView photonView = PhotonView.Get(this);
             photonView.RPC("RPCRemoveFromSelection", PhotonTargets.All, pos);
         }
-
         [PunRPC]
         void RPCRemoveFromSelection(Vector2 pos)
         {
             GameObject.Find("Grid").GetComponent<GameHandler>().RemoveFromSelection(pos);
         }
 
+
         public void RemoveAllSelections()
         {
             PhotonView photonView = PhotonView.Get(this);
             photonView.RPC("RPCRemoveAllSelections", PhotonTargets.All);
         }
-
         [PunRPC]
         void RPCRemoveAllSelections()
         {
             GameObject.Find("Grid").GetComponent<GameHandler>().RemoveSelections();
         }
         #endregion
+
+        public void InitiateCombo()
+        {
+            PhotonView photonView = PhotonView.Get(this);
+            photonView.RPC("RPCInitiateCombo", PhotonTargets.All);
+        }
+        [PunRPC]
+        void RPCInitiateCombo()
+        {
+            Debug.Log("Combo time RPC");
+            GameObject.Find("Grid").GetComponent<GameHandler>().InitiateCombo();
+        }
     }
 }
