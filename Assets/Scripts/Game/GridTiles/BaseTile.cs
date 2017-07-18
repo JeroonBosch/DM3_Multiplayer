@@ -5,6 +5,7 @@ namespace Com.Hypester.DM3
     public class BaseTile : MonoBehaviour
     {
         public Vector2 position { get; set; }
+        public bool animate = false;
 
         private void Update()
         {
