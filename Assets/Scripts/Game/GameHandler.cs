@@ -103,10 +103,11 @@ namespace Com.Hypester.DM3
                 }
                 else
                 {
+                    Grid oldGrid = _grid;
                     _grid = (Grid)stream.ReceiveNext();
                     _curPlayer = (int)stream.ReceiveNext();
                     Debug.Log("Data received.");
-                    GridUpdate();
+                    GridUpdate(oldGrid);
                 }
             }
         }
@@ -165,7 +166,7 @@ namespace Com.Hypester.DM3
             }
         }
 
-        void GridUpdate ()
+        void GridUpdate (Grid oldGrid)
         {
             Debug.Log("GridUpdate");
 
@@ -190,6 +191,10 @@ namespace Com.Hypester.DM3
                         {
                             tile.GetComponent<Image>().enabled = true;
                             tile.GetComponent<Image>().sprite = HexSprite(TileTypes.EColor.yellow + _grid.data[x, y].color);
+                            if (_grid.data[x, y].color != oldGrid.data[x, y].color)
+                            {
+                                tile.Animate(_curPlayer); //Change in color. TODO this is weird, as it prevent falling animation if previous tile is same color.
+                            }
                         }
                         else
                             tile.GetComponent<Image>().enabled = false;
