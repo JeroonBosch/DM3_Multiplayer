@@ -67,7 +67,7 @@ namespace Com.Hypester.DM3
 
         void OnFingerDown(LeanFinger finger)
         {
-            if (finger.Index == 0)
+            if (finger.Index == 0 && _game.IsMyTurn())
             {
                 GameObject interactionObject = null;
 
@@ -102,11 +102,10 @@ namespace Com.Hypester.DM3
 
         void OnFingerUp(LeanFinger finger)
         {
-            if (finger.Index == 0)
+            if (finger.Index == 0 && _game.IsMyTurn())
             {
                 if (_selectedTiles.Count > 2) {
                     _game.MyPlayer.InitiateCombo();
-                    Debug.Log("Combo time");
                 } else
                 {
                     _game.MyPlayer.RemoveAllSelections();

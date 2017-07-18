@@ -3,7 +3,7 @@
     public static class Constants
     {
         public const int PlayerStartHP = 200;
-        public const float MoveTimeInSeconds = 20f;
+        public const float TurnTime = 20f;
         public const int TurnPassHealAmount = 5;
 
         public const int gridXsize = 10;

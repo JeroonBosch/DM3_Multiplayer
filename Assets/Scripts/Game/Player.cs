@@ -83,7 +83,6 @@ namespace Com.Hypester.DM3
         [PunRPC]
         void RPCInitiateCombo()
         {
-            Debug.Log("Combo time RPC");
             GameObject.Find("Grid").GetComponent<GameHandler>().InitiateCombo();
         }
     }

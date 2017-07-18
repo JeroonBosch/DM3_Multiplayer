@@ -35,6 +35,7 @@ namespace Com.Hypester.DM3
             if (timeOut > 10f)
             {
                 _findingMatch = false;
+                PhotonNetwork.LeaveRoom();
                 ResetReadyButton();
             }
         }

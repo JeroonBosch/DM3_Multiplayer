@@ -71,6 +71,16 @@ namespace Com.Hypester.DM3
             CreatePlayer();
         }
 
+        public override void OnPhotonPlayerDisconnected(PhotonPlayer otherPlayer)
+        {
+            base.OnPhotonPlayerDisconnected(otherPlayer);
+            if (PhotonNetwork.inRoom && SceneManager.GetActiveScene().name == "NormalGame")
+            {
+                PhotonNetwork.LoadLevel("Menu");
+                PhotonNetwork.LeaveRoom();
+            }
+        }
+
         public void CreatePlayer ()
         {
             GameObject playerGO = PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity, 0);

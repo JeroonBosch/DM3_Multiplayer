@@ -13,13 +13,19 @@ namespace Com.Hypester.DM3
     public class GameHandler : Photon.MonoBehaviour, IPunObservable
     {
         #region private variables
-        bool _isActive;
-        Grid _grid;
-        int _curPlayer = 0;
-        List<BaseTile> _baseTiles;
-        Player _myPlayer;
-        List<Vector2> _selectedTiles;
+        private bool _isActive;
+        private Grid _grid;
+        private int _curPlayer;
+        private List<BaseTile> _baseTiles;
+        private Player _myPlayer;
+        private List<Vector2> _selectedTiles;
+        private float _turnTimer;
+        private Coroutine _refill;
+        private float _refillInterval;
+        private float _refillTime;
+        private bool _refillChanges;
         #endregion
+
         public Player MyPlayer { get { return _myPlayer; } }
 
         public delegate byte[] SerializeMethod(object customObject);
@@ -32,6 +38,10 @@ namespace Com.Hypester.DM3
 
             _isActive = false;
             _selectedTiles = new List<Vector2>();
+            _curPlayer = 0;
+            _turnTimer = 0;
+            _refillInterval = .2f;
+            _refillTime = float.PositiveInfinity;
         }
 
         private void Update()
@@ -45,7 +55,19 @@ namespace Com.Hypester.DM3
                     tile.GetComponent<Image>().sprite = HexSpriteSelected(TileTypes.EColor.yellow + color);
                 }
             }
+
+            GameObject.Find("CurPlayer").GetComponent<Text>().text = "Current player: " + _curPlayer; 
         }
+
+        private void FixedUpdate()
+        {
+            if (_turnTimer > Constants.TurnTime)
+            {
+                EndTurn();
+            } else
+                _turnTimer += Time.fixedDeltaTime;
+        }
+
         public void Show ()
         {
             Player[] players = FindObjectsOfType<Player>();
@@ -61,8 +83,14 @@ namespace Com.Hypester.DM3
 
             _isActive = true;
 
-            if (_myPlayer.localID == 1)
+            if (_myPlayer.localID == 1) { 
                 transform.rotation = new Quaternion(0f, 0f, 180f, transform.rotation.w);
+                GameObject go = Instantiate(Resources.Load("OpponentsTurn")) as GameObject;
+                go.transform.SetParent(transform.parent, false);
+            } else {
+                GameObject go = Instantiate(Resources.Load("MyTurn")) as GameObject;
+                go.transform.SetParent(transform.parent, false);
+            }
         }
 
         void IPunObservable.OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
@@ -77,13 +105,16 @@ namespace Com.Hypester.DM3
                 {
                     _grid = (Grid)stream.ReceiveNext();
                     _curPlayer = (int)stream.ReceiveNext();
-                    VisualizeGrid();
+                    Debug.Log("Data received.");
+                    GridUpdate();
                 }
             }
         }
 
         void GenerateGrid ()
         {
+            Debug.Log("GenerateGrid");
+
             _grid = new Grid();
             _grid.data = new Tile[Constants.gridXsize, Constants.gridYsize];
 
@@ -102,9 +133,10 @@ namespace Com.Hypester.DM3
 
         void VisualizeGrid()
         {
+            Debug.Log("VisualizeGrid");
+
             foreach (Transform child in transform)
                 Destroy(child.gameObject);
-
 
             _baseTiles = new List<BaseTile>();
 
@@ -123,9 +155,152 @@ namespace Com.Hypester.DM3
                         tile.transform.localPosition = new Vector3((-Constants.gridXsize / 2 + x) * Constants.tileWidth + Constants.tileWidth/2, (-Constants.gridYsize / 2 + y) * Constants.tileHeight + (Constants.tileHeight * 0.25f), 0f);
 
                     if (_grid.data[x, y].color < Constants.AmountOfColors)
+                    {
+                        tile.GetComponent<Image>().enabled = true;
                         tile.GetComponent<Image>().sprite = HexSprite(TileTypes.EColor.yellow + _grid.data[x, y].color);
+                    }
                     else
-                        Destroy(tile.gameObject);
+                        tile.GetComponent<Image>().enabled = false;
+                }
+            }
+        }
+
+        void GridUpdate ()
+        {
+            Debug.Log("GridUpdate");
+
+            for (int x = 0; x < Constants.gridXsize; x++)
+            {
+                for (int y = 0; y < Constants.gridYsize; y++)
+                {
+                    Vector2 pos = new Vector2(x, y);
+                    BaseTile tile = BaseTileAtPos(pos);
+                    if (tile != null) { 
+                        tile.gameObject.name = "Tile (" + x + "," + y + ")";
+                        tile.transform.SetParent(transform, false);
+                        tile.position = pos;
+                        _baseTiles.Add(tile.GetComponent<BaseTile>());
+                        if (x % 2 == 0)
+                            tile.transform.localPosition = new Vector3((-Constants.gridXsize / 2 + x) * Constants.tileWidth + Constants.tileWidth / 2, (-Constants.gridYsize / 2 + y) * Constants.tileHeight + (Constants.tileHeight * .75f), 0f);
+                        else
+                            tile.transform.localPosition = new Vector3((-Constants.gridXsize / 2 + x) * Constants.tileWidth + Constants.tileWidth / 2, (-Constants.gridYsize / 2 + y) * Constants.tileHeight + (Constants.tileHeight * 0.25f), 0f);
+
+
+                        if (_grid.data[x, y].color < Constants.AmountOfColors)
+                        {
+                            tile.GetComponent<Image>().enabled = true;
+                            tile.GetComponent<Image>().sprite = HexSprite(TileTypes.EColor.yellow + _grid.data[x, y].color);
+                        }
+                        else
+                            tile.GetComponent<Image>().enabled = false;
+                    }
+                }
+            }
+        }
+
+        private void EndTurn ()
+        {
+            _turnTimer = 0f;
+            
+            if (_curPlayer == 0)
+                _curPlayer = 1;
+            else
+                _curPlayer = 0;
+
+            if (IsMyTurn()) {
+                GameObject go = Instantiate(Resources.Load("MyTurn")) as GameObject;
+                go.transform.SetParent(transform.parent, false);
+            } else { 
+                GameObject go = Instantiate(Resources.Load("OpponentsTurn")) as GameObject;
+                go.transform.SetParent(transform.parent, false);
+            }
+
+            if (_refill == null)
+            {
+                _refillChanges = false;
+                _refillTime = Time.time + _refillInterval;
+                _refill = StartCoroutine(RefillCoroutine());
+            }
+        }
+
+        private IEnumerator RefillCoroutine()
+        {
+            Debug.Log("RefillCoroutine() started.");
+            while (Time.time < _refillTime) yield return null;
+            Debug.Log("RefillCoroutine() done.");
+
+            if (_curPlayer == 1) //since the player number already changed.
+            {
+                ShiftTilesDown();
+            }
+            else
+            {
+                ShiftTilesUp();
+            }
+
+            _refillTime = float.PositiveInfinity;
+            _refill = null;
+
+            if (_refillChanges)
+            {
+                Grid newGrid = new Grid();
+                newGrid.data = _grid.data;
+                _grid = newGrid; //TODO: This is a hack to trigger a server-side call
+
+                _refillChanges = false;
+                _refillTime = Time.time + _refillInterval;
+                _refill = StartCoroutine(RefillCoroutine());
+            }
+        }
+
+        private void ShiftTilesDown()
+        { //0,0 is bottom left
+            for (int x = 0; x < Constants.gridXsize; x++)
+            {
+                for (int y = 1; y < Constants.gridYsize; y++) //bottom row does not need shifting down. If there's 8 rows (0 to 7), then y should be 1 to 7, as row 0 is to be ignored.
+                {
+                    Tile tile = TileAtPos(new Vector2(x, y));
+
+                    if (tile.color >= Constants.AmountOfColors) // Means it's destroyed.
+                    {
+                        _refillChanges = true;
+
+                        if (y == Constants.gridYsize - 1) //Top row, create new ones.
+                        {
+                            _grid.data[x, y].color = UnityEngine.Random.Range(0, Constants.AmountOfColors); 
+                        } else {
+                            Debug.Log("Taking color from " + x + ", " + (y + 1));
+                            _grid.data[x, y].color = _grid.data[x, y + 1].color; //Take color from above.
+                            _grid.data[x, y + 1].color = Constants.AmountOfColors; //Above tile is set to invisible.
+                        }
+                    }
+                }
+            }
+        }
+
+        private void ShiftTilesUp()
+        {
+            for (int x = 0; x < Constants.gridXsize; x++)
+            {
+                for (int y = Constants.gridYsize - 2; y >= 0; y--) //top row does not need shifting up. If there's 8 rows (7 to 0), then y should be 6 to 0, as row 7 is to be ignored.
+                {
+                    Tile tile = TileAtPos(new Vector2(x, y));
+
+                    if (tile.color >= Constants.AmountOfColors) // Means it's destroyed.
+                    {
+                        _refillChanges = true;
+
+                        if (y == 0) //Bottom row, create new ones.
+                        {
+                            _grid.data[x, y].color = UnityEngine.Random.Range(0, Constants.AmountOfColors);
+                        }
+                        else
+                        {
+                            Debug.Log("Taking color from " + x + ", " + (y - 1));
+                            _grid.data[x, y].color = _grid.data[x, y - 1].color; //Take color from below.
+                            _grid.data[x, y - 1].color = Constants.AmountOfColors; //Below tile is set to invisible.
+                        }
+                    }
                 }
             }
         }
@@ -157,13 +332,26 @@ namespace Com.Hypester.DM3
 
         public void InitiateCombo ()
         {
-            Debug.Log(_selectedTiles.Count + " bla");
             foreach (Vector2 pos in _selectedTiles) {
-                Destroy(BaseTileAtPos(pos).gameObject);
                 _grid.data[(int)pos.x, (int)pos.y].color = Constants.AmountOfColors;
             }
 
+            EndTurn();
             _selectedTiles.Clear();
+        }
+
+        public bool IsMyTurn()
+        {
+            if (_myPlayer.localID == _curPlayer)
+                return true;
+            return false;
+        }
+
+        public bool InTurnDelay()
+        {
+            /*if (_myPlayer.localID == _curPlayer)
+                return true;*/
+            return false;
         }
 
 
