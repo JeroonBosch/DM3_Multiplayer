@@ -179,12 +179,12 @@ namespace Com.Hypester.DM3
                     if (tile != null) { 
                         tile.gameObject.name = "Tile (" + x + "," + y + ")";
                         tile.transform.SetParent(transform, false);
-                        tile.position = pos;
+                        //tile.position = pos;
                         _baseTiles.Add(tile.GetComponent<BaseTile>());
-                        if (x % 2 == 0)
-                            tile.transform.localPosition = new Vector3((-Constants.gridXsize / 2 + x) * Constants.tileWidth + Constants.tileWidth / 2, (-Constants.gridYsize / 2 + y) * Constants.tileHeight + (Constants.tileHeight * .75f), 0f);
-                        else
-                            tile.transform.localPosition = new Vector3((-Constants.gridXsize / 2 + x) * Constants.tileWidth + Constants.tileWidth / 2, (-Constants.gridYsize / 2 + y) * Constants.tileHeight + (Constants.tileHeight * 0.25f), 0f);
+                        //if (x % 2 == 0)
+                        //    tile.transform.localPosition = new Vector3((-Constants.gridXsize / 2 + x) * Constants.tileWidth + Constants.tileWidth / 2, (-Constants.gridYsize / 2 + y) * Constants.tileHeight + (Constants.tileHeight * .75f), 0f);
+                        //else
+                        //    tile.transform.localPosition = new Vector3((-Constants.gridXsize / 2 + x) * Constants.tileWidth + Constants.tileWidth / 2, (-Constants.gridYsize / 2 + y) * Constants.tileHeight + (Constants.tileHeight * 0.25f), 0f);
 
 
                         if (_grid.data[x, y].color < Constants.AmountOfColors)
@@ -301,7 +301,7 @@ namespace Com.Hypester.DM3
                         }
                         else
                         {
-                            Debug.Log("Taking color from " + x + ", " + (y - 1));
+                            //Debug.Log("Taking color from " + x + ", " + (y - 1));
                             _grid.data[x, y].color = _grid.data[x, y - 1].color; //Take color from below.
                             _grid.data[x, y - 1].color = Constants.AmountOfColors; //Below tile is set to invisible.
                         }

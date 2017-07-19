@@ -8,31 +8,35 @@ namespace Com.Hypester.DM3
 
         private Vector2 _startPos;
         private Vector2 _endPos;
-        private bool _animate;
+        private bool _animating;
 
         private void Start()
         {
             _startPos = new Vector2();
             _endPos = new Vector2();
-            _animate = false;
+            _animating = false;
         }
 
         private void Update()
         {
-            if (_animate)
+            if (_animating)
             {
-                Vector2.MoveTowards(_endPos, _startPos, .2f);
+                transform.localPosition = Vector2.MoveTowards(transform.localPosition, _endPos, .05f);
             }
         }
 
-        public void Animate (int curPlayer)
+        public void Animate(int curPlayer)
         {
-            if (curPlayer == 0)
-                _startPos = new Vector2(transform.localPosition.x, transform.localPosition.y + Constants.tileHeight);
-            else
-                _startPos = new Vector2(transform.localPosition.x, transform.localPosition.y - Constants.tileHeight);
-            _endPos = new Vector2(transform.localPosition.x, transform.localPosition.y);
-            _animate = true;
+            /*if (!_animating) { 
+                Debug.Log("Animating " + position);
+                if (curPlayer == 0)
+                    _startPos = new Vector2(transform.localPosition.x, transform.localPosition.y + Constants.tileHeight);
+                else
+                    _startPos = new Vector2(transform.localPosition.x, transform.localPosition.y - Constants.tileHeight);
+                _endPos = new Vector2(transform.localPosition.x, transform.localPosition.y);
+                transform.localPosition = _startPos;
+                _animating = true;
+            }*/
         }
     }
 }

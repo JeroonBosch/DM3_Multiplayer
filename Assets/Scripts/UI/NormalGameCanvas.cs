@@ -22,12 +22,12 @@ namespace Com.Hypester.DM3
         protected override void Update()
         {
             base.Update();
-            Transform textObject = transform.Find("AmountOfPlayersText");
+            Transform textObject = GameObject.Find("AmountOfPlayersText").transform;
             int playerCount = 0;
             if (PhotonNetwork.connected)
                 playerCount = PhotonNetwork.countOfPlayers;
             if (textObject)
-                textObject.GetComponent<Text>().text = "Current amount of players: " + playerCount;
+                textObject.GetComponent<Text>().text = playerCount + " players online.";
 
             if (_findingMatch)
                 timeOut += Time.deltaTime;
@@ -59,7 +59,7 @@ namespace Com.Hypester.DM3
         {
             Button readyButton = transform.Find("ReadyButton").GetComponent<Button>();
             Text buttonText = readyButton.transform.Find("Text").GetComponent<Text>();
-            buttonText.text = "Find match";
+            buttonText.text = "Boot Camp";
             readyButton.interactable = true;
             PhotonConnect.Instance.ConnectNormalGameroom();
         }
