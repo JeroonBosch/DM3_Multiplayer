@@ -10,9 +10,10 @@ namespace Com.Hypester.DM3
 
         #region private variables
         int profileID;
-        int coins;
         string profileName;
         string portraitURL;
+
+        private GameObject _game;
         #endregion
 
         // Use this for initialization
@@ -22,6 +23,20 @@ namespace Com.Hypester.DM3
 
             if (gameObject.GetComponent<PhotonView>().isMine)
                 transform.Find("FingerTracker").GetComponent<Image>().enabled = false;
+        }
+
+        private void Update()
+        {
+            if (_game == null)
+                _game = GameObject.Find("Grid");
+
+            if (_game && _game.GetComponent<GameHandler>().MyPlayer != null)
+            {
+                if (_game.GetComponent<GameHandler>().IsMyTurn())
+                    transform.Find("FingerTracker").GetComponent<Image>().enabled = false;
+                else if (!gameObject.GetComponent<PhotonView>().isMine)
+                    transform.Find("FingerTracker").GetComponent<Image>().enabled = true;
+            }
         }
 
         void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
@@ -47,7 +62,7 @@ namespace Com.Hypester.DM3
         [PunRPC]
         void RPCAddToSelection(Vector2 pos)
         {
-            GameObject.Find("Grid").GetComponent<GameHandler>().AddToSelection(pos);
+            _game.GetComponent<GameHandler>().AddToSelection(pos);
         }
 
 
@@ -59,7 +74,7 @@ namespace Com.Hypester.DM3
         [PunRPC]
         void RPCRemoveFromSelection(Vector2 pos)
         {
-            GameObject.Find("Grid").GetComponent<GameHandler>().RemoveFromSelection(pos);
+            _game.GetComponent<GameHandler>().RemoveFromSelection(pos);
         }
 
 
@@ -71,7 +86,7 @@ namespace Com.Hypester.DM3
         [PunRPC]
         void RPCRemoveAllSelections()
         {
-            GameObject.Find("Grid").GetComponent<GameHandler>().RemoveSelections();
+            _game.GetComponent<GameHandler>().RemoveSelections();
         }
         #endregion
 
@@ -83,7 +98,7 @@ namespace Com.Hypester.DM3
         [PunRPC]
         void RPCInitiateCombo()
         {
-            GameObject.Find("Grid").GetComponent<GameHandler>().InitiateCombo();
+            _game.GetComponent<GameHandler>().InitiateCombo();
         }
     }
 }

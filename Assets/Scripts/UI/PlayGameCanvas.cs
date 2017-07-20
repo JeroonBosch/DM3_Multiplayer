@@ -28,19 +28,33 @@ namespace Com.Hypester.DM3
             if (_selectedTiles.Count > 0)
             {
                 Vector2 vec = FindNearestTileToFinger();
+                //Select new tile.
                 if (!_selectedTiles.Contains(vec) && _game.TileAtPos(new Vector2(vec.x, vec.y)).color == _game.TileAtPos(new Vector2(_selectedTiles[0].x, _selectedTiles[0].y)).color && DistanceToBetweenPos(vec, _selectedTiles[_selectedTiles.Count-1]) < 1.5f)
                 {
                     _selectedTiles.Add(vec);
                     NewSelectedTile(vec);
                 }
+                //Remove if already selected, plus remove all previously selected ones.
+                else if (_selectedTiles.Contains(vec) && _selectedTiles[_selectedTiles.Count - 1] != vec && DistanceToBetweenPos(vec, _selectedTiles[_selectedTiles.Count - 1]) < 1.5f)
+                {
+                    int index = _selectedTiles.IndexOf(vec);
+                    for (int i = index + 1; i < _selectedTiles.Count; i++)
+                    {
+                        RemoveSelectedTile(_selectedTiles[i]);
+                        _selectedTiles.RemoveAt(i);
+                    }
+                }
             }
 
             if (_finger != null)
-                if (GameObject.Find("FingerTracker")) {
+            {
+                if (GameObject.Find("FingerTracker"))
+                {
                     Transform tf = GameObject.Find("FingerTracker").transform;
                     tf.position = _finger.GetWorldPosition(1f);
                     tf.localPosition = new Vector2(-tf.localPosition.x, -tf.localPosition.y);
                 }
+            }
         }
 
         public override void Show()
@@ -144,10 +158,12 @@ namespace Com.Hypester.DM3
 
         void NewSelectedTile (Vector2 position)
         {
-            //BaseTile newTile = _game.BaseTileAtPos(position);
-            //int prevIndex = _selectedTiles.IndexOf(position) - 1;
-            //BaseTile prevTile = _game.BaseTileAtPos(_selectedTiles[prevIndex]);
             _game.MyPlayer.NewSelection(position);
+        }
+
+        void RemoveSelectedTile (Vector2 position)
+        {
+            _game.MyPlayer.RemoveSelection(position);
         }
 
         #region SpriteRendering
