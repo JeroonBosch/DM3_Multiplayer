@@ -240,37 +240,39 @@ namespace Com.Hypester.DM3
 
         private void Refill()
         {
-            Debug.Log("Refill v2. Done only on the master-client's side.");
+            Debug.Log("---- Refill v2 ----");
+            Grid dupli = DuplicateGrid();
 
             for (int x = 0; x < Constants.gridXsize; x++)
             {
+                Debug.Log("---- Column " + x+ " ----");
                 int topRow = Constants.gridYsize - 1;
-                //for (int y = topRow; y > 0; y--)
-                for (int y = 0; y <= topRow; y++)
+                for (int y = topRow; y >= 0; y--)
+                //for (int y = 0; y <= topRow; y++)
                 {
+
                     Vector2 pos = new Vector2(x, y);
                     Tile tile = TileAtPos(pos);
-
                     int colorToAssume = tile.color;
 
                     //Checking only for non-destroyed tiles.
                     if (colorToAssume < Constants.AmountOfColors) { 
                         int emptyTilesBelow = EmptyTilesBelow(x, y); //Problem!! : emptyTilesBelow changes while checking it. Need to check a duplicate grid.data instead
-                        //int filledTilesBelow = FilledTilesBelow(x, y);
-                        //float tileDifference = emptyTilesBelow - filledTilesBelow;
 
-                        //If there's more empty spaces below than other tiles to till them.
+                        //If there's empty spaces below
                         if (emptyTilesBelow > 0)
                         {
                             Vector2 dropIntoPos = new Vector2(x, y - emptyTilesBelow);
                             float dropDistance = emptyTilesBelow * Constants.tileHeight;
 
-                            _grid.data[(int)dropIntoPos.x, (int)dropIntoPos.y].color = colorToAssume; //Set color of the target position to this tile.
+                            Debug.Log( "("+ (int)dropIntoPos.x + ", " + (int)dropIntoPos.y + ") is now " + colorToAssume);
+                            dupli.data[(int)dropIntoPos.x, (int)dropIntoPos.y].color = colorToAssume; //Set color of the target position to this tile.
 
                             if (y + emptyTilesBelow <= topRow)
-                                _grid.data[x, y].color = _grid.data[x, y + emptyTilesBelow].color;
+                                dupli.data[x, y].color = _grid.data[x, y + emptyTilesBelow].color;
                             else
-                                _grid.data[x, y].color = Constants.AmountOfColors;
+                                dupli.data[x, y].color = Constants.AmountOfColors;
+                            Debug.Log("(" + x + ", " + y + ") resorts to " + dupli.data[x, y].color);
 
                             AnimateTile anim = new AnimateTile(colorToAssume, dropDistance, (int)dropIntoPos.x, (int)dropIntoPos.y);
                             photonView.RPC("RPCAnimateTile", PhotonTargets.All, anim);
@@ -279,14 +281,42 @@ namespace Com.Hypester.DM3
                 }
             }
 
+            ApplyGrid(dupli);
+
             photonView.RPC("RPCSendGridData", PhotonTargets.All, _grid);
+        }
+
+        private Grid DuplicateGrid ()
+        {
+            Grid dupli = new Grid();
+            dupli.data = new Tile[Constants.gridXsize, Constants.gridYsize];
+            for (int x = 0; x < Constants.gridXsize; x++)
+            {
+                int topRow = Constants.gridYsize - 1;
+                for (int y = topRow; y >= 0; y--)
+                {
+                    dupli.data[x, y] = new Tile();
+                    dupli.data[x, y].color = _grid.data[x, y].color;
+                }
+            }
+            return dupli;
+        }
+
+        private void ApplyGrid(Grid gridToApply)
+        {
+            for (int x = 0; x < Constants.gridXsize; x++)
+            {
+                int topRow = Constants.gridYsize - 1;
+                for (int y = topRow; y >= 0; y--)
+                    _grid.data[x, y].color = gridToApply.data[x, y].color;
+            }
         }
 
         private int EmptyTilesBelow(int x, int y)
         {
             int startY = y - 1;
             int tileCount = 0;
-            for (int i = startY; i > 0; i--) //bottom row does not need shifting down. If there's 8 rows (0 to 7), then y should be 1 to 7, as row 0 is to be ignored.
+            for (int i = startY; i >= 0; i--) //bottom row does not need shifting down. If there's 8 rows (0 to 7), then y should be 1 to 7, as row 0 is to be ignored.
             {
                 Tile tile = TileAtPos(new Vector2(x, i));
                 if (tile.color >= Constants.AmountOfColors) // Means it's destroyed.
