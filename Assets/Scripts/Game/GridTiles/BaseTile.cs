@@ -46,15 +46,15 @@ namespace Com.Hypester.DM3
                 GetComponent<Image>().sprite = HexSprite(TileTypes.EColor.yellow + _color);
         }
 
-        public void Animate (int curPlayer, float distance)
+        public void Animate (float distance)
         {
             if (!_animating)
             {
-                //Debug.Log("Animating " + position);
-                if (curPlayer == 0)
-                    _startPos = new Vector2(transform.localPosition.x, transform.localPosition.y - distance);
-                else
-                    _startPos = new Vector2(transform.localPosition.x, transform.localPosition.y + distance);
+                Debug.Log("Animating " + position + " d: " + distance);
+                //if (curPlayer == 0)
+                //    _startPos = new Vector2(transform.localPosition.x, transform.localPosition.y - distance);
+                //else
+                _startPos = new Vector2(transform.localPosition.x, transform.localPosition.y + distance);
                 _endPos = new Vector2(transform.localPosition.x, transform.localPosition.y);
                 transform.localPosition = _startPos;
                 _animating = true;

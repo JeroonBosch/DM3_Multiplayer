@@ -238,47 +238,21 @@ namespace Com.Hypester.DM3
             }
         }
 
+        //Refill function
         private void Refill()
         {
             Debug.Log("---- Refill v2 ----");
             Grid dupli = DuplicateGrid();
 
-            for (int x = 0; x < Constants.gridXsize; x++)
+            if (_curPlayer == 0)
             {
-                Debug.Log("---- Column " + x+ " ----");
-                int topRow = Constants.gridYsize - 1;
-                for (int y = topRow; y >= 0; y--)
-                //for (int y = 0; y <= topRow; y++)
-                {
-
-                    Vector2 pos = new Vector2(x, y);
-                    Tile tile = TileAtPos(pos);
-                    int colorToAssume = tile.color;
-
-                    //Checking only for non-destroyed tiles.
-                    if (colorToAssume < Constants.AmountOfColors) { 
-                        int emptyTilesBelow = EmptyTilesBelow(x, y); //Problem!! : emptyTilesBelow changes while checking it. Need to check a duplicate grid.data instead
-
-                        //If there's empty spaces below
-                        if (emptyTilesBelow > 0)
-                        {
-                            Vector2 dropIntoPos = new Vector2(x, y - emptyTilesBelow);
-                            float dropDistance = emptyTilesBelow * Constants.tileHeight;
-
-                            Debug.Log( "("+ (int)dropIntoPos.x + ", " + (int)dropIntoPos.y + ") is now " + colorToAssume);
-                            dupli.data[(int)dropIntoPos.x, (int)dropIntoPos.y].color = colorToAssume; //Set color of the target position to this tile.
-
-                            if (y + emptyTilesBelow <= topRow)
-                                dupli.data[x, y].color = _grid.data[x, y + emptyTilesBelow].color;
-                            else
-                                dupli.data[x, y].color = Constants.AmountOfColors;
-                            Debug.Log("(" + x + ", " + y + ") resorts to " + dupli.data[x, y].color);
-
-                            AnimateTile anim = new AnimateTile(colorToAssume, dropDistance, (int)dropIntoPos.x, (int)dropIntoPos.y);
-                            photonView.RPC("RPCAnimateTile", PhotonTargets.All, anim);
-                        }
-                    }
-                }
+                dupli = ShiftUpGrid(dupli);
+                dupli = RefillGridFromBelow(dupli);
+            }
+            else
+            {
+                dupli = ShiftDownGrid(dupli);
+                dupli = RefillGridFromAbove(dupli);
             }
 
             ApplyGrid(dupli);
@@ -297,6 +271,143 @@ namespace Com.Hypester.DM3
                 {
                     dupli.data[x, y] = new Tile();
                     dupli.data[x, y].color = _grid.data[x, y].color;
+                }
+            }
+            return dupli;
+        }
+
+        //Normal 'gravity' (player 0)
+        private Grid ShiftDownGrid (Grid dupli)
+        {
+            for (int x = 0; x < Constants.gridXsize; x++)
+            {
+                Debug.Log("---- Column " + x + " ----");
+                int topRow = Constants.gridYsize - 1;
+                for (int y = topRow; y >= 0; y--)
+                {
+
+                    Vector2 pos = new Vector2(x, y);
+                    Tile tile = TileAtPos(pos);
+                    int colorToAssume = tile.color;
+
+                    //Checking only for non-destroyed tiles.
+                    if (colorToAssume < Constants.AmountOfColors)
+                    {
+                        int emptyTilesBelow = EmptyTilesBelow(x, y);
+
+                        //If there's empty spaces below
+                        if (emptyTilesBelow > 0)
+                        {
+                            Vector2 dropIntoPos = new Vector2(x, y - emptyTilesBelow);
+                            float dropDistance = emptyTilesBelow * Constants.tileHeight; //Works well it seems ;)
+
+                            //Debug.Log("(" + (int)dropIntoPos.x + ", " + (int)dropIntoPos.y + ") is now " + colorToAssume);
+                            dupli.data[(int)dropIntoPos.x, (int)dropIntoPos.y].color = colorToAssume; //Set color of the target position to this tile.
+
+                            if (y + emptyTilesBelow <= topRow)
+                                dupli.data[x, y].color = _grid.data[x, y + emptyTilesBelow].color;
+                            else
+                                dupli.data[x, y].color = Constants.AmountOfColors;
+                            //Debug.Log("(" + x + ", " + y + ") resorts to " + dupli.data[x, y].color);
+
+                            AnimateTile anim = new AnimateTile(colorToAssume, dropDistance, (int)dropIntoPos.x, (int)dropIntoPos.y);
+                            photonView.RPC("RPCAnimateTile", PhotonTargets.All, anim);
+                        }
+                    }
+                }
+            }
+            return dupli;
+        }
+
+        private Grid RefillGridFromAbove(Grid dupli)
+        {
+            for (int x = 0; x < Constants.gridXsize; x++)
+            {
+                int topRow = Constants.gridYsize - 1;
+                for (int y = topRow; y >= 0; y--)
+                {
+
+                    Vector2 pos = new Vector2(x, y);
+                    Tile tile = dupli.data[x, y];
+
+                    //Replace destroyed tiles
+                    if (tile.color >= Constants.AmountOfColors)
+                    {
+                        //Debug.Log("Refilling " + x + ", " + y);
+                        float dropDistance = y * Constants.tileHeight; //Works well it seems ;)
+                        int color = UnityEngine.Random.Range(0, Constants.AmountOfColors);
+                        dupli.data[x, y].color = color;
+                        AnimateTile anim = new AnimateTile(color, dropDistance, x, y);
+                        photonView.RPC("RPCAnimateTile", PhotonTargets.All, anim);
+                    }
+                }
+            }
+            return dupli;
+        }
+
+        //Reverse 'gravity' (player 1)
+        private Grid ShiftUpGrid(Grid dupli)
+        {
+            for (int x = 0; x < Constants.gridXsize; x++)
+            {
+                Debug.Log("---- Column " + x + " ----");
+                int topRow = Constants.gridYsize - 1;
+                for (int y = 0; y <= topRow; y++)
+                {
+
+                    Vector2 pos = new Vector2(x, y);
+                    Tile tile = TileAtPos(pos);
+                    int colorToAssume = tile.color;
+
+                    //Checking only for non-destroyed tiles.
+                    if (colorToAssume < Constants.AmountOfColors)
+                    {
+                        int emptyTilesAbove = EmptyTilesAbove(x, y);
+
+                        //If there's empty spaces below
+                        if (emptyTilesAbove > 0)
+                        {
+                            Vector2 dropIntoPos = new Vector2(x, y + emptyTilesAbove);
+                            float dropDistance = -1f * emptyTilesAbove * Constants.tileHeight; //Works well it seems ;)
+
+                            //Debug.Log("(" + (int)dropIntoPos.x + ", " + (int)dropIntoPos.y + ") is now " + colorToAssume);
+                            dupli.data[(int)dropIntoPos.x, (int)dropIntoPos.y].color = colorToAssume; //Set color of the target position to this tile.
+
+                            if (y - emptyTilesAbove >= 0)
+                                dupli.data[x, y].color = _grid.data[x, y - emptyTilesAbove].color;
+                            else
+                                dupli.data[x, y].color = Constants.AmountOfColors;
+                            //Debug.Log("(" + x + ", " + y + ") resorts to " + dupli.data[x, y].color);
+
+                            AnimateTile anim = new AnimateTile(colorToAssume, dropDistance, (int)dropIntoPos.x, (int)dropIntoPos.y);
+                            photonView.RPC("RPCAnimateTile", PhotonTargets.All, anim);
+                        }
+                    }
+                }
+            }
+            return dupli;
+        }
+
+        private Grid RefillGridFromBelow(Grid dupli)
+        {
+            for (int x = 0; x < Constants.gridXsize; x++)
+            {
+                int topRow = Constants.gridYsize - 1;
+                for (int y = 0; y <= topRow; y++)
+                {
+                    Vector2 pos = new Vector2(x, y);
+                    Tile tile = dupli.data[x, y];
+
+                    //Replace destroyed tiles
+                    if (tile.color >= Constants.AmountOfColors)
+                    {
+                        //Debug.Log("Refilling " + x + ", " + y);
+                        float dropDistance = -1f * topRow * Constants.tileHeight; //Works well it seems ;)
+                        int color = UnityEngine.Random.Range(0, Constants.AmountOfColors);
+                        dupli.data[x, y].color = color;
+                        AnimateTile anim = new AnimateTile(color, dropDistance, x, y);
+                        photonView.RPC("RPCAnimateTile", PhotonTargets.All, anim);
+                    }
                 }
             }
             return dupli;
@@ -328,14 +439,15 @@ namespace Com.Hypester.DM3
             return tileCount;
         }
 
-        private int FilledTilesBelow(int x, int y)
+        private int EmptyTilesAbove(int x, int y)
         {
-            int startY = y - 1;
+            int startY = y + 1;
             int tileCount = 0;
-            for (int i = startY; i > 0; i--) //bottom row does not need shifting down. If there's 8 rows (0 to 7), then y should be 1 to 7, as row 0 is to be ignored.
+            int topRow = Constants.gridYsize - 1;
+            for (int i = startY; i <= topRow; i++) //bottom row does not need shifting down. If there's 8 rows (0 to 7), then y should be 1 to 7, as row 0 is to be ignored.
             {
                 Tile tile = TileAtPos(new Vector2(x, i));
-                if (tile.color < Constants.AmountOfColors) // Means it's filled.
+                if (tile.color >= Constants.AmountOfColors) // Means it's destroyed.
                 {
                     tileCount++;
                 }
@@ -343,90 +455,6 @@ namespace Com.Hypester.DM3
 
             return tileCount;
         }
-
-        /*private IEnumerator RefillCoroutine()
-        {
-            while (Time.time < _refillTime) yield return null;
-            Debug.Log("Refilling");
-
-            if (_curPlayer == 1) //since the player number already changed.
-            {
-                ShiftTilesDown();
-            }
-            else
-            {
-                ShiftTilesUp();
-            }
-
-            _refillTime = float.PositiveInfinity;
-            _refill = null;
-
-            if (_refillChanges)
-            {
-                _refillChanges = false;
-                _refillTime = Time.time + _refillInterval;
-                _refill = StartCoroutine(RefillCoroutine());
-            }
-            else
-            {
-                //Send data.
-                PhotonView photonView = PhotonView.Get(this);
-                photonView.RPC("RPCSendGridData", PhotonTargets.All, _grid);
-            }
-        }
-
-        private void ShiftTilesDown()
-        { //0,0 is bottom left
-            for (int x = 0; x < Constants.gridXsize; x++)
-            {
-                for (int y = 0; y < Constants.gridYsize; y++) //bottom row does not need shifting down. If there's 8 rows (0 to 7), then y should be 1 to 7, as row 0 is to be ignored.
-                {
-                    Tile tile = TileAtPos(new Vector2(x, y));
-
-                    if (tile.color >= Constants.AmountOfColors) // Means it's destroyed.
-                    {
-                        _refillChanges = true;
-
-                        if (y == Constants.gridYsize - 1) //Top row, create new ones.
-                        {
-                            _grid.data[x, y].color = UnityEngine.Random.Range(0, Constants.AmountOfColors);
-                        }
-                        else
-                        {
-                            _grid.data[x, y].color = _grid.data[x, y + 1].color; //Take color from above.
-                            _grid.data[x, y + 1].color = Constants.AmountOfColors; //Above tile is set to invisible.
-                        }
-                    }
-                }
-            }
-        }
-
-        private void ShiftTilesUp()
-        {
-            for (int x = 0; x < Constants.gridXsize; x++)
-            {
-                for (int y = Constants.gridYsize - 2; y >= 0; y--) //top row does not need shifting up. If there's 8 rows (7 to 0), then y should be 6 to 0, as row 7 is to be ignored.
-                {
-                    Tile tile = TileAtPos(new Vector2(x, y));
-
-                    if (tile.color >= Constants.AmountOfColors) // Means it's destroyed.
-                    {
-                        _refillChanges = true;
-
-                        if (y == 0) //Bottom row, create new ones.
-                        {
-                            _grid.data[x, y].color = UnityEngine.Random.Range(0, Constants.AmountOfColors);
-                        }
-                        else
-                        {
-                            //Debug.Log("Taking color from " + x + ", " + (y - 1));
-                            _grid.data[x, y].color = _grid.data[x, y - 1].color; //Take color from below.
-                            _grid.data[x, y - 1].color = Constants.AmountOfColors; //Below tile is set to invisible.
-                        }
-                    }
-                }
-            }
-        }*/
 
         public Tile TileAtPos(Vector2 position)
         {
@@ -514,13 +542,11 @@ namespace Com.Hypester.DM3
         private void RPCAnimateTile(AnimateTile tile)
         {
             BaseTile dropIntoTile = BaseTileAtPos(new Vector2 (tile.x, tile.y));
-            //dataTile.color = Constants.AmountOfColors; //Invisible\
 
-            if (!(tile.color < Constants.AmountOfColors))
-                Debug.Log("Trying to animate invisible tile, wtf?");
+            //Debug.Log("Anim request: " + tile + " | " + tile.x + ", " + tile.y + " > " + tile.color);
 
             dropIntoTile.color = tile.color;
-            dropIntoTile.Animate(_curPlayer, tile.fallDistance);
+            dropIntoTile.Animate(tile.fallDistance);
         }
 
         #region Serialization
@@ -578,15 +604,15 @@ namespace Com.Hypester.DM3
 
         private static object DeserializeAnimTile(StreamBuffer inStream, short length)
         {
-            AnimateTile tile = new AnimateTile(0,0,0,0);
+            AnimateTile tile = new AnimateTile();
             lock (memAnimTile)
             {
                 inStream.Read(memAnimTile, 0, 4 * 4);
                 int index = 0;
-                Protocol.Deserialize(out tile.color, memTile, ref index);
-                Protocol.Deserialize(out tile.fallDistance, memTile, ref index);
-                Protocol.Deserialize(out tile.x, memTile, ref index);
-                Protocol.Deserialize(out tile.y, memTile, ref index);
+                Protocol.Deserialize(out tile.color, memAnimTile, ref index);
+                Protocol.Deserialize(out tile.fallDistance, memAnimTile, ref index);
+                Protocol.Deserialize(out tile.x, memAnimTile, ref index);
+                Protocol.Deserialize(out tile.y, memAnimTile, ref index);
             }
 
             return tile;

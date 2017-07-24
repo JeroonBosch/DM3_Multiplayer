@@ -35,5 +35,9 @@ namespace Com.Hypester.DM3
             this.x = x;
             this.y = y;
         }
+
+        public AnimateTile()
+        {
+        }
     }
 }
