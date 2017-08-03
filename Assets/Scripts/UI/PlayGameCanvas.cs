@@ -166,6 +166,12 @@ namespace Com.Hypester.DM3
             _game.MyPlayer.RemoveSelection(position);
         }
 
+        public void EndGame ()
+        {
+            GoToScreen(GameObject.Find("EndScreen").GetComponent<BaseMenuCanvas>());
+            enabled = false;
+        }
+
         #region SpriteRendering
         public Sprite HexSprite(TileTypes.EColor color)
         {

@@ -10,12 +10,17 @@ namespace Com.Hypester.DM3
         bool _findingMatch;
         float timeOut = 0f;
 
+        GameObject findOpponent;
+
         // Use this for initialization
         protected override void Start()
         {
             base.Start();
             PhotonNetwork.autoJoinLobby = false;
             PhotonNetwork.automaticallySyncScene = true;
+
+            findOpponent = GameObject.Find("FindOpponent");
+            findOpponent.SetActive(false);
         }
 
         // Update is called once per frame
@@ -32,10 +37,14 @@ namespace Com.Hypester.DM3
             if (_findingMatch)
                 timeOut += Time.deltaTime;
 
-            if (timeOut > 10f)
+            if (timeOut > 30f)
             {
+                timeOut = 0f;
                 _findingMatch = false;
-                PhotonNetwork.LeaveRoom();
+                if (PhotonNetwork.inRoom)
+                    PhotonNetwork.LeaveRoom();
+                else
+                    PhotonNetwork.Reconnect();
                 ResetReadyButton();
             }
         }
@@ -53,6 +62,7 @@ namespace Com.Hypester.DM3
             Text buttonText = readyButton.transform.Find("Text").GetComponent<Text>();
             buttonText.text = "Finding match...";
             readyButton.interactable = false;
+            findOpponent.SetActive(true);
         }
 
         private void ResetReadyButton ()
@@ -62,6 +72,7 @@ namespace Com.Hypester.DM3
             buttonText.text = "Boot Camp";
             readyButton.interactable = true;
             PhotonConnect.Instance.ConnectNormalGameroom();
+            findOpponent.SetActive(false);
         }
     }
 }

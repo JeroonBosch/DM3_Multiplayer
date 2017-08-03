@@ -8,6 +8,9 @@ namespace Com.Hypester.DM3
 {
     public class LoadingScreenCanvas : BaseMenuCanvas
     {
+        float timer = 0f;
+        float timeUntilStart = 3f;
+
         protected override void Start ()
         {
             base.Start();
@@ -18,8 +21,10 @@ namespace Com.Hypester.DM3
         {
             base.Update();
 
+            timer += Time.deltaTime;
+
             Player[] players = FindObjectsOfType<Player>();
-            if (players.Length == 2)
+            if (players.Length == 2 && timer > timeUntilStart)
             {
                 GoToScreen(GameObject.Find("PlayScreen").GetComponent<BaseMenuCanvas>());
                 enabled = false;

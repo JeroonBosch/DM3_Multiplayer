@@ -15,5 +15,7 @@
         public const int BoosterOneThreshhold = 5;
         public const int BoosterTwoThreshhold = 8;
         public const int BoosterThreeThreshhold = 10;
+
+        public const float MoveTimeInSeconds = 20;
     }
 }

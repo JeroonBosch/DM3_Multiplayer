@@ -50,7 +50,7 @@ namespace Com.Hypester.DM3
         {
             if (!_animating)
             {
-                Debug.Log("Animating " + position + " d: " + distance);
+                //Debug.Log("Animating " + position + " d: " + distance);
                 //if (curPlayer == 0)
                 //    _startPos = new Vector2(transform.localPosition.x, transform.localPosition.y - distance);
                 //else

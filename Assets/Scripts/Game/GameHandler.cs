@@ -19,13 +19,18 @@ namespace Com.Hypester.DM3
         private List<BaseTile> _baseTiles;
         private Player _myPlayer;
         private List<Vector2> _selectedTiles;
-        private float _turnTimer;
 
         private bool _gridReceived = false;
         private bool _gridVisualized = false;
         #endregion
 
+        #region public game logic
         public Player MyPlayer { get { return _myPlayer; } }
+
+        public float healthPlayerOne;
+        public float healthPlayerTwo;
+        public float turnTimer;
+        #endregion
 
         public delegate byte[] SerializeMethod(object customObject);
         public delegate object DeserializeMethod(byte[] serializedCustomObject);
@@ -39,7 +44,10 @@ namespace Com.Hypester.DM3
             _isActive = false;
             _selectedTiles = new List<Vector2>();
             _curPlayer = 0;
-            _turnTimer = 0;
+
+            turnTimer = 0;
+            healthPlayerOne = Constants.PlayerStartHP;
+            healthPlayerTwo = Constants.PlayerStartHP;
 
             _grid = new Grid();
             if (PhotonNetwork.isMasterClient)
@@ -65,18 +73,21 @@ namespace Com.Hypester.DM3
                     }
                 }
 
-                GameObject.Find("CurPlayer").GetComponent<Text>().text = "Current player: " + _curPlayer;
+                if (IsMyTurn())
+                    GameObject.Find("CurPlayer").GetComponent<Text>().text = "My turn";
+                else
+                    GameObject.Find("CurPlayer").GetComponent<Text>().text = "Wait...";
             }
         }
 
         private void FixedUpdate()
         {
-            if (_turnTimer > Constants.TurnTime)
+            if (turnTimer > Constants.TurnTime)
             {
                 EndTurn();
             }
             else
-                _turnTimer += Time.fixedDeltaTime;
+                turnTimer += Time.fixedDeltaTime;
         }
 
         public void Show()
@@ -118,10 +129,14 @@ namespace Com.Hypester.DM3
                 if (stream.isWriting)
                 {
                     stream.SendNext(_curPlayer);
+                    stream.SendNext(healthPlayerOne);
+                    stream.SendNext(healthPlayerTwo);
                 }
                 else
                 {
                     _curPlayer = (int)stream.ReceiveNext();
+                    healthPlayerOne = (float)stream.ReceiveNext();
+                    healthPlayerTwo = (float)stream.ReceiveNext();
                 }
             }
         }
@@ -215,7 +230,7 @@ namespace Com.Hypester.DM3
 
         private void EndTurn()
         {
-            _turnTimer = 0f;
+            turnTimer = 0f;
 
             //Master client will sync this.
             if (PhotonNetwork.isMasterClient)
@@ -327,7 +342,7 @@ namespace Com.Hypester.DM3
                 for (int y = topRow; y >= 0; y--)
                 {
 
-                    Vector2 pos = new Vector2(x, y);
+                    //Vector2 pos = new Vector2(x, y);
                     Tile tile = dupli.data[x, y];
 
                     //Replace destroyed tiles
@@ -395,7 +410,7 @@ namespace Com.Hypester.DM3
                 int topRow = Constants.gridYsize - 1;
                 for (int y = 0; y <= topRow; y++)
                 {
-                    Vector2 pos = new Vector2(x, y);
+                    //Vector2 pos = new Vector2(x, y);
                     Tile tile = dupli.data[x, y];
 
                     //Replace destroyed tiles
@@ -492,10 +507,27 @@ namespace Com.Hypester.DM3
                 {
                     _grid.data[(int)pos.x, (int)pos.y].color = Constants.AmountOfColors;
                 }
+
+                if (_curPlayer == 0)
+                    DamagePlayerWithCombo(1, _selectedTiles.Count);
+                else
+                    DamagePlayerWithCombo(0, _selectedTiles.Count);
             }
 
             EndTurn();
             _selectedTiles.Clear();
+        }
+
+        public void DamagePlayerWithCombo(int playerNumber, float comboSize)
+        {
+            if (playerNumber == 0)
+                healthPlayerOne -= Mathf.Pow(comboSize, 2);
+            else
+                healthPlayerTwo -= Mathf.Pow(comboSize, 2);
+
+
+            if (healthPlayerOne < 0 || healthPlayerTwo < 0)
+                photonView.RPC("RPCEndGame", PhotonTargets.All);
         }
 
         public bool IsMyTurn()
@@ -527,13 +559,19 @@ namespace Com.Hypester.DM3
                 if (_myPlayer.localID == 1)
                 {
                     transform.rotation = new Quaternion(0f, 0f, 180f, transform.rotation.w);
-                    GameObject go = Instantiate(Resources.Load("UI/OpponentsTurn")) as GameObject;
-                    go.transform.SetParent(transform.parent, false);
+                    if (GameObject.FindGameObjectWithTag("TurnText") == null)
+                    {
+                        GameObject go = Instantiate(Resources.Load("UI/OpponentsTurn")) as GameObject;
+                        go.transform.SetParent(transform.parent, false);
+                    }
                 }
                 else
                 {
-                    GameObject go = Instantiate(Resources.Load("UI/MyTurn")) as GameObject;
-                    go.transform.SetParent(transform.parent, false);
+                    if (GameObject.FindGameObjectWithTag("TurnText") == null)
+                    {
+                        GameObject go = Instantiate(Resources.Load("UI/MyTurn")) as GameObject;
+                        go.transform.SetParent(transform.parent, false);
+                    }
                 }
             }
         }
@@ -547,6 +585,12 @@ namespace Com.Hypester.DM3
 
             dropIntoTile.color = tile.color;
             dropIntoTile.Animate(tile.fallDistance);
+        }
+
+        [PunRPC]
+        private void RPCEndGame ()
+        {
+            GameObject.Find("PlayScreen").GetComponent<PlayGameCanvas>().EndGame();
         }
 
         #region Serialization
