@@ -118,7 +118,7 @@ namespace Com.Hypester.DM3
                     transform.rotation = new Quaternion(0f, 0f, 180f, transform.rotation.w);
                 }
 
-                photonView.RPC("RPCTurnWarning", PhotonTargets.All);
+                photonView.RPC("RPCTurnWarning", PhotonTargets.All, _curPlayer);
             }
         }
 
@@ -240,7 +240,7 @@ namespace Com.Hypester.DM3
                 else
                     _curPlayer = 0;
 
-                photonView.RPC("RPCTurnWarning", PhotonTargets.All);
+                photonView.RPC("RPCTurnWarning", PhotonTargets.All, _curPlayer);
 
                 /*if (_refill == null)
                 {
@@ -514,6 +514,25 @@ namespace Com.Hypester.DM3
                     DamagePlayerWithCombo(0, _selectedTiles.Count);
             }
 
+            foreach (Vector2 pos in _selectedTiles)
+            {
+                GameObject go = Instantiate(Resources.Load("Explosion")) as GameObject;
+                Player[] players = GameObject.FindObjectsOfType<Player>();
+                Player targetPlayer = null;
+                foreach (Player player in players)
+                {
+                    if (player.localID != _curPlayer)
+                    {
+                        targetPlayer = player;
+                    }
+                }
+
+                
+                go.GetComponent<TileExplosion>().Init(targetPlayer, 1);
+                go.transform.SetParent(transform.parent, false);
+            }
+
+
             EndTurn();
             _selectedTiles.Clear();
         }
@@ -553,15 +572,15 @@ namespace Com.Hypester.DM3
         }
 
         [PunRPC]
-        private void RPCTurnWarning()
+        private void RPCTurnWarning(int curPlayer)
         {
             if (_myPlayer != null) { 
-                if (_myPlayer.localID == 1)
+                if (curPlayer == _myPlayer.localID) //Reversed
                 {
                     transform.rotation = new Quaternion(0f, 0f, 180f, transform.rotation.w);
                     if (GameObject.FindGameObjectWithTag("TurnText") == null)
                     {
-                        GameObject go = Instantiate(Resources.Load("UI/OpponentsTurn")) as GameObject;
+                        GameObject go = Instantiate(Resources.Load("UI/MyTurn")) as GameObject;
                         go.transform.SetParent(transform.parent, false);
                     }
                 }
@@ -569,7 +588,7 @@ namespace Com.Hypester.DM3
                 {
                     if (GameObject.FindGameObjectWithTag("TurnText") == null)
                     {
-                        GameObject go = Instantiate(Resources.Load("UI/MyTurn")) as GameObject;
+                        GameObject go = Instantiate(Resources.Load("UI/OpponentsTurn")) as GameObject;
                         go.transform.SetParent(transform.parent, false);
                     }
                 }

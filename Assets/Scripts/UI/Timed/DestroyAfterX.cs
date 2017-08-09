@@ -1,16 +1,19 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class DestroyAfterX : MonoBehaviour
+namespace Com.Hypester.DM3
 {
-    public float destroyAfterTime = 2f;
-    private float _timer = 0f;
-
-    void Update()
+    public class DestroyAfterX : MonoBehaviour
     {
-        if (_timer > destroyAfterTime)
-            Destroy(gameObject);
-        else
-            _timer += Time.deltaTime;
+        public float destroyAfterTime = 2f;
+        private float _timer = 0f;
+
+        void Update()
+        {
+            if (_timer > destroyAfterTime)
+                Destroy(gameObject);
+            else
+                _timer += Time.deltaTime;
+        }
     }
 }
