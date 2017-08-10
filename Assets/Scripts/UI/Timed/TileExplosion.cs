@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,14 +12,14 @@ namespace Com.Hypester.DM3
         private Vector2 _startPosition;
         private Player _targetPlayer;
 
-        private float _travelTime = .66f;
+        private float _travelTime = .99f;
         private float _travellingFor = 0f;
         private float _random;
 
         private bool _damageApplied = false;
         private float _damageMultiplier = 1;
 
-        public void Init(Player targetPlayer, float damageMultiplier)
+        public void Init(Player targetPlayer, float damageMultiplier, Sprite image)
         {
             _damageMultiplier = damageMultiplier;
 
@@ -26,6 +27,8 @@ namespace Com.Hypester.DM3
             _rt = GetComponent<RectTransform>();
             _startPosition = _rt.position;
             _random = Random.Range(-1f, 1f);
+
+            GetComponent<Image>().sprite = image;
 
 
             //_travelTime = .4f + count * .5f;
@@ -53,8 +56,8 @@ namespace Com.Hypester.DM3
                 t = Mathf.Min(t, 1f);
 
                 Vector2 p0 = _startPosition;
-                Vector2 p1 = new Vector2(_startPosition.x + 400 * _random, _startPosition.y);
-                Vector2 p2 = new Vector2(endPosition.x + 400 * _random, endPosition.y);
+                Vector2 p1 = new Vector2(_startPosition.x + 3 * _random, _startPosition.y);
+                Vector2 p2 = new Vector2(endPosition.x + 3 * _random, endPosition.y);
                 //Vector2 p2 = endPosition;
                 Vector3 p3 = endPosition;
                 _rt.position = CalculateBezierPoint(t, p0, p1, p2, p3);

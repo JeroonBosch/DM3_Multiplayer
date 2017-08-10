@@ -82,12 +82,15 @@ namespace Com.Hypester.DM3
 
         private void FixedUpdate()
         {
-            if (turnTimer > Constants.TurnTime)
+            if (_isActive)
             {
-                EndTurn();
+                if (turnTimer > Constants.TurnTime)
+                {
+                    EndTurn();
+                }
+                else
+                    turnTimer += Time.fixedDeltaTime;
             }
-            else
-                turnTimer += Time.fixedDeltaTime;
         }
 
         public void Show()
@@ -296,7 +299,7 @@ namespace Com.Hypester.DM3
         {
             for (int x = 0; x < Constants.gridXsize; x++)
             {
-                Debug.Log("---- Column " + x + " ----");
+                //Debug.Log("---- Column " + x + " ----");
                 int topRow = Constants.gridYsize - 1;
                 for (int y = topRow; y >= 0; y--)
                 {
@@ -505,7 +508,12 @@ namespace Com.Hypester.DM3
             {
                 foreach (Vector2 pos in _selectedTiles)
                 {
-                    _grid.data[(int)pos.x, (int)pos.y].color = Constants.AmountOfColors;
+                    _grid.data[(int)pos.x, (int)pos.y].color = Constants.AmountOfColors; //Equals being 'destroyed'
+                }
+
+                if (_selectedTiles.Count > Constants.BoosterOneThreshhold)
+                {
+                    CreateBooster(_selectedTiles[_selectedTiles.Count - 1], _selectedTiles.Count);
                 }
 
                 if (_curPlayer == 0)
@@ -527,14 +535,20 @@ namespace Com.Hypester.DM3
                     }
                 }
 
-                
-                go.GetComponent<TileExplosion>().Init(targetPlayer, 1);
-                go.transform.SetParent(transform.parent, false);
+                BaseTile baseTile = BaseTileAtPos(pos);
+                go.transform.SetParent(transform, false); //or transform.parent? TODO
+                go.transform.position = baseTile.transform.position;
+                go.GetComponent<TileExplosion>().Init(targetPlayer, 1, baseTile.HexSprite(TileTypes.EColor.yellow + baseTile.color));
             }
 
 
             EndTurn();
             _selectedTiles.Clear();
+        }
+
+        private void CreateBooster (Vector2 position, int comboCount)
+        {
+
         }
 
         public void DamagePlayerWithCombo(int playerNumber, float comboSize)

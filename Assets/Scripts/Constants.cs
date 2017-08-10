@@ -2,7 +2,7 @@
 {
     public static class Constants
     {
-        public const int PlayerStartHP = 200;
+        public const int PlayerStartHP = 600;
         public const float TurnTime = 20f;
         public const int TurnPassHealAmount = 5;
 
