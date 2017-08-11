@@ -17,5 +17,7 @@
         public const int BoosterThreeThreshhold = 10;
 
         public const float MoveTimeInSeconds = 20;
+
+        public const float DistanceBetweenTiles = 1.12f;
     }
 }

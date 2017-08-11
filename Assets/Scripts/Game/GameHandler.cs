@@ -18,7 +18,9 @@ namespace Com.Hypester.DM3
         private int _curPlayer;
         private List<BaseTile> _baseTiles;
         private Player _myPlayer;
+        private Player _enemyPlayer;
         private List<Vector2> _selectedTiles;
+        private List<Vector2> _collateralTiles;
 
         private bool _gridReceived = false;
         private bool _gridVisualized = false;
@@ -63,15 +65,15 @@ namespace Com.Hypester.DM3
                 if (_gridReceived && !_gridVisualized)
                     VisualizeGrid();
 
-                foreach (BaseTile tile in FindObjectsOfType<BaseTile>())
+                // TODO more efficiency ? 
+                /*foreach (BaseTile tile in FindObjectsOfType<BaseTile>())
                 {
-                    //int color = TileAtPos(new Vector2(tile.position.x, tile.position.y)).color;
                     tile.SetSelected = false;
                     if (_selectedTiles.Contains(tile.position))
                     {
                         tile.SetSelected = true;
                     }
-                }
+                }*/
 
                 if (IsMyTurn())
                     GameObject.Find("CurPlayer").GetComponent<Text>().text = "My turn";
@@ -103,6 +105,8 @@ namespace Com.Hypester.DM3
                 {
                     if (player.GetComponent<PhotonView>().isMine)
                         _myPlayer = player;
+                    else
+                        _enemyPlayer = player;
                 }
 
                 if (_gridReceived)
@@ -115,10 +119,13 @@ namespace Com.Hypester.DM3
                 }
 
 
-
-                if (_myPlayer.localID == 1)
+                Debug.Log(_myPlayer.localID);
+                if (_myPlayer.localID == 1 && !PhotonNetwork.isMasterClient)
                 {
                     transform.rotation = new Quaternion(0f, 0f, 180f, transform.rotation.w);
+                } else
+                {
+                    transform.rotation = new Quaternion(0f, 0f, 0f, transform.rotation.w);
                 }
 
                 photonView.RPC("RPCTurnWarning", PhotonTargets.All, _curPlayer);
@@ -222,6 +229,11 @@ namespace Com.Hypester.DM3
                                 //tile.GetComponent<Image>().sprite = HexSprite(TileTypes.EColor.yellow + _grid.data[x, y].color);
                                 tile.color = _grid.data[x, y].color;
                                 tile.SetSelected = false;
+
+                                if (_grid.data[x, y].boosterLevel > 0)
+                                {
+                                    tile.boosterLevel = _grid.data[x, y].boosterLevel;
+                                }
                             }
                             else
                                 tile.GetComponent<Image>().enabled = false;
@@ -368,7 +380,7 @@ namespace Com.Hypester.DM3
         {
             for (int x = 0; x < Constants.gridXsize; x++)
             {
-                Debug.Log("---- Column " + x + " ----");
+                //Debug.Log("---- Column " + x + " ----");
                 int topRow = Constants.gridYsize - 1;
                 for (int y = 0; y <= topRow; y++)
                 {
@@ -487,16 +499,58 @@ namespace Com.Hypester.DM3
         public void AddToSelection(Vector2 pos)
         {
             _selectedTiles.Add(pos);
+            BaseTileAtPos(pos).SetSelected = true;
+
+            if (BaseTileAtPos(pos).boosterLevel > 0)
+            {
+                foreach (BaseTile tile in BaseTileAtPos(pos).ListCollateralDamage(this, 1f))
+                {
+                    tile.SetCollateral = true;
+                }
+            }
         }
 
         public void RemoveFromSelection(Vector2 pos)
         {
             _selectedTiles.Remove(pos);
+            BaseTileAtPos(pos).SetSelected = false;
+
+            if (BaseTileAtPos(pos).boosterLevel > 0)
+                RecalculateCollateral();
+        }
+
+        private void RecalculateCollateral ()
+        {
+            foreach (Vector2 pos in _selectedTiles) { 
+                foreach (BaseTile tile in BaseTileAtPos(pos).ListCollateralDamage(this, 1f))
+                {
+                    tile.SetCollateral = true;
+                }
+            }
         }
 
         public void RemoveSelections()
         {
             _selectedTiles.Clear();
+            foreach (BaseTile tile in FindObjectsOfType<BaseTile>())
+            {
+                tile.SetSelected = false;
+                tile.SetCollateral = false;
+            }
+        }
+
+        public List<BaseTile> FindAdjacentTiles(Vector2 position, float radius)
+        {
+            List<BaseTile> allTiles = _baseTiles;
+            BaseTile centerTile = allTiles.Find(item => item.position.x == position.x && item.position.y == position.y);
+            List<BaseTile> targetTiles = new List<BaseTile>();
+            foreach (BaseTile tile in allTiles)
+            {
+                if (centerTile.DistanceToTile(tile) <= Constants.DistanceBetweenTiles * radius)
+                    targetTiles.Add(tile);
+            }
+
+            return targetTiles;
         }
 
         public void InitiateCombo()
@@ -509,12 +563,10 @@ namespace Com.Hypester.DM3
                 foreach (Vector2 pos in _selectedTiles)
                 {
                     _grid.data[(int)pos.x, (int)pos.y].color = Constants.AmountOfColors; //Equals being 'destroyed'
+                    _grid.data[(int)pos.x, (int)pos.y].boosterLevel = 0; //Equals being 'destroyed'
                 }
 
-                if (_selectedTiles.Count > Constants.BoosterOneThreshhold)
-                {
-                    CreateBooster(_selectedTiles[_selectedTiles.Count - 1], _selectedTiles.Count);
-                }
+                CreateBooster(_selectedTiles[_selectedTiles.Count - 1], _selectedTiles.Count);
 
                 if (_curPlayer == 0)
                     DamagePlayerWithCombo(1, _selectedTiles.Count);
@@ -546,9 +598,16 @@ namespace Com.Hypester.DM3
             _selectedTiles.Clear();
         }
 
-        private void CreateBooster (Vector2 position, int comboCount)
+        private void CreateBooster (Vector2 pos, int comboCount)
         {
-
+            if (comboCount >= Constants.BoosterThreeThreshhold)
+                _grid.data[(int)pos.x, (int)pos.y].boosterLevel = 3;
+            else if (comboCount >= Constants.BoosterTwoThreshhold)
+                _grid.data[(int)pos.x, (int)pos.y].boosterLevel = 2;
+            else if (comboCount >= Constants.BoosterOneThreshhold)
+                _grid.data[(int)pos.x, (int)pos.y].boosterLevel = 1;
+            else
+                _grid.data[(int)pos.x, (int)pos.y].boosterLevel = 0;
         }
 
         public void DamagePlayerWithCombo(int playerNumber, float comboSize)
@@ -565,6 +624,9 @@ namespace Com.Hypester.DM3
 
         public bool IsMyTurn()
         {
+            if (_myPlayer == null)
+                return false;
+
             if (_myPlayer.localID == _curPlayer)
                 return true;
             return false;
@@ -591,7 +653,6 @@ namespace Com.Hypester.DM3
             if (_myPlayer != null) { 
                 if (curPlayer == _myPlayer.localID) //Reversed
                 {
-                    transform.rotation = new Quaternion(0f, 0f, 180f, transform.rotation.w);
                     if (GameObject.FindGameObjectWithTag("TurnText") == null)
                     {
                         GameObject go = Instantiate(Resources.Load("UI/MyTurn")) as GameObject;
@@ -604,6 +665,7 @@ namespace Com.Hypester.DM3
                     {
                         GameObject go = Instantiate(Resources.Load("UI/OpponentsTurn")) as GameObject;
                         go.transform.SetParent(transform.parent, false);
+                        go.GetComponent<Text>().text = _enemyPlayer.GetName() + "'s turn!";
                     }
                 }
             }

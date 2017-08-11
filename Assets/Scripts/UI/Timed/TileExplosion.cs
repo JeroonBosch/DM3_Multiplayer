@@ -56,8 +56,8 @@ namespace Com.Hypester.DM3
                 t = Mathf.Min(t, 1f);
 
                 Vector2 p0 = _startPosition;
-                Vector2 p1 = new Vector2(_startPosition.x + 3 * _random, _startPosition.y);
-                Vector2 p2 = new Vector2(endPosition.x + 3 * _random, endPosition.y);
+                Vector2 p1 = new Vector2(_startPosition.x + 5 * _random, _startPosition.y);
+                Vector2 p2 = new Vector2(endPosition.x + 5 * _random, endPosition.y);
                 //Vector2 p2 = endPosition;
                 Vector3 p3 = endPosition;
                 _rt.position = CalculateBezierPoint(t, p0, p1, p2, p3);

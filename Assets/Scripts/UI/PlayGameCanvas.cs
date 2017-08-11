@@ -29,13 +29,14 @@ namespace Com.Hypester.DM3
             {
                 Vector2 vec = FindNearestTileToFinger();
                 //Select new tile.
-                if (!_selectedTiles.Contains(vec) && _game.TileAtPos(new Vector2(vec.x, vec.y)).color == _game.TileAtPos(new Vector2(_selectedTiles[0].x, _selectedTiles[0].y)).color && DistanceToBetweenPos(vec, _selectedTiles[_selectedTiles.Count-1]) < 1.5f)
+                if (!_selectedTiles.Contains(vec) && _game.TileAtPos(new Vector2(vec.x, vec.y)).color == _game.TileAtPos(new Vector2(_selectedTiles[0].x, _selectedTiles[0].y)).color && IsAdjacentPosition(vec, _selectedTiles[_selectedTiles.Count-1]))
                 {
+                    Debug.Log("selected with dist: " + DistanceBetweenPos(vec, _selectedTiles[_selectedTiles.Count - 1]));
                     _selectedTiles.Add(vec);
                     NewSelectedTile(vec);
                 }
                 //Remove if already selected, plus remove all previously selected ones.
-                else if (_selectedTiles.Contains(vec) && _selectedTiles[_selectedTiles.Count - 1] != vec && DistanceToBetweenPos(vec, _selectedTiles[_selectedTiles.Count - 1]) < 1.5f)
+                else if (_selectedTiles.Contains(vec) && _selectedTiles[_selectedTiles.Count - 1] != vec && IsAdjacentPosition(vec, _selectedTiles[_selectedTiles.Count - 1]))
                 {
                     int index = _selectedTiles.IndexOf(vec);
                     for (int i = index + 1; i < _selectedTiles.Count; i++)
@@ -148,12 +149,20 @@ namespace Com.Hypester.DM3
             return tilePos;
         }
 
-        private float DistanceToBetweenPos(Vector2 position, Vector2 position2)
+        private float DistanceBetweenPos(Vector2 position, Vector2 position2)
         {
             BaseTile newTile = _game.BaseTileAtPos(position);
             BaseTile prevTile = _game.BaseTileAtPos(position2);
 
-            return Vector3.Distance(newTile.position, prevTile.position);
+            return newTile.DistanceToTile(prevTile);
+        }
+
+        private bool IsAdjacentPosition(Vector2 position, Vector2 position2)
+        {
+            BaseTile newTile = _game.BaseTileAtPos(position);
+            BaseTile prevTile = _game.BaseTileAtPos(position2);
+
+            return newTile.IsAdjacentTo(prevTile);
         }
 
         void NewSelectedTile (Vector2 position)

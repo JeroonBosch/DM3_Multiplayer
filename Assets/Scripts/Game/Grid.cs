@@ -5,6 +5,7 @@ using System;
 
 namespace Com.Hypester.DM3
 {
+    //Transferable classes.
     [Serializable]
     public class Grid
     {

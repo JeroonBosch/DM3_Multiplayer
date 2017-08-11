@@ -21,8 +21,24 @@ namespace Com.Hypester.DM3
         {
             DontDestroyOnLoad(gameObject);
 
-            if (gameObject.GetComponent<PhotonView>().isMine)
+            if (gameObject.GetComponent<PhotonView>().isMine) {
+                profileName = PhotonNetwork.playerName;
                 transform.Find("FingerTracker").GetComponent<Image>().enabled = false;
+            }
+
+            if (localID == 0) {
+                foreach (GameObject player1name in GameObject.FindGameObjectsWithTag("Player_1_Name"))
+                {
+                    player1name.GetComponent<Text>().text = profileName;
+                }
+            } else
+            {
+                foreach (GameObject player2name in GameObject.FindGameObjectsWithTag("Player_2_Name"))
+                {
+                    player2name.GetComponent<Text>().text = profileName;
+                }
+            }
+                
         }
 
         private void Update()
@@ -51,6 +67,26 @@ namespace Com.Hypester.DM3
                 profileName = (string)stream.ReceiveNext();
                 localID = (int)stream.ReceiveNext();
             }
+
+            if (localID == 0)
+            {
+                foreach (GameObject player1name in GameObject.FindGameObjectsWithTag("Player_1_Name"))
+                {
+                    player1name.GetComponent<Text>().text = profileName;
+                }
+            }
+            else
+            {
+                foreach (GameObject player2name in GameObject.FindGameObjectsWithTag("Player_2_Name"))
+                {
+                    player2name.GetComponent<Text>().text = profileName;
+                }
+            }
+        }
+
+        public string GetName ()
+        {
+            return profileName;
         }
 
         #region SelectionRPCs

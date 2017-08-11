@@ -14,7 +14,8 @@ namespace Com.Hypester.DM3
         protected override void Start ()
         {
             base.Start();
-
+            //GameObject.FindGameObjectsWithTag("Player_1_Name");
+            //GameObject.Find("Player1Name").GetComponent<Text>().text = PhotonNetwork.playerName;
         }
 
         protected override void Update()
