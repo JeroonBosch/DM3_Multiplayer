@@ -24,7 +24,7 @@ namespace Com.Hypester.DM3
         public bool SetSelected { set { _selected = value; SelectionChange(); } }
 
         private bool _collateral;
-        public bool SetCollateral { set { _collateral = value; CollateralChange(); } }
+        public bool collateral { get { return _collateral; } set { _collateral = value; CollateralChange(); } }
 
         private bool _isBeingDestroyed;
         public bool isBeingDestroyed { get { return _isBeingDestroyed; }}

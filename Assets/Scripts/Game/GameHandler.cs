@@ -229,14 +229,11 @@ namespace Com.Hypester.DM3
                                 //tile.GetComponent<Image>().sprite = HexSprite(TileTypes.EColor.yellow + _grid.data[x, y].color);
                                 tile.color = _grid.data[x, y].color;
                                 tile.SetSelected = false;
-
-                                if (_grid.data[x, y].boosterLevel > 0)
-                                {
-                                    tile.boosterLevel = _grid.data[x, y].boosterLevel;
-                                }
+                                tile.boosterLevel = _grid.data[x, y].boosterLevel;
                             }
-                            else
+                            else { 
                                 tile.GetComponent<Image>().enabled = false;
+                            }
                         }
                     }
                 }
@@ -301,6 +298,7 @@ namespace Com.Hypester.DM3
                 {
                     dupli.data[x, y] = new Tile();
                     dupli.data[x, y].color = _grid.data[x, y].color;
+                    dupli.data[x, y].boosterLevel = _grid.data[x, y].boosterLevel;
                 }
             }
             return dupli;
@@ -311,7 +309,6 @@ namespace Com.Hypester.DM3
         {
             for (int x = 0; x < Constants.gridXsize; x++)
             {
-                //Debug.Log("---- Column " + x + " ----");
                 int topRow = Constants.gridYsize - 1;
                 for (int y = topRow; y >= 0; y--)
                 {
@@ -319,6 +316,7 @@ namespace Com.Hypester.DM3
                     Vector2 pos = new Vector2(x, y);
                     Tile tile = TileAtPos(pos);
                     int colorToAssume = tile.color;
+                    int boosterToAssume = tile.boosterLevel;
 
                     //Checking only for non-destroyed tiles.
                     if (colorToAssume < Constants.AmountOfColors)
@@ -329,16 +327,19 @@ namespace Com.Hypester.DM3
                         if (emptyTilesBelow > 0)
                         {
                             Vector2 dropIntoPos = new Vector2(x, y - emptyTilesBelow);
-                            float dropDistance = emptyTilesBelow * Constants.tileHeight; //Works well it seems ;)
+                            float dropDistance = emptyTilesBelow * Constants.tileHeight;
 
-                            //Debug.Log("(" + (int)dropIntoPos.x + ", " + (int)dropIntoPos.y + ") is now " + colorToAssume);
                             dupli.data[(int)dropIntoPos.x, (int)dropIntoPos.y].color = colorToAssume; //Set color of the target position to this tile.
+                            dupli.data[(int)dropIntoPos.x, (int)dropIntoPos.y].boosterLevel = boosterToAssume; //Set booster of the target position to this tile.
 
-                            if (y + emptyTilesBelow <= topRow)
+                            if (y + emptyTilesBelow <= topRow) { 
                                 dupli.data[x, y].color = _grid.data[x, y + emptyTilesBelow].color;
-                            else
+                                dupli.data[x, y].boosterLevel = _grid.data[x, y + emptyTilesBelow].boosterLevel;
+                            }
+                            else { 
                                 dupli.data[x, y].color = Constants.AmountOfColors;
-                            //Debug.Log("(" + x + ", " + y + ") resorts to " + dupli.data[x, y].color);
+                                //dupli.data[x, y].boosterLevel = 0;
+                            }
 
                             AnimateTile anim = new AnimateTile(colorToAssume, dropDistance, (int)dropIntoPos.x, (int)dropIntoPos.y);
                             photonView.RPC("RPCAnimateTile", PhotonTargets.All, anim);
@@ -356,17 +357,15 @@ namespace Com.Hypester.DM3
                 int topRow = Constants.gridYsize - 1;
                 for (int y = topRow; y >= 0; y--)
                 {
-
-                    //Vector2 pos = new Vector2(x, y);
                     Tile tile = dupli.data[x, y];
 
                     //Replace destroyed tiles
                     if (tile.color >= Constants.AmountOfColors)
                     {
-                        //Debug.Log("Refilling " + x + ", " + y);
-                        float dropDistance = y * Constants.tileHeight; //Works well it seems ;)
+                        float dropDistance = y * Constants.tileHeight;
                         int color = UnityEngine.Random.Range(0, Constants.AmountOfColors);
                         dupli.data[x, y].color = color;
+                        dupli.data[x, y].boosterLevel = 0;
                         AnimateTile anim = new AnimateTile(color, dropDistance, x, y);
                         photonView.RPC("RPCAnimateTile", PhotonTargets.All, anim);
                     }
@@ -380,7 +379,6 @@ namespace Com.Hypester.DM3
         {
             for (int x = 0; x < Constants.gridXsize; x++)
             {
-                //Debug.Log("---- Column " + x + " ----");
                 int topRow = Constants.gridYsize - 1;
                 for (int y = 0; y <= topRow; y++)
                 {
@@ -388,6 +386,7 @@ namespace Com.Hypester.DM3
                     Vector2 pos = new Vector2(x, y);
                     Tile tile = TileAtPos(pos);
                     int colorToAssume = tile.color;
+                    int boosterToAssume = tile.boosterLevel;
 
                     //Checking only for non-destroyed tiles.
                     if (colorToAssume < Constants.AmountOfColors)
@@ -398,16 +397,21 @@ namespace Com.Hypester.DM3
                         if (emptyTilesAbove > 0)
                         {
                             Vector2 dropIntoPos = new Vector2(x, y + emptyTilesAbove);
-                            float dropDistance = -1f * emptyTilesAbove * Constants.tileHeight; //Works well it seems ;)
+                            float dropDistance = -1f * emptyTilesAbove * Constants.tileHeight;
 
-                            //Debug.Log("(" + (int)dropIntoPos.x + ", " + (int)dropIntoPos.y + ") is now " + colorToAssume);
                             dupli.data[(int)dropIntoPos.x, (int)dropIntoPos.y].color = colorToAssume; //Set color of the target position to this tile.
+                            dupli.data[(int)dropIntoPos.x, (int)dropIntoPos.y].boosterLevel = boosterToAssume; //Set booster of the target position to this tile.
 
                             if (y - emptyTilesAbove >= 0)
+                            {
                                 dupli.data[x, y].color = _grid.data[x, y - emptyTilesAbove].color;
+                                dupli.data[x, y].boosterLevel = _grid.data[x, y - emptyTilesAbove].boosterLevel;
+                            }
                             else
+                            {
                                 dupli.data[x, y].color = Constants.AmountOfColors;
-                            //Debug.Log("(" + x + ", " + y + ") resorts to " + dupli.data[x, y].color);
+                                //dupli.data[x, y].boosterLevel = 0;
+                            }
 
                             AnimateTile anim = new AnimateTile(colorToAssume, dropDistance, (int)dropIntoPos.x, (int)dropIntoPos.y);
                             photonView.RPC("RPCAnimateTile", PhotonTargets.All, anim);
@@ -425,16 +429,15 @@ namespace Com.Hypester.DM3
                 int topRow = Constants.gridYsize - 1;
                 for (int y = 0; y <= topRow; y++)
                 {
-                    //Vector2 pos = new Vector2(x, y);
                     Tile tile = dupli.data[x, y];
 
                     //Replace destroyed tiles
                     if (tile.color >= Constants.AmountOfColors)
                     {
-                        //Debug.Log("Refilling " + x + ", " + y);
-                        float dropDistance = -1f * topRow * Constants.tileHeight; //Works well it seems ;)
+                        float dropDistance = -1f * topRow * Constants.tileHeight;
                         int color = UnityEngine.Random.Range(0, Constants.AmountOfColors);
                         dupli.data[x, y].color = color;
+                        dupli.data[x, y].boosterLevel = 0;
                         AnimateTile anim = new AnimateTile(color, dropDistance, x, y);
                         photonView.RPC("RPCAnimateTile", PhotonTargets.All, anim);
                     }
@@ -448,8 +451,10 @@ namespace Com.Hypester.DM3
             for (int x = 0; x < Constants.gridXsize; x++)
             {
                 int topRow = Constants.gridYsize - 1;
-                for (int y = topRow; y >= 0; y--)
+                for (int y = topRow; y >= 0; y--) { 
                     _grid.data[x, y].color = gridToApply.data[x, y].color;
+                    //_grid.data[x, y].boosterLevel = gridToApply.data[x, y].boosterLevel;
+                }
             }
         }
 
@@ -501,13 +506,7 @@ namespace Com.Hypester.DM3
             _selectedTiles.Add(pos);
             BaseTileAtPos(pos).SetSelected = true;
 
-            if (BaseTileAtPos(pos).boosterLevel > 0)
-            {
-                foreach (BaseTile tile in BaseTileAtPos(pos).ListCollateralDamage(this, 1f))
-                {
-                    tile.SetCollateral = true;
-                }
-            }
+            RecalculateCollateral();
         }
 
         public void RemoveFromSelection(Vector2 pos)
@@ -521,12 +520,47 @@ namespace Com.Hypester.DM3
 
         private void RecalculateCollateral ()
         {
-            foreach (Vector2 pos in _selectedTiles) { 
+            List<BaseTile> collateral = new List<BaseTile>();
+
+            //Reset
+            foreach (BaseTile tile in FindObjectsOfType<BaseTile>())
+            {
+                tile.collateral = false;
+            }
+
+            foreach (Vector2 pos in _selectedTiles) {
                 foreach (BaseTile tile in BaseTileAtPos(pos).ListCollateralDamage(this, 1f))
                 {
-                    tile.SetCollateral = true;
+                    collateral.Add(tile);
+                    tile.collateral = true;
                 }
             }
+
+            LoopCollateralDamage(collateral);
+        }
+
+        private void LoopCollateralDamage(List<BaseTile> collateral)
+        {
+            List<BaseTile> copy = new List<BaseTile>(collateral);
+
+            bool anyChanges = false;
+            foreach (BaseTile collateralTile in copy)
+            {
+                if (collateralTile.boosterLevel > 0)
+                {
+                    foreach (BaseTile affectedTile in collateralTile.ListCollateralDamage(this, 1f))
+                    {
+                        if (!copy.Contains(affectedTile) && affectedTile.collateral == false) { 
+                            collateral.Add(affectedTile);
+                            affectedTile.collateral = true;
+                            anyChanges = true;
+                        }
+                    }
+                }
+            }
+
+            if (anyChanges)
+                LoopCollateralDamage(collateral);
         }
 
         public void RemoveSelections()
@@ -535,7 +569,7 @@ namespace Com.Hypester.DM3
             foreach (BaseTile tile in FindObjectsOfType<BaseTile>())
             {
                 tile.SetSelected = false;
-                tile.SetCollateral = false;
+                tile.collateral = false;
             }
         }
 
@@ -562,35 +596,34 @@ namespace Com.Hypester.DM3
             {
                 foreach (Vector2 pos in _selectedTiles)
                 {
-                    _grid.data[(int)pos.x, (int)pos.y].color = Constants.AmountOfColors; //Equals being 'destroyed'
-                    _grid.data[(int)pos.x, (int)pos.y].boosterLevel = 0; //Equals being 'destroyed'
+                    DestroyTileAtPosition(pos);
+                }
+
+                foreach (BaseTile tile in _baseTiles.FindAll(item => item.collateral == true))
+                {
+                    DestroyTileAtPosition(tile.position);
                 }
 
                 CreateBooster(_selectedTiles[_selectedTiles.Count - 1], _selectedTiles.Count);
 
                 if (_curPlayer == 0)
+                {
                     DamagePlayerWithCombo(1, _selectedTiles.Count);
-                else
+                    DamagePlayer(1, _baseTiles.FindAll(item => item.collateral == true).Count);
+                } else {
                     DamagePlayerWithCombo(0, _selectedTiles.Count);
+                    DamagePlayer(0, _baseTiles.FindAll(item => item.collateral == true).Count);
+                }
             }
 
             foreach (Vector2 pos in _selectedTiles)
             {
-                GameObject go = Instantiate(Resources.Load("Explosion")) as GameObject;
-                Player[] players = GameObject.FindObjectsOfType<Player>();
-                Player targetPlayer = null;
-                foreach (Player player in players)
-                {
-                    if (player.localID != _curPlayer)
-                    {
-                        targetPlayer = player;
-                    }
-                }
+                CreateTileAttackPlayerEffect(pos);
+            }
 
-                BaseTile baseTile = BaseTileAtPos(pos);
-                go.transform.SetParent(transform, false); //or transform.parent? TODO
-                go.transform.position = baseTile.transform.position;
-                go.GetComponent<TileExplosion>().Init(targetPlayer, 1, baseTile.HexSprite(TileTypes.EColor.yellow + baseTile.color));
+            foreach (BaseTile tile in _baseTiles.FindAll(item => item.collateral == true))
+            {
+                CreateTileAttackPlayerEffect(tile.position);
             }
 
 
@@ -598,6 +631,32 @@ namespace Com.Hypester.DM3
             _selectedTiles.Clear();
         }
 
+        private void CreateTileAttackPlayerEffect (Vector2 pos)
+        {
+            GameObject go = Instantiate(Resources.Load("Explosion")) as GameObject;
+            Player[] players = GameObject.FindObjectsOfType<Player>();
+            Player targetPlayer = null;
+            foreach (Player player in players)
+            {
+                if (player.localID != _curPlayer)
+                {
+                    targetPlayer = player;
+                }
+            }
+
+            BaseTile baseTile = BaseTileAtPos(pos);
+            go.transform.SetParent(transform, false); //or transform.parent? TODO
+            go.transform.position = baseTile.transform.position;
+            go.GetComponent<TileExplosion>().Init(targetPlayer, 1, baseTile.HexSprite(TileTypes.EColor.yellow + baseTile.color));
+            baseTile.color = Constants.AmountOfColors;
+        }
+
+        private void DestroyTileAtPosition (Vector2 pos)
+        {
+            _grid.data[(int)pos.x, (int)pos.y].color = Constants.AmountOfColors; //Equals being 'destroyed'
+            _grid.data[(int)pos.x, (int)pos.y].boosterLevel = 0;
+        }
+    
         private void CreateBooster (Vector2 pos, int comboCount)
         {
             if (comboCount >= Constants.BoosterThreeThreshhold)
@@ -608,6 +667,8 @@ namespace Com.Hypester.DM3
                 _grid.data[(int)pos.x, (int)pos.y].boosterLevel = 1;
             else
                 _grid.data[(int)pos.x, (int)pos.y].boosterLevel = 0;
+
+            photonView.RPC("RPCSendTile", PhotonTargets.All, _grid.data[(int)pos.x, (int)pos.y]);
         }
 
         public void DamagePlayerWithCombo(int playerNumber, float comboSize)
@@ -616,6 +677,18 @@ namespace Com.Hypester.DM3
                 healthPlayerOne -= Mathf.Pow(comboSize, 2);
             else
                 healthPlayerTwo -= Mathf.Pow(comboSize, 2);
+
+
+            if (healthPlayerOne < 0 || healthPlayerTwo < 0)
+                photonView.RPC("RPCEndGame", PhotonTargets.All);
+        }
+
+        public void DamagePlayer (int playerNumber, float damage)
+        {
+            if (playerNumber == 0)
+                healthPlayerOne -= damage;
+            else
+                healthPlayerTwo -= damage;
 
 
             if (healthPlayerOne < 0 || healthPlayerTwo < 0)
@@ -637,6 +710,14 @@ namespace Com.Hypester.DM3
             /*if (_myPlayer.localID == _curPlayer)
                 return true;*/
             return false;
+        }
+
+
+        [PunRPC]
+        public void RPCSendTile(Tile tile)
+        {
+            _grid.data[tile.x, tile.y] = tile;
+            //GridUpdate();
         }
 
         [PunRPC]
