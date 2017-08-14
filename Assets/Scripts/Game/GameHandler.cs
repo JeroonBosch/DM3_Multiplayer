@@ -228,8 +228,9 @@ namespace Com.Hypester.DM3
                                 tile.GetComponent<Image>().enabled = true;
                                 //tile.GetComponent<Image>().sprite = HexSprite(TileTypes.EColor.yellow + _grid.data[x, y].color);
                                 tile.color = _grid.data[x, y].color;
-                                tile.SetSelected = false;
                                 tile.boosterLevel = _grid.data[x, y].boosterLevel;
+                                Debug.Log("booster at GridUpdate: " + _grid.data[x, y].boosterLevel);
+                                tile.SetSelected = false;
                             }
                             else { 
                                 tile.GetComponent<Image>().enabled = false;
@@ -332,13 +333,14 @@ namespace Com.Hypester.DM3
                             dupli.data[(int)dropIntoPos.x, (int)dropIntoPos.y].color = colorToAssume; //Set color of the target position to this tile.
                             dupli.data[(int)dropIntoPos.x, (int)dropIntoPos.y].boosterLevel = boosterToAssume; //Set booster of the target position to this tile.
 
-                            if (y + emptyTilesBelow <= topRow) { 
+                            if (y + emptyTilesBelow <= topRow) { //Possible to take color from above?
                                 dupli.data[x, y].color = _grid.data[x, y + emptyTilesBelow].color;
-                                dupli.data[x, y].boosterLevel = _grid.data[x, y + emptyTilesBelow].boosterLevel;
+                                if (_grid.data[x, y + emptyTilesBelow].boosterLevel > 0)
+                                    dupli.data[x, y].boosterLevel = _grid.data[x, y + emptyTilesBelow].boosterLevel;
                             }
                             else { 
                                 dupli.data[x, y].color = Constants.AmountOfColors;
-                                //dupli.data[x, y].boosterLevel = 0;
+                                dupli.data[x, y].boosterLevel = 0;
                             }
 
                             AnimateTile anim = new AnimateTile(colorToAssume, dropDistance, (int)dropIntoPos.x, (int)dropIntoPos.y);
@@ -365,7 +367,7 @@ namespace Com.Hypester.DM3
                         float dropDistance = y * Constants.tileHeight;
                         int color = UnityEngine.Random.Range(0, Constants.AmountOfColors);
                         dupli.data[x, y].color = color;
-                        dupli.data[x, y].boosterLevel = 0;
+                        //dupli.data[x, y].boosterLevel = 0;
                         AnimateTile anim = new AnimateTile(color, dropDistance, x, y);
                         photonView.RPC("RPCAnimateTile", PhotonTargets.All, anim);
                     }
@@ -405,12 +407,13 @@ namespace Com.Hypester.DM3
                             if (y - emptyTilesAbove >= 0)
                             {
                                 dupli.data[x, y].color = _grid.data[x, y - emptyTilesAbove].color;
-                                dupli.data[x, y].boosterLevel = _grid.data[x, y - emptyTilesAbove].boosterLevel;
+                                if (_grid.data[x, y - emptyTilesAbove].boosterLevel > 0)
+                                    dupli.data[x, y].boosterLevel = _grid.data[x, y - emptyTilesAbove].boosterLevel;
                             }
                             else
                             {
                                 dupli.data[x, y].color = Constants.AmountOfColors;
-                                //dupli.data[x, y].boosterLevel = 0;
+                                dupli.data[x, y].boosterLevel = 0;
                             }
 
                             AnimateTile anim = new AnimateTile(colorToAssume, dropDistance, (int)dropIntoPos.x, (int)dropIntoPos.y);
@@ -437,7 +440,7 @@ namespace Com.Hypester.DM3
                         float dropDistance = -1f * topRow * Constants.tileHeight;
                         int color = UnityEngine.Random.Range(0, Constants.AmountOfColors);
                         dupli.data[x, y].color = color;
-                        dupli.data[x, y].boosterLevel = 0;
+                        //dupli.data[x, y].boosterLevel = 0;
                         AnimateTile anim = new AnimateTile(color, dropDistance, x, y);
                         photonView.RPC("RPCAnimateTile", PhotonTargets.All, anim);
                     }
@@ -453,7 +456,7 @@ namespace Com.Hypester.DM3
                 int topRow = Constants.gridYsize - 1;
                 for (int y = topRow; y >= 0; y--) { 
                     _grid.data[x, y].color = gridToApply.data[x, y].color;
-                    //_grid.data[x, y].boosterLevel = gridToApply.data[x, y].boosterLevel;
+                    _grid.data[x, y].boosterLevel = gridToApply.data[x, y].boosterLevel;
                 }
             }
         }
@@ -668,7 +671,8 @@ namespace Com.Hypester.DM3
             else
                 _grid.data[(int)pos.x, (int)pos.y].boosterLevel = 0;
 
-            photonView.RPC("RPCSendTile", PhotonTargets.All, _grid.data[(int)pos.x, (int)pos.y]);
+            Tile tile = _grid.data[(int)pos.x, (int)pos.y];
+            photonView.RPC("RPCSendTile", PhotonTargets.All, tile);
         }
 
         public void DamagePlayerWithCombo(int playerNumber, float comboSize)
@@ -716,7 +720,8 @@ namespace Com.Hypester.DM3
         [PunRPC]
         public void RPCSendTile(Tile tile)
         {
-            _grid.data[tile.x, tile.y] = tile;
+            _grid.data[tile.x, tile.y].color = tile.color;
+            _grid.data[tile.x, tile.y].boosterLevel = tile.boosterLevel;
             //GridUpdate();
         }
 
