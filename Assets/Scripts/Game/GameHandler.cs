@@ -28,10 +28,24 @@ namespace Com.Hypester.DM3
 
         #region public game logic
         public Player MyPlayer { get { return _myPlayer; } }
+        public Player EnemyPlayer { get { return _enemyPlayer; } }
 
         public float healthPlayerOne;
         public float healthPlayerTwo;
         public float turnTimer;
+
+        //powers
+        public int P1_PowerBlue = 0;
+        public int P1_PowerGreen = 0;
+        public int P1_PowerRed = 0;
+        public int P1_PowerYellow = 0;
+        public int P2_PowerBlue = 0;
+        public int P2_PowerGreen = 0;
+        public int P2_PowerRed = 0;
+        public int P2_PowerYellow = 0;
+
+        private bool _MC_endTurnDelay; //Master Client only.
+        private float _MC_endTurnDelayTimer; //Master Client only.
         #endregion
 
         public delegate byte[] SerializeMethod(object customObject);
@@ -65,20 +79,23 @@ namespace Com.Hypester.DM3
                 if (_gridReceived && !_gridVisualized)
                     VisualizeGrid();
 
-                // TODO more efficiency ? 
-                /*foreach (BaseTile tile in FindObjectsOfType<BaseTile>())
-                {
-                    tile.SetSelected = false;
-                    if (_selectedTiles.Contains(tile.position))
-                    {
-                        tile.SetSelected = true;
-                    }
-                }*/
-
                 if (IsMyTurn())
                     GameObject.Find("CurPlayer").GetComponent<Text>().text = "My turn";
                 else
                     GameObject.Find("CurPlayer").GetComponent<Text>().text = "Wait...";
+
+                if (PhotonNetwork.isMasterClient)
+                {
+                    if (_MC_endTurnDelay)
+                        _MC_endTurnDelayTimer += Time.deltaTime;
+
+                    if (_MC_endTurnDelayTimer > Constants.TimeBetweenTurns) { 
+                        Refill();
+                        turnTimer = 0f;
+                        _MC_endTurnDelay = false;
+                        _MC_endTurnDelayTimer = 0f;
+                    }
+                }
             }
         }
 
@@ -119,7 +136,7 @@ namespace Com.Hypester.DM3
                 }
 
 
-                Debug.Log(_myPlayer.localID);
+                Debug.Log("My Local ID: " + _myPlayer.localID + " (0 is Master Client)");
                 if (_myPlayer.localID == 1 && !PhotonNetwork.isMasterClient)
                 {
                     transform.rotation = new Quaternion(0f, 0f, 180f, transform.rotation.w);
@@ -229,7 +246,6 @@ namespace Com.Hypester.DM3
                                 //tile.GetComponent<Image>().sprite = HexSprite(TileTypes.EColor.yellow + _grid.data[x, y].color);
                                 tile.color = _grid.data[x, y].color;
                                 tile.boosterLevel = _grid.data[x, y].boosterLevel;
-                                Debug.Log("booster at GridUpdate: " + _grid.data[x, y].boosterLevel);
                                 tile.SetSelected = false;
                             }
                             else { 
@@ -255,14 +271,8 @@ namespace Com.Hypester.DM3
 
                 photonView.RPC("RPCTurnWarning", PhotonTargets.All, _curPlayer);
 
-                /*if (_refill == null)
-                {
-                    _refillChanges = false;
-                    _refillTime = Time.time + _refillInterval;
-                    _refill = StartCoroutine(RefillCoroutine());
-                }*/
-
-                Refill();
+                _MC_endTurnDelay = true;
+                _MC_endTurnDelayTimer = 0f;
             }
         }
 
@@ -331,12 +341,12 @@ namespace Com.Hypester.DM3
                             float dropDistance = emptyTilesBelow * Constants.tileHeight;
 
                             dupli.data[(int)dropIntoPos.x, (int)dropIntoPos.y].color = colorToAssume; //Set color of the target position to this tile.
-                            dupli.data[(int)dropIntoPos.x, (int)dropIntoPos.y].boosterLevel = boosterToAssume; //Set booster of the target position to this tile.
+                            if (dupli.data[(int)dropIntoPos.x, (int)dropIntoPos.y].boosterLevel < boosterToAssume)
+                                dupli.data[(int)dropIntoPos.x, (int)dropIntoPos.y].boosterLevel = boosterToAssume; //Set booster of the target position to this tile.
 
                             if (y + emptyTilesBelow <= topRow) { //Possible to take color from above?
                                 dupli.data[x, y].color = _grid.data[x, y + emptyTilesBelow].color;
-                                if (_grid.data[x, y + emptyTilesBelow].boosterLevel > 0)
-                                    dupli.data[x, y].boosterLevel = _grid.data[x, y + emptyTilesBelow].boosterLevel;
+                                dupli.data[x, y].boosterLevel = _grid.data[x, y + emptyTilesBelow].boosterLevel;
                             }
                             else { 
                                 dupli.data[x, y].color = Constants.AmountOfColors;
@@ -367,7 +377,7 @@ namespace Com.Hypester.DM3
                         float dropDistance = y * Constants.tileHeight;
                         int color = UnityEngine.Random.Range(0, Constants.AmountOfColors);
                         dupli.data[x, y].color = color;
-                        //dupli.data[x, y].boosterLevel = 0;
+                        dupli.data[x, y].boosterLevel = 0;
                         AnimateTile anim = new AnimateTile(color, dropDistance, x, y);
                         photonView.RPC("RPCAnimateTile", PhotonTargets.All, anim);
                     }
@@ -402,13 +412,13 @@ namespace Com.Hypester.DM3
                             float dropDistance = -1f * emptyTilesAbove * Constants.tileHeight;
 
                             dupli.data[(int)dropIntoPos.x, (int)dropIntoPos.y].color = colorToAssume; //Set color of the target position to this tile.
-                            dupli.data[(int)dropIntoPos.x, (int)dropIntoPos.y].boosterLevel = boosterToAssume; //Set booster of the target position to this tile.
+                            if (dupli.data[(int)dropIntoPos.x, (int)dropIntoPos.y].boosterLevel < boosterToAssume)
+                                dupli.data[(int)dropIntoPos.x, (int)dropIntoPos.y].boosterLevel = boosterToAssume; //Set booster of the target position to this tile.
 
                             if (y - emptyTilesAbove >= 0)
                             {
                                 dupli.data[x, y].color = _grid.data[x, y - emptyTilesAbove].color;
-                                if (_grid.data[x, y - emptyTilesAbove].boosterLevel > 0)
-                                    dupli.data[x, y].boosterLevel = _grid.data[x, y - emptyTilesAbove].boosterLevel;
+                                dupli.data[x, y].boosterLevel = _grid.data[x, y - emptyTilesAbove].boosterLevel;
                             }
                             else
                             {
@@ -440,7 +450,7 @@ namespace Com.Hypester.DM3
                         float dropDistance = -1f * topRow * Constants.tileHeight;
                         int color = UnityEngine.Random.Range(0, Constants.AmountOfColors);
                         dupli.data[x, y].color = color;
-                        //dupli.data[x, y].boosterLevel = 0;
+                        dupli.data[x, y].boosterLevel = 0;
                         AnimateTile anim = new AnimateTile(color, dropDistance, x, y);
                         photonView.RPC("RPCAnimateTile", PhotonTargets.All, anim);
                     }
@@ -597,6 +607,7 @@ namespace Com.Hypester.DM3
             //Only master client will update the _grid and then sync it.
             if (PhotonNetwork.isMasterClient)
             {
+                int color = BaseTileAtPos(_selectedTiles[_selectedTiles.Count - 1]).color;
                 foreach (Vector2 pos in _selectedTiles)
                 {
                     DestroyTileAtPosition(pos);
@@ -607,26 +618,30 @@ namespace Com.Hypester.DM3
                     DestroyTileAtPosition(tile.position);
                 }
 
-                CreateBooster(_selectedTiles[_selectedTiles.Count - 1], _selectedTiles.Count);
+                CreateBooster(_selectedTiles[_selectedTiles.Count - 1], _selectedTiles.Count, color);
 
                 if (_curPlayer == 0)
                 {
                     DamagePlayerWithCombo(1, _selectedTiles.Count);
                     DamagePlayer(1, _baseTiles.FindAll(item => item.collateral == true).Count);
+                    FillPowerBar(0, color, _selectedTiles.Count);
                 } else {
                     DamagePlayerWithCombo(0, _selectedTiles.Count);
                     DamagePlayer(0, _baseTiles.FindAll(item => item.collateral == true).Count);
+                    FillPowerBar(1, color, _selectedTiles.Count);
                 }
             }
 
+            int count = 0;
             foreach (Vector2 pos in _selectedTiles)
             {
-                CreateTileAttackPlayerEffect(pos);
+                CreateTileAttackPlayerEffect(pos, count);
+                count++;
             }
 
             foreach (BaseTile tile in _baseTiles.FindAll(item => item.collateral == true))
             {
-                CreateTileAttackPlayerEffect(tile.position);
+                CreateTileAttackPlayerEffect(tile.position, count);
             }
 
 
@@ -634,7 +649,7 @@ namespace Com.Hypester.DM3
             _selectedTiles.Clear();
         }
 
-        private void CreateTileAttackPlayerEffect (Vector2 pos)
+        private void CreateTileAttackPlayerEffect (Vector2 pos, int count)
         {
             GameObject go = Instantiate(Resources.Load("Explosion")) as GameObject;
             Player[] players = GameObject.FindObjectsOfType<Player>();
@@ -650,8 +665,21 @@ namespace Com.Hypester.DM3
             BaseTile baseTile = BaseTileAtPos(pos);
             go.transform.SetParent(transform, false); //or transform.parent? TODO
             go.transform.position = baseTile.transform.position;
-            go.GetComponent<TileExplosion>().Init(targetPlayer, 1, baseTile.HexSprite(TileTypes.EColor.yellow + baseTile.color));
+            go.GetComponent<TileExplosion>().Init(targetPlayer, count, baseTile.HexSprite(TileTypes.EColor.yellow + baseTile.color));
             baseTile.color = Constants.AmountOfColors;
+
+            GameObject expl = null;
+            if (baseTile.boosterLevel == 1)
+                expl = Instantiate(Resources.Load("UI/Booster1Explosion")) as GameObject;
+            else if (baseTile.boosterLevel == 2)
+                expl = Instantiate(Resources.Load("UI/Booster2Explosion")) as GameObject;
+            else if (baseTile.boosterLevel == 3)
+                expl = Instantiate(Resources.Load("UI/Booster3Explosion")) as GameObject;
+            if (expl != null)
+            {
+                expl.transform.SetParent(baseTile.transform.parent, false);
+                expl.transform.position = baseTile.transform.position;
+            }
         }
 
         private void DestroyTileAtPosition (Vector2 pos)
@@ -660,7 +688,7 @@ namespace Com.Hypester.DM3
             _grid.data[(int)pos.x, (int)pos.y].boosterLevel = 0;
         }
     
-        private void CreateBooster (Vector2 pos, int comboCount)
+        private void CreateBooster (Vector2 pos, int comboCount, int color)
         {
             if (comboCount >= Constants.BoosterThreeThreshhold)
                 _grid.data[(int)pos.x, (int)pos.y].boosterLevel = 3;
@@ -670,6 +698,9 @@ namespace Com.Hypester.DM3
                 _grid.data[(int)pos.x, (int)pos.y].boosterLevel = 1;
             else
                 _grid.data[(int)pos.x, (int)pos.y].boosterLevel = 0;
+
+            if (comboCount >= Constants.BoosterOneThreshhold)
+                _grid.data[(int)pos.x, (int)pos.y].color = color;
 
             Tile tile = _grid.data[(int)pos.x, (int)pos.y];
             photonView.RPC("RPCSendTile", PhotonTargets.All, tile);
@@ -699,6 +730,36 @@ namespace Com.Hypester.DM3
                 photonView.RPC("RPCEndGame", PhotonTargets.All);
         }
 
+        private void FillPowerBar (int playerNumber, int color, int increaseBy)
+        {
+            if (playerNumber == 0)
+            {
+                if (color == 1) // yellow, blue, green, red
+                    P1_PowerBlue = Mathf.Min(P1_PowerBlue + increaseBy, Constants.BluePowerReq);
+                else if (color == 2)
+                    P1_PowerGreen = Mathf.Min(P1_PowerGreen + increaseBy, Constants.GreenPowerReq);
+                else if (color == 3)
+                    P1_PowerRed = Mathf.Min(P1_PowerRed + increaseBy, Constants.RedPowerReq);
+                else if (color == 0)
+                    P1_PowerYellow = Mathf.Min(P1_PowerYellow + increaseBy, Constants.YellowPowerReq);
+            } else
+            {
+                if (color == 1) { 
+                    P2_PowerBlue = Mathf.Min(P2_PowerBlue + increaseBy, Constants.BluePowerReq);
+                    photonView.RPC("RPCFillPower", PhotonTargets.Others, color, P2_PowerBlue);
+                } else if (color == 2) { 
+                    P2_PowerGreen = Mathf.Min(P2_PowerGreen + increaseBy, Constants.GreenPowerReq);
+                    photonView.RPC("RPCFillPower", PhotonTargets.Others, color, P2_PowerGreen);
+                } else if (color == 3) { 
+                    P2_PowerRed = Mathf.Min(P2_PowerRed + increaseBy, Constants.RedPowerReq);
+                    photonView.RPC("RPCFillPower", PhotonTargets.Others, color, P2_PowerRed);
+                } else if (color == 0) { 
+                    P2_PowerYellow = Mathf.Min(P2_PowerYellow + increaseBy, Constants.YellowPowerReq);
+                    photonView.RPC("RPCFillPower", PhotonTargets.Others, color, P2_PowerYellow);
+                }
+            }
+        }
+
         public bool IsMyTurn()
         {
             if (_myPlayer == null)
@@ -715,7 +776,6 @@ namespace Com.Hypester.DM3
                 return true;*/
             return false;
         }
-
 
         [PunRPC]
         public void RPCSendTile(Tile tile)
@@ -772,6 +832,27 @@ namespace Com.Hypester.DM3
         private void RPCEndGame ()
         {
             GameObject.Find("PlayScreen").GetComponent<PlayGameCanvas>().EndGame();
+        }
+
+        [PunRPC]
+        private void RPCFillPower(int color, int value)
+        {
+            if (color == 1)
+                P2_PowerBlue = value;
+            else if (color == 2)
+                P2_PowerGreen = value;
+            else if (color == 3)
+                P2_PowerRed = value;
+            else if (color == 0)
+                P2_PowerYellow = value;
+        }
+
+
+        [PunRPC]
+        public void SendRematchRequest()
+        {
+            Debug.Log("Rematch order gotten, reloading Scene.");
+            PhotonNetwork.LoadLevel("NormalGame");
         }
 
         #region Serialization

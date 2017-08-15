@@ -2,7 +2,7 @@
 {
     public static class Constants
     {
-        public const int PlayerStartHP = 600;
+        public const int PlayerStartHP = 10;
         public const float TurnTime = 20f;
         public const int TurnPassHealAmount = 5;
 
@@ -16,8 +16,13 @@
         public const int BoosterTwoThreshhold = 8;
         public const int BoosterThreeThreshhold = 10;
 
-        public const float MoveTimeInSeconds = 20;
+        public const float TimeBetweenTurns = 2f;
 
         public const float DistanceBetweenTiles = 1.12f;
+
+        public const int BluePowerReq = 15;
+        public const int GreenPowerReq = 15;
+        public const int RedPowerReq = 15;
+        public const int YellowPowerReq = 15;
     }
 }

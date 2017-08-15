@@ -10,29 +10,41 @@ namespace Com.Hypester.DM3
     {
         private RectTransform _rt;
         private Vector2 _startPosition;
+        private Vector2 _endPosition;
         private Player _targetPlayer;
 
-        private float _travelTime = .99f;
+        private float _travelTime = .8f;
         private float _travellingFor = 0f;
-        private float _random;
+        private float _randomDirection;
 
         private bool _damageApplied = false;
-        private float _damageMultiplier = 1;
+        private int _count = 1;
+        private float _timeToDelay;
+        private float _delayTimer;
 
-        public void Init(Player targetPlayer, float damageMultiplier, Sprite image)
+        public void Init(Player targetPlayer, int count, Sprite image)
         {
-            _damageMultiplier = damageMultiplier;
+            _count = count;
+            _timeToDelay = count * .1f;
+            _delayTimer = 0f;
 
             _targetPlayer = targetPlayer;
             _rt = GetComponent<RectTransform>();
             _startPosition = _rt.position;
-            _random = Random.Range(-1f, 1f);
+
+            _endPosition = new Vector2();
+            if (_targetPlayer.localID == GameObject.Find("Grid").GetComponent<GameHandler>().MyPlayer.localID)
+                _endPosition = GameObject.Find("MyAvatar").GetComponent<RectTransform>().position;
+            else
+                _endPosition = GameObject.Find("OpponentAvatar").GetComponent<RectTransform>().position;
+
+            _randomDirection = Random.Range(-1f, 1f);
 
             GetComponent<Image>().sprite = image;
 
 
             //_travelTime = .4f + count * .5f;
-            Destroy(this.gameObject, _travelTime);
+            Destroy(this.gameObject, _travelTime + _timeToDelay);
         }
 
         private void OnDestroy()
@@ -45,22 +57,21 @@ namespace Com.Hypester.DM3
         // Update is called once per frame
         private void Update()
         {
-                Vector2 endPosition = new Vector2();
-                if (_targetPlayer.localID == GameObject.Find("Grid").GetComponent<GameHandler>().MyPlayer.localID)
-                    endPosition = GameObject.Find("MyAvatar").GetComponent<RectTransform>().position;
-                else
-                    endPosition = GameObject.Find("OpponentAvatar").GetComponent<RectTransform>().position;
-
+            if (_delayTimer < _timeToDelay)
+            {
+                _delayTimer += Time.deltaTime; //time in seconds
+            } else {
                 _travellingFor += Time.deltaTime; //time in seconds
                 float t = _travellingFor / _travelTime;
                 t = Mathf.Min(t, 1f);
 
                 Vector2 p0 = _startPosition;
-                Vector2 p1 = new Vector2(_startPosition.x + 5 * _random, _startPosition.y);
-                Vector2 p2 = new Vector2(endPosition.x + 5 * _random, endPosition.y);
+                Vector2 p1 = new Vector2(_startPosition.x + 5 * _randomDirection, _startPosition.y);
+                Vector2 p2 = new Vector2(_endPosition.x + 5 * _randomDirection, _endPosition.y);
                 //Vector2 p2 = endPosition;
-                Vector3 p3 = endPosition;
+                Vector3 p3 = _endPosition;
                 _rt.position = CalculateBezierPoint(t, p0, p1, p2, p3);
+            }
         }
 
         //P0 is start position, P1 is start curve, P2 is end-curve, P3 is end position
@@ -82,7 +93,10 @@ namespace Com.Hypester.DM3
 
         private void ApplyDamage()
         {
-            //_damageApplied = true;
+            _damageApplied = true;
+            GameObject explosion = Instantiate(Resources.Load("UI/DamagePlayer")) as GameObject;
+            explosion.transform.SetParent(transform.parent, false);
+            explosion.transform.position = _endPosition;
             //_targetPlayer.NormalExplosion();
             //_targetPlayer.ReceiveDamage(1 * _damageMultiplier);
         }

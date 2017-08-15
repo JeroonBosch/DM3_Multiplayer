@@ -22,8 +22,9 @@ namespace Com.Hypester.DM3
         private void Update()
         {
             if (PhotonNetwork.inRoom && SceneManager.GetActiveScene().name != "NormalGame")
-                if (PhotonNetwork.room.PlayerCount == 2)
+                if (PhotonNetwork.room.PlayerCount == 2) { 
                     PhotonNetwork.LoadLevel("NormalGame");
+                }
 
             if (_connect && !PhotonNetwork.connecting && !PhotonNetwork.connected)
                 PhotonNetwork.ConnectUsingSettings("v0.1");
@@ -71,6 +72,18 @@ namespace Com.Hypester.DM3
             CreatePlayer();
         }
 
+        public override void OnLeftRoom()
+        {
+            base.OnLeftRoom();
+            Debug.Log("Left room.");
+            PhotonNetwork.LoadLevel("Menu");
+        }
+
+        public override void OnJoinedLobby()
+        {
+            base.OnJoinedLobby();
+        }
+
         public override void OnPhotonPlayerDisconnected(PhotonPlayer otherPlayer)
         {
             base.OnPhotonPlayerDisconnected(otherPlayer);
@@ -78,6 +91,9 @@ namespace Com.Hypester.DM3
             {
                 PhotonNetwork.LoadLevel("Menu");
                 PhotonNetwork.LeaveRoom();
+            } else
+            {
+                PhotonNetwork.LoadLevel("Menu");
             }
         }
 
@@ -89,6 +105,12 @@ namespace Com.Hypester.DM3
                 playerGO.GetComponent<Player>().localID = 0;
             else
                 playerGO.GetComponent<Player>().localID = 1;
+        }
+
+        public void Rematch ()
+        {
+            Debug.Log("Trying to get a rematch.");
+            GameObject.Find("Grid").GetComponent<GameHandler>().photonView.RPC("SendRematchRequest", PhotonTargets.All);
         }
     }
 }

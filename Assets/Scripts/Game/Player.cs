@@ -7,6 +7,7 @@ namespace Com.Hypester.DM3
     public class Player : Photon.MonoBehaviour
     {
         public int localID;
+        public bool wantsRematch;
 
         #region private variables
         int profileID;
@@ -20,6 +21,7 @@ namespace Com.Hypester.DM3
         void Start()
         {
             DontDestroyOnLoad(gameObject);
+            GetComponent<Canvas>().worldCamera = Camera.current;
 
             if (gameObject.GetComponent<PhotonView>().isMine) {
                 profileName = PhotonNetwork.playerName;
@@ -38,7 +40,8 @@ namespace Com.Hypester.DM3
                     player2name.GetComponent<Text>().text = profileName;
                 }
             }
-                
+
+            wantsRematch = false;
         }
 
         private void Update()
@@ -135,6 +138,12 @@ namespace Com.Hypester.DM3
         void RPCInitiateCombo()
         {
             _game.GetComponent<GameHandler>().InitiateCombo();
+        }
+
+        [PunRPC]
+        public void RequestRematch ()
+        {
+            wantsRematch = true;
         }
     }
 }

@@ -31,7 +31,6 @@ namespace Com.Hypester.DM3
                 //Select new tile.
                 if (!_selectedTiles.Contains(vec) && _game.TileAtPos(new Vector2(vec.x, vec.y)).color == _game.TileAtPos(new Vector2(_selectedTiles[0].x, _selectedTiles[0].y)).color && IsAdjacentPosition(vec, _selectedTiles[_selectedTiles.Count-1]))
                 {
-                    Debug.Log("selected with dist: " + DistanceBetweenPos(vec, _selectedTiles[_selectedTiles.Count - 1]));
                     _selectedTiles.Add(vec);
                     NewSelectedTile(vec);
                 }
@@ -62,8 +61,8 @@ namespace Com.Hypester.DM3
         {
             base.Show();
 
-            foreach (Player player in FindObjectsOfType<Player>())
-                player.transform.SetParent(transform, false);
+            //foreach (Player player in FindObjectsOfType<Player>())
+            //    player.transform.SetParent(transform, false);
 
             _game.Show();
         }
