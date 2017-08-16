@@ -639,7 +639,7 @@ namespace Com.Hypester.DM3
                     if (!P2_ShieldActive)
                     {
                         DamagePlayerWithCombo(1, _selectedTiles.Count);
-                        DamagePlayer(1, _baseTiles.FindAll(item => item.collateral == true).Count);
+                        DamagePlayer(1, _baseTiles.FindAll(item => item.collateral == true).Count * 2f);
                     }
                     else { 
                         P2_ShieldActive = false;
@@ -649,7 +649,7 @@ namespace Com.Hypester.DM3
                 } else {
                     if (!P1_ShieldActive) {
                         DamagePlayerWithCombo(0, _selectedTiles.Count);
-                        DamagePlayer(0, _baseTiles.FindAll(item => item.collateral == true).Count);
+                        DamagePlayer(0, _baseTiles.FindAll(item => item.collateral == true).Count * 2f);
                     }
                     else {
                         P1_ShieldActive = false;
@@ -683,8 +683,9 @@ namespace Com.Hypester.DM3
 
         private void CreateTileAttackPlayerEffect (Vector2 pos, int count, bool collateral)
         {
-            GameObject go = Instantiate(Resources.Load("Explosion")) as GameObject;
-            Player[] players = GameObject.FindObjectsOfType<Player>();
+            //GameObject go = Instantiate(Resources.Load("Explosion")) as GameObject;
+            GameObject go = Instantiate(Resources.Load("ParticleEffects/TileDebris")) as GameObject;
+            Player[] players = FindObjectsOfType<Player>();
             Player targetPlayer = null;
             foreach (Player player in players)
             {
@@ -709,9 +710,12 @@ namespace Com.Hypester.DM3
                 expl = Instantiate(Resources.Load("ParticleEffects/Booster_Two_Explosion")) as GameObject;
             else if (baseTile.boosterLevel == 3)
                 expl = Instantiate(Resources.Load("ParticleEffects/Booster_Three_Explosion")) as GameObject;
-            else
-                if (!collateral)
-                    expl = Instantiate(Resources.Load("ParticleEffects/TileDestroyed")) as GameObject;
+            else { 
+                if (!collateral) { 
+                    expl = Instantiate(Resources.Load("ParticleEffects/TileDestroyedTimer")) as GameObject;
+                    expl.GetComponent<TimedEffect>().createAfterTime = count * Constants.DelayAfterTileDestruction;
+                }
+            }
             if (expl != null)
             {
                 //expl.transform.SetParent(baseTile.transform.parent, false);
@@ -746,9 +750,9 @@ namespace Com.Hypester.DM3
         public void DamagePlayerWithCombo(int playerNumber, float comboSize)
         {
             if (playerNumber == 0)
-                healthPlayerOne -= Mathf.Pow(comboSize, 2);
+                healthPlayerOne -= (comboSize * comboSize - 2);
             else
-                healthPlayerTwo -= Mathf.Pow(comboSize, 2);
+                healthPlayerTwo -= (comboSize * comboSize - 2);//Mathf.Pow(comboSize, 2);
 
 
             if (healthPlayerOne < 0 || healthPlayerTwo < 0)
@@ -845,7 +849,7 @@ namespace Com.Hypester.DM3
                         P2_ShieldActive = true;
                         photonView.RPC("RPC_ShieldActivated", PhotonTargets.All, 1);
                         P2_PowerBlue = 0;
-                        photonView.RPC("RPC_EmptyPower", PhotonTargets.Others, color);
+                        photonView.RPC("RPC_EmptyPower", PhotonTargets.Others, color); //Sync with non-host player.
                     }
                     else if (color == 2 && P2_PowerGreen >= Constants.GreenPowerReq) //green
                     {
@@ -964,6 +968,10 @@ namespace Com.Hypester.DM3
         [PunRPC]
         private void RPC_ShieldEffect (int targetPlayer)
         {
+            if (targetPlayer == MyPlayer.localID)
+                foreach (GameObject activeShield in GameObject.FindGameObjectsWithTag("ActiveShield"))
+                    Destroy(activeShield);
+
             GameObject effect = Instantiate(Resources.Load("ParticleEffects/ShieldEffect")) as GameObject;
             Vector2 effectPosition = new Vector2();
             if (_myPlayer.localID == targetPlayer)

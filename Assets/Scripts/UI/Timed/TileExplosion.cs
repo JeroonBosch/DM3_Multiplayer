@@ -8,7 +8,7 @@ namespace Com.Hypester.DM3
 {
     public class TileExplosion : MonoBehaviour
     {
-        private RectTransform _rt;
+        private Transform _rt;
         private Vector2 _startPosition;
         private Vector2 _endPosition;
         private Player _targetPlayer;
@@ -21,27 +21,27 @@ namespace Com.Hypester.DM3
         private int _count = 1;
         private float _timeToDelay;
         private float _delayTimer;
+        private bool _playing = false;
 
         public void Init(Player targetPlayer, int count, Sprite image)
         {
             _count = count;
-            _timeToDelay = _count * .1f;
+            _timeToDelay = _count * Constants.DelayAfterTileDestruction;
             _delayTimer = 0f;
 
             _targetPlayer = targetPlayer;
-            _rt = GetComponent<RectTransform>();
+            _rt = transform;
             _startPosition = _rt.position;
 
             _endPosition = new Vector2();
             if (_targetPlayer.localID == GameObject.Find("Grid").GetComponent<GameHandler>().MyPlayer.localID)
-                _endPosition = GameObject.Find("MyAvatar").GetComponent<RectTransform>().position;
+                _endPosition = GameObject.Find("MyAvatar").transform.position;
             else
-                _endPosition = GameObject.Find("OpponentAvatar").GetComponent<RectTransform>().position;
+                _endPosition = GameObject.Find("OpponentAvatar").transform.position;
 
             _randomDirection = Random.Range(-1f, 1f);
 
-            GetComponent<Image>().sprite = image;
-
+            //GetComponent<Image>().sprite = image;
 
             //_travelTime = .4f + count * .5f;
             Destroy(gameObject, _travelTime + _timeToDelay);
@@ -61,6 +61,10 @@ namespace Com.Hypester.DM3
             {
                 _delayTimer += Time.deltaTime; //time in seconds
             } else {
+                if (!_playing) { 
+                    transform.Find("Particle").GetComponent<ParticleSystem>().Play();
+                    _playing = true;
+                }
                 _travellingFor += Time.deltaTime; //time in seconds
                 float t = _travellingFor / _travelTime;
                 t = Mathf.Min(t, 1f);
@@ -95,9 +99,12 @@ namespace Com.Hypester.DM3
         {
             _damageApplied = true;
 
-            if (GameObject.FindGameObjectsWithTag("ReceiveDamageEffect").Length < 5) { 
+            if (GameObject.FindGameObjectsWithTag("ReceiveDamageEffect").Length < 15) { 
                 GameObject explosion = Instantiate(Resources.Load("ParticleEffects/PlayerReceiveDamage")) as GameObject;
-                explosion.transform.position = _endPosition;
+
+                float randomX = Random.Range(-.5f, .5f);
+                float randomY = Random.Range(-.5f, .5f);
+                explosion.transform.position = new Vector2 (_endPosition.x + randomX, _endPosition.y + randomY);
             }
         }
     }

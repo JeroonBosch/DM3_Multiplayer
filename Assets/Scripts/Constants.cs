@@ -2,7 +2,7 @@
 {
     public static class Constants
     {
-        public const int PlayerStartHP = 500;
+        public const int PlayerStartHP = 400;
         public const float TurnTime = 20f;
         public const int TurnPassHealAmount = 5;
 
@@ -26,5 +26,7 @@
         public const int YellowPowerReq = 3;
 
         public const int HealPower = 50;
+
+        public const float DelayAfterTileDestruction = .1f;
     }
 }
