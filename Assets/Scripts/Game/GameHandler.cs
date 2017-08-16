@@ -668,7 +668,7 @@ namespace Com.Hypester.DM3
 
             foreach (BaseTile tile in _baseTiles.FindAll(item => item.collateral == true))
             {
-                CreateTileAttackPlayerEffect(tile.position, count);
+                CreateTileAttackPlayerEffect(tile.position, count, true);
             }
 
 
@@ -676,7 +676,12 @@ namespace Com.Hypester.DM3
             _selectedTiles.Clear();
         }
 
-        private void CreateTileAttackPlayerEffect (Vector2 pos, int count)
+        private void CreateTileAttackPlayerEffect(Vector2 pos, int count)
+        {
+            CreateTileAttackPlayerEffect(pos, count, false);
+        }
+
+        private void CreateTileAttackPlayerEffect (Vector2 pos, int count, bool collateral)
         {
             GameObject go = Instantiate(Resources.Load("Explosion")) as GameObject;
             Player[] players = GameObject.FindObjectsOfType<Player>();
@@ -705,7 +710,8 @@ namespace Com.Hypester.DM3
             else if (baseTile.boosterLevel == 3)
                 expl = Instantiate(Resources.Load("ParticleEffects/Booster_Three_Explosion")) as GameObject;
             else
-                expl = Instantiate(Resources.Load("ParticleEffects/TileDestroyed")) as GameObject;
+                if (!collateral)
+                    expl = Instantiate(Resources.Load("ParticleEffects/TileDestroyed")) as GameObject;
             if (expl != null)
             {
                 //expl.transform.SetParent(baseTile.transform.parent, false);
