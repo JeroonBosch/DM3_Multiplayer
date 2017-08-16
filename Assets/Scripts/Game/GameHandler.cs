@@ -14,6 +14,7 @@ namespace Com.Hypester.DM3
     {
         #region private variables
         private bool _isActive;
+        public bool Active { get { return _isActive; } }
         private Grid _grid;
         private int _curPlayer;
         private List<BaseTile> _baseTiles;
@@ -24,6 +25,7 @@ namespace Com.Hypester.DM3
 
         private bool _gridReceived = false;
         private bool _gridVisualized = false;
+        private bool _gameDone = false;
         #endregion
 
         #region public game logic
@@ -44,6 +46,9 @@ namespace Com.Hypester.DM3
         public int P2_PowerRed = 0;
         public int P2_PowerYellow = 0;
 
+        public bool P1_ShieldActive = false;
+        public bool P2_ShieldActive = false;
+
         private bool _MC_endTurnDelay; //Master Client only.
         private float _MC_endTurnDelayTimer; //Master Client only.
         #endregion
@@ -58,6 +63,7 @@ namespace Com.Hypester.DM3
             PhotonPeer.RegisterType(typeof(Grid), (byte)'G', SerializeGrid, DeserializeGrid);
 
             _isActive = false;
+            _gameDone = false;
             _selectedTiles = new List<Vector2>();
             _curPlayer = 0;
 
@@ -89,11 +95,17 @@ namespace Com.Hypester.DM3
                     if (_MC_endTurnDelay)
                         _MC_endTurnDelayTimer += Time.deltaTime;
 
-                    if (_MC_endTurnDelayTimer > Constants.TimeBetweenTurns) { 
-                        Refill();
-                        turnTimer = 0f;
-                        _MC_endTurnDelay = false;
-                        _MC_endTurnDelayTimer = 0f;
+                    if (_MC_endTurnDelayTimer > Constants.TimeBetweenTurns) {
+                        if (!_gameDone)
+                        {
+                            Refill();
+                            turnTimer = 0f;
+                            _MC_endTurnDelay = false;
+                            _MC_endTurnDelayTimer = 0f;
+                        }
+                        else { 
+                            photonView.RPC("RPCEndGame", PhotonTargets.All);
+                        }
                     }
                 }
             }
@@ -146,6 +158,8 @@ namespace Com.Hypester.DM3
                 }
 
                 photonView.RPC("RPCTurnWarning", PhotonTargets.All, _curPlayer);
+                _myPlayer.Reset();
+                _enemyPlayer.Reset();
             }
         }
 
@@ -279,7 +293,7 @@ namespace Com.Hypester.DM3
         //Refill function
         private void Refill()
         {
-            Debug.Log("---- Refill v2 ----");
+            Debug.Log("---- Refilling ----");
             Grid dupli = DuplicateGrid();
 
             if (_curPlayer == 0)
@@ -622,12 +636,25 @@ namespace Com.Hypester.DM3
 
                 if (_curPlayer == 0)
                 {
-                    DamagePlayerWithCombo(1, _selectedTiles.Count);
-                    DamagePlayer(1, _baseTiles.FindAll(item => item.collateral == true).Count);
+                    if (!P2_ShieldActive)
+                    {
+                        DamagePlayerWithCombo(1, _selectedTiles.Count);
+                        DamagePlayer(1, _baseTiles.FindAll(item => item.collateral == true).Count);
+                    }
+                    else { 
+                        P2_ShieldActive = false;
+                        photonView.RPC("RPC_ShieldEffect", PhotonTargets.All, 1); //TODO some animation/particle here.
+                    }
                     FillPowerBar(0, color, _selectedTiles.Count);
                 } else {
-                    DamagePlayerWithCombo(0, _selectedTiles.Count);
-                    DamagePlayer(0, _baseTiles.FindAll(item => item.collateral == true).Count);
+                    if (!P1_ShieldActive) {
+                        DamagePlayerWithCombo(0, _selectedTiles.Count);
+                        DamagePlayer(0, _baseTiles.FindAll(item => item.collateral == true).Count);
+                    }
+                    else {
+                        P1_ShieldActive = false;
+                        photonView.RPC("RPC_ShieldEffect", PhotonTargets.All, 0); //TODO some animation/particle here.
+                    }
                     FillPowerBar(1, color, _selectedTiles.Count);
                 }
             }
@@ -668,16 +695,20 @@ namespace Com.Hypester.DM3
             go.GetComponent<TileExplosion>().Init(targetPlayer, count, baseTile.HexSprite(TileTypes.EColor.yellow + baseTile.color));
             baseTile.color = Constants.AmountOfColors;
 
+            //Explosion effect
+
             GameObject expl = null;
             if (baseTile.boosterLevel == 1)
-                expl = Instantiate(Resources.Load("UI/Booster1Explosion")) as GameObject;
+                expl = Instantiate(Resources.Load("ParticleEffects/Booster_One_Explosion")) as GameObject;
             else if (baseTile.boosterLevel == 2)
-                expl = Instantiate(Resources.Load("UI/Booster2Explosion")) as GameObject;
+                expl = Instantiate(Resources.Load("ParticleEffects/Booster_Two_Explosion")) as GameObject;
             else if (baseTile.boosterLevel == 3)
-                expl = Instantiate(Resources.Load("UI/Booster3Explosion")) as GameObject;
+                expl = Instantiate(Resources.Load("ParticleEffects/Booster_Three_Explosion")) as GameObject;
+            else
+                expl = Instantiate(Resources.Load("ParticleEffects/TileDestroyed")) as GameObject;
             if (expl != null)
             {
-                expl.transform.SetParent(baseTile.transform.parent, false);
+                //expl.transform.SetParent(baseTile.transform.parent, false);
                 expl.transform.position = baseTile.transform.position;
             }
         }
@@ -715,7 +746,7 @@ namespace Com.Hypester.DM3
 
 
             if (healthPlayerOne < 0 || healthPlayerTwo < 0)
-                photonView.RPC("RPCEndGame", PhotonTargets.All);
+                _gameDone = true;
         }
 
         public void DamagePlayer (int playerNumber, float damage)
@@ -727,7 +758,7 @@ namespace Com.Hypester.DM3
 
 
             if (healthPlayerOne < 0 || healthPlayerTwo < 0)
-                photonView.RPC("RPCEndGame", PhotonTargets.All);
+                _gameDone = true;
         }
 
         private void FillPowerBar (int playerNumber, int color, int increaseBy)
@@ -775,6 +806,60 @@ namespace Com.Hypester.DM3
             /*if (_myPlayer.localID == _curPlayer)
                 return true;*/
             return false;
+        }
+
+        public void PowerClicked (int color)
+        {
+            if (PhotonNetwork.isMasterClient) { 
+                if (_curPlayer == 0) { 
+                    if (color == 1 && P1_PowerBlue >= Constants.BluePowerReq) //blue
+                    {
+                        P1_ShieldActive = true;
+                        photonView.RPC("RPC_ShieldActivated", PhotonTargets.All, 0);
+                        P1_PowerBlue = 0;
+                    }
+                    else if (color == 2 && P1_PowerGreen >= Constants.GreenPowerReq) //green
+                    {
+                        healthPlayerOne += Constants.HealPower;
+                        photonView.RPC("RPC_HealEffect", PhotonTargets.All, 0);
+                        P1_PowerGreen = 0;
+                    }
+                    else if (color == 3 && P1_PowerRed >= Constants.RedPowerReq) //red
+                    {
+                        P1_PowerRed = 0;
+                    }
+                    else if (color == 0 && P1_PowerYellow >= Constants.YellowPowerReq) //yellow
+                    {
+                        P1_PowerYellow = 0;
+                    }
+                } else
+                {
+                    if (color == 1 && P2_PowerBlue >= Constants.BluePowerReq) //blue
+                    {
+                        P2_ShieldActive = true;
+                        photonView.RPC("RPC_ShieldActivated", PhotonTargets.All, 1);
+                        P2_PowerBlue = 0;
+                        photonView.RPC("RPC_EmptyPower", PhotonTargets.Others, color);
+                    }
+                    else if (color == 2 && P2_PowerGreen >= Constants.GreenPowerReq) //green
+                    {
+                        healthPlayerTwo += Constants.HealPower;
+                        photonView.RPC("RPC_HealEffect", PhotonTargets.All, 1);
+                        P2_PowerGreen = 0;
+                        photonView.RPC("RPC_EmptyPower", PhotonTargets.Others, color);
+                    }
+                    else if (color == 3 && P2_PowerRed >= Constants.RedPowerReq) //red
+                    {
+                        P2_PowerRed = 0;
+                        photonView.RPC("RPC_EmptyPower", PhotonTargets.Others, color);
+                    }
+                    else if (color == 0 && P2_PowerYellow >= Constants.YellowPowerReq) //yellow
+                    {
+                        P2_PowerYellow = 0;
+                        photonView.RPC("RPC_EmptyPower", PhotonTargets.Others, color);
+                    }
+                }
+            }
         }
 
         [PunRPC]
@@ -832,6 +917,8 @@ namespace Com.Hypester.DM3
         private void RPCEndGame ()
         {
             GameObject.Find("PlayScreen").GetComponent<PlayGameCanvas>().EndGame();
+            _gameDone = false;
+            _isActive = false;
         }
 
         [PunRPC]
@@ -847,12 +934,60 @@ namespace Com.Hypester.DM3
                 P2_PowerYellow = value;
         }
 
+        [PunRPC]
+        private void RPC_EmptyPower(int color)
+        {
+            if (color == 1)
+                P2_PowerBlue = 0;
+            else if (color == 2)
+                P2_PowerGreen = 0;
+            else if (color == 3)
+                P2_PowerRed = 0;
+            else if (color == 0)
+                P2_PowerYellow = 0;
+        }
+
 
         [PunRPC]
         public void SendRematchRequest()
         {
             Debug.Log("Rematch order gotten, reloading Scene.");
             PhotonNetwork.LoadLevel("NormalGame");
+        }
+
+        [PunRPC]
+        private void RPC_ShieldEffect (int targetPlayer)
+        {
+            GameObject effect = Instantiate(Resources.Load("ParticleEffects/ShieldEffect")) as GameObject;
+            Vector2 effectPosition = new Vector2();
+            if (_myPlayer.localID == targetPlayer)
+                effectPosition = GameObject.Find("MyAvatar").GetComponent<RectTransform>().position;
+            else
+                effectPosition = GameObject.Find("OpponentAvatar").GetComponent<RectTransform>().position;
+            effect.transform.position = effectPosition;
+        }
+
+        [PunRPC]
+        private void RPC_ShieldActivated(int targetPlayer)
+        {
+            if (_myPlayer.localID == targetPlayer) { 
+                GameObject effect = Instantiate(Resources.Load("ParticleEffects/ShieldActivated")) as GameObject;
+                Vector2 effectPosition = new Vector2();
+                effectPosition = GameObject.Find("MyAvatar").GetComponent<RectTransform>().position;
+                effect.transform.position = effectPosition;
+            }
+        }
+
+        [PunRPC]
+        private void RPC_HealEffect(int targetPlayer)
+        {
+            GameObject effect = Instantiate(Resources.Load("ParticleEffects/HealEffect")) as GameObject;
+            Vector2 effectPosition = new Vector2();
+            if (_myPlayer.localID == targetPlayer)
+                effectPosition = GameObject.Find("MyAvatar").GetComponent<RectTransform>().position;
+            else
+                effectPosition = GameObject.Find("OpponentAvatar").GetComponent<RectTransform>().position;
+            effect.transform.position = effectPosition;
         }
 
         #region Serialization

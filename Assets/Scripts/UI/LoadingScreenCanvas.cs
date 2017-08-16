@@ -14,6 +14,22 @@ namespace Com.Hypester.DM3
         protected override void Start ()
         {
             base.Start();
+            if (GameObject.FindGameObjectsWithTag("Player").Length >= 2)
+            {
+                if (GameObject.FindGameObjectsWithTag("Player")[0].GetComponent<Player>().localID == 0)
+                    GameObject.Find("Player1Name").GetComponent<Text>().text = GameObject.FindGameObjectsWithTag("Player")[0].GetComponent<Player>().profileName;
+                if (GameObject.FindGameObjectsWithTag("Player")[0].GetComponent<Player>().localID == 1)
+                    GameObject.Find("Player2Name").GetComponent<Text>().text = GameObject.FindGameObjectsWithTag("Player")[0].GetComponent<Player>().profileName;
+                if (GameObject.FindGameObjectsWithTag("Player")[1].GetComponent<Player>().localID == 0)
+                    GameObject.Find("Player1Name").GetComponent<Text>().text = GameObject.FindGameObjectsWithTag("Player")[1].GetComponent<Player>().profileName;
+                if (GameObject.FindGameObjectsWithTag("Player")[1].GetComponent<Player>().localID == 1)
+                    GameObject.Find("Player2Name").GetComponent<Text>().text = GameObject.FindGameObjectsWithTag("Player")[1].GetComponent<Player>().profileName;
+            }
+
+            foreach (GameObject go in GameObject.FindGameObjectsWithTag("Player"))
+            {
+                go.transform.Find("FingerTracker").GetComponent<Image>().enabled = false;
+            }
             //GameObject.FindGameObjectsWithTag("Player_1_Name");
             //GameObject.Find("Player1Name").GetComponent<Text>().text = PhotonNetwork.playerName;
         }

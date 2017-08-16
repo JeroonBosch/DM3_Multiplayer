@@ -97,8 +97,11 @@ namespace Com.Hypester.DM3
                     for (int i = 0; i < results.Count; i++)
                     {
                         if (!resultFound)
-                            if (results[i].gameObject.tag == "Tile")
+                            if (results[i].gameObject.tag == "Tile" || results[i].gameObject.tag == "Power")
+                            { 
                                 interactionObject = results[i].gameObject;
+                                resultFound = true;
+                            }
                     }
                 }
 
@@ -109,6 +112,16 @@ namespace Com.Hypester.DM3
                         _selectedTiles.Add(interactionObject.GetComponent<BaseTile>().position);
                         _finger = finger;
                         _game.MyPlayer.NewSelection(_selectedTiles[0]);
+                    } else if (interactionObject.tag == "Power")
+                    {
+                        if (interactionObject.name == "MyBlue")
+                            _game.MyPlayer.PowerClicked(1);
+                        if (interactionObject.name == "MyGreen")
+                            _game.MyPlayer.PowerClicked(2);
+                        if (interactionObject.name == "MyRed")
+                            _game.MyPlayer.PowerClicked(3);
+                        if (interactionObject.name == "MyYellow")
+                            _game.MyPlayer.PowerClicked(0);
                     }
                 }
             }

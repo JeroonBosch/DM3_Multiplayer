@@ -25,7 +25,7 @@ namespace Com.Hypester.DM3
         public void Init(Player targetPlayer, int count, Sprite image)
         {
             _count = count;
-            _timeToDelay = count * .1f;
+            _timeToDelay = _count * .1f;
             _delayTimer = 0f;
 
             _targetPlayer = targetPlayer;
@@ -44,7 +44,7 @@ namespace Com.Hypester.DM3
 
 
             //_travelTime = .4f + count * .5f;
-            Destroy(this.gameObject, _travelTime + _timeToDelay);
+            Destroy(gameObject, _travelTime + _timeToDelay);
         }
 
         private void OnDestroy()
@@ -94,11 +94,11 @@ namespace Com.Hypester.DM3
         private void ApplyDamage()
         {
             _damageApplied = true;
-            GameObject explosion = Instantiate(Resources.Load("UI/DamagePlayer")) as GameObject;
-            explosion.transform.SetParent(transform.parent, false);
-            explosion.transform.position = _endPosition;
-            //_targetPlayer.NormalExplosion();
-            //_targetPlayer.ReceiveDamage(1 * _damageMultiplier);
+
+            if (GameObject.FindGameObjectsWithTag("ReceiveDamageEffect").Length < 5) { 
+                GameObject explosion = Instantiate(Resources.Load("ParticleEffects/PlayerReceiveDamage")) as GameObject;
+                explosion.transform.position = _endPosition;
+            }
         }
     }
 }

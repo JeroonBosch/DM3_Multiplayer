@@ -26,8 +26,8 @@ namespace Com.Hypester.DM3
         private bool _collateral;
         public bool collateral { get { return _collateral; } set { _collateral = value; CollateralChange(); } }
 
-        private bool _isBeingDestroyed;
-        public bool isBeingDestroyed { get { return _isBeingDestroyed; }}
+        /*private bool _isBeingDestroyed;
+        public bool isBeingDestroyed { get { return _isBeingDestroyed; }}*/
 
         private void Start()
         {
@@ -65,14 +65,17 @@ namespace Com.Hypester.DM3
             {
                 _boosterObj = Instantiate(Resources.Load("Tiles/Modifications/Booster1")) as GameObject;
                 _boosterObj.transform.SetParent(transform, false);
+                _boosterObj.transform.rotation = new Quaternion(0f, 0f, 0f, _boosterObj.transform.rotation.w);
             } else if (_boosterLevel == 2)
             {
                 _boosterObj = Instantiate(Resources.Load("Tiles/Modifications/Booster2")) as GameObject;
                 _boosterObj.transform.SetParent(transform, false);
+                _boosterObj.transform.rotation = new Quaternion(0f, 0f, 0f, _boosterObj.transform.rotation.w);
             } else if  (_boosterLevel == 3)
             {
                 _boosterObj = Instantiate(Resources.Load("Tiles/Modifications/Booster3")) as GameObject;
                 _boosterObj.transform.SetParent(transform, false);
+                _boosterObj.transform.rotation = new Quaternion(0f, 0f, 0f, _boosterObj.transform.rotation.w);
             }
         }
 
@@ -152,14 +155,14 @@ namespace Com.Hypester.DM3
                 for (int i = 0; i < positions.Count; i++)
                 {
                     BaseTile baseTile = grid.BaseTileAtPos(positions[i]);
-                    if (baseTile && !baseTile.isBeingDestroyed)
+                    if (baseTile)// && !baseTile.isBeingDestroyed)
                         toDestroy.Add(baseTile);
                 }
 
                 List<BaseTile> adjacentInRadius = grid.FindAdjacentTiles(new Vector2(position.x, position.y), radius);
                 foreach (BaseTile tile in adjacentInRadius)
                 {
-                    if (tile && !tile.isBeingDestroyed)
+                    if (tile)// && !tile.isBeingDestroyed)
                         if (!toDestroy.Contains(tile) && !(tile.position.x == position.x && tile.position.y == position.y))
                             toDestroy.Add(tile);
                 }
@@ -196,7 +199,7 @@ namespace Com.Hypester.DM3
                 for (int i = 0; i < positions.Count; i++)
                 {
                     BaseTile baseTile = grid.BaseTileAtPos(positions[i]);
-                    if (baseTile && !baseTile.isBeingDestroyed)
+                    if (baseTile)// && !baseTile.isBeingDestroyed)
                         toDestroy.Add(baseTile);
                 }
 
@@ -204,7 +207,7 @@ namespace Com.Hypester.DM3
                 List<BaseTile> adjacentInRadius = grid.FindAdjacentTiles(new Vector2(position.x, position.y), newRadius);
                 foreach (BaseTile tile in adjacentInRadius)
                 {
-                    if (tile && !tile.isBeingDestroyed)
+                    if (tile)// && !tile.isBeingDestroyed)
                         if (!toDestroy.Contains(tile) && !(tile.position.x == position.x && tile.position.y == position.y))
                             toDestroy.Add(tile);
                 }

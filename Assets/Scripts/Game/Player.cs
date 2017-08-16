@@ -7,11 +7,11 @@ namespace Com.Hypester.DM3
     public class Player : Photon.MonoBehaviour
     {
         public int localID;
+        public string profileName;
         public bool wantsRematch;
 
         #region private variables
         int profileID;
-        string profileName;
         string portraitURL;
 
         private GameObject _game;
@@ -21,7 +21,7 @@ namespace Com.Hypester.DM3
         void Start()
         {
             DontDestroyOnLoad(gameObject);
-            GetComponent<Canvas>().worldCamera = Camera.current;
+            GetComponent<Canvas>().worldCamera = Camera.main;
 
             if (gameObject.GetComponent<PhotonView>().isMine) {
                 profileName = PhotonNetwork.playerName;
@@ -44,6 +44,12 @@ namespace Com.Hypester.DM3
             wantsRematch = false;
         }
 
+        public void Reset()
+        {
+            Start();
+            photonView.RPC("SendName", PhotonTargets.All, profileName);
+        }
+
         private void Update()
         {
             if (_game == null)
@@ -53,9 +59,11 @@ namespace Com.Hypester.DM3
             {
                 if (_game.GetComponent<GameHandler>().IsMyTurn())
                     transform.Find("FingerTracker").GetComponent<Image>().enabled = false;
-                else if (!gameObject.GetComponent<PhotonView>().isMine)
+                else if (!gameObject.GetComponent<PhotonView>().isMine && _game.GetComponent<GameHandler>().Active)
                     transform.Find("FingerTracker").GetComponent<Image>().enabled = true;
             }
+
+            GetComponent<Canvas>().worldCamera = Camera.main;
         }
 
         void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
@@ -95,7 +103,6 @@ namespace Com.Hypester.DM3
         #region SelectionRPCs
         public void NewSelection(Vector2 pos)
         {
-            PhotonView photonView = PhotonView.Get(this);
             photonView.RPC("RPCAddToSelection", PhotonTargets.All, pos);
         }
         [PunRPC]
@@ -107,7 +114,6 @@ namespace Com.Hypester.DM3
 
         public void RemoveSelection(Vector2 pos)
         {
-            PhotonView photonView = PhotonView.Get(this);
             photonView.RPC("RPCRemoveFromSelection", PhotonTargets.All, pos);
         }
         [PunRPC]
@@ -119,7 +125,6 @@ namespace Com.Hypester.DM3
 
         public void RemoveAllSelections()
         {
-            PhotonView photonView = PhotonView.Get(this);
             photonView.RPC("RPCRemoveAllSelections", PhotonTargets.All);
         }
         [PunRPC]
@@ -131,7 +136,6 @@ namespace Com.Hypester.DM3
 
         public void InitiateCombo()
         {
-            PhotonView photonView = PhotonView.Get(this);
             photonView.RPC("RPCInitiateCombo", PhotonTargets.All);
         }
         [PunRPC]
@@ -144,6 +148,40 @@ namespace Com.Hypester.DM3
         public void RequestRematch ()
         {
             wantsRematch = true;
+        }
+
+        [PunRPC]
+        public void SendName(string profName)
+        {
+            profileName = profName;
+
+            if (localID == 0)
+            {
+                foreach (GameObject player1name in GameObject.FindGameObjectsWithTag("Player_1_Name"))
+                {
+                    player1name.GetComponent<Text>().text = profileName;
+                }
+            }
+            else
+            {
+                foreach (GameObject player2name in GameObject.FindGameObjectsWithTag("Player_2_Name"))
+                {
+                    player2name.GetComponent<Text>().text = profileName;
+                }
+            }
+        }
+
+        public void PowerClicked (int color)
+        {
+            if (PhotonNetwork.isMasterClient)
+                _game.GetComponent<GameHandler>().PowerClicked(color);
+            else
+                photonView.RPC("RPC_PowerClick", PhotonTargets.Others, color);
+        }
+        [PunRPC]
+        void RPC_PowerClick(int color)
+        {
+            _game.GetComponent<GameHandler>().PowerClicked(color);
         }
     }
 }

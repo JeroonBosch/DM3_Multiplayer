@@ -18,6 +18,11 @@ namespace Com.Hypester.DM3
             _game = GameObject.Find("Grid").GetComponent<GameHandler>();
 
             _rematchBubble.enabled = false;
+
+            foreach (GameObject go in GameObject.FindGameObjectsWithTag("Player"))
+            {
+                go.transform.Find("FingerTracker").GetComponent<Image>().enabled = false;
+            }
         }
 
         protected override void Update()

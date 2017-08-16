@@ -46,21 +46,25 @@ namespace Com.Hypester.DM3
         {
             if (_game != null) { 
 
-                if (_game.MyPlayer != null) { 
+                if (_game.MyPlayer != null) {
 
-                    
+                    //health
                     if ((_game.MyPlayer.localID == 0 && playerNumber == 0) || (_game.MyPlayer.localID == 1 && playerNumber == 1)) {
-                        //health
                         SetHitpoints(_game.healthPlayerOne, Constants.PlayerStartHP);
                     }
                     else { 
                         SetHitpoints(_game.healthPlayerTwo, Constants.PlayerStartHP);
                     }
+
                     //timer
-                    if ((_game.IsMyTurn() && playerNumber == 0) || (!_game.IsMyTurn() && playerNumber == 1))
+                    if ((_game.IsMyTurn() && playerNumber == 0) || (!_game.IsMyTurn() && playerNumber == 1)) { 
                         SetTimer(_game.turnTimer);
-                    else
+                        transform.localScale = new Vector3(1f, 1f, 1f);
+                    }
+                    else { 
                         SetTimer(0f);
+                        transform.localScale = new Vector3(.8f, .8f, 1f);
+                    }
 
                     if (_game.MyPlayer.localID == 0 && playerNumber == 0)
                     {

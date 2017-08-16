@@ -3,13 +3,14 @@
 public class OnlyOne : MonoBehaviour {
 
 	// Use this for initialization
-	void Start () {
-        OnlyOne[] checkArray = FindObjectsOfType<OnlyOne>();
+	void OnEnable () {
+        string tag = gameObject.tag;
+        GameObject[] checkArray = GameObject.FindGameObjectsWithTag(tag);
 
         if (checkArray.Length > 1)
         {
             int count = 0;
-            foreach (OnlyOne one in checkArray) { 
+            foreach (GameObject one in checkArray) { 
                 if (count > 0)
                     Destroy(one.gameObject);
                 count++;
