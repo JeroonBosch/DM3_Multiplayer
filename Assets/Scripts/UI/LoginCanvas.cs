@@ -36,6 +36,7 @@ namespace Com.Hypester.DM3
             GameObject.Find("LoggingIn").GetComponent<Text>().enabled = true;
             GameObject.Find("NameField").SetActive(false);
             GameObject.Find("LoginButton").SetActive(false);
+            GameObject.Find("PleaseEnterNickname").SetActive(false);
             PhotonConnect.Instance.EnsureConnection();
 
             if (_text.text != "")

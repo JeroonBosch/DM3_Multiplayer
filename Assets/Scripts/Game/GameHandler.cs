@@ -103,8 +103,12 @@ namespace Com.Hypester.DM3
                             _MC_endTurnDelay = false;
                             _MC_endTurnDelayTimer = 0f;
                         }
-                        else { 
-                            photonView.RPC("RPCEndGame", PhotonTargets.All);
+                        else {
+                            int winnerPlayer = 0;
+                            if (healthPlayerOne <= 0)
+                                winnerPlayer = 1;
+
+                            photonView.RPC("RPC_EndGame", PhotonTargets.All, winnerPlayer);
                         }
                     }
                 }
@@ -274,6 +278,11 @@ namespace Com.Hypester.DM3
         private void EndTurn()
         {
             turnTimer = 0f;
+
+            if (GameObject.FindGameObjectWithTag("ActiveFireball"))
+            {
+                Destroy(GameObject.FindGameObjectWithTag("ActiveFireball"));
+            }
 
             //Master client will sync this.
             if (PhotonNetwork.isMasterClient)
@@ -696,10 +705,10 @@ namespace Com.Hypester.DM3
             }
 
             BaseTile baseTile = BaseTileAtPos(pos);
-            go.transform.SetParent(transform, false); //or transform.parent? TODO
+            //go.transform.SetParent(transform, false); //or transform.parent? TODO
             go.transform.position = baseTile.transform.position;
             go.GetComponent<TileExplosion>().Init(targetPlayer, count, baseTile.HexSprite(TileTypes.EColor.yellow + baseTile.color));
-            baseTile.color = Constants.AmountOfColors;
+            //baseTile.color = Constants.AmountOfColors;
 
             //Explosion effect
 
@@ -714,6 +723,7 @@ namespace Com.Hypester.DM3
                 if (!collateral) { 
                     expl = Instantiate(Resources.Load("ParticleEffects/TileDestroyedTimer")) as GameObject;
                     expl.GetComponent<TimedEffect>().createAfterTime = count * Constants.DelayAfterTileDestruction;
+                    expl.GetComponent<TimedEffect>().basetileToHide = baseTile;
                 }
             }
             if (expl != null)
@@ -755,7 +765,7 @@ namespace Com.Hypester.DM3
                 healthPlayerTwo -= (comboSize * comboSize - 2);//Mathf.Pow(comboSize, 2);
 
 
-            if (healthPlayerOne < 0 || healthPlayerTwo < 0)
+            if (healthPlayerOne <= 0 || healthPlayerTwo <= 0)
                 _gameDone = true;
         }
 
@@ -767,7 +777,7 @@ namespace Com.Hypester.DM3
                 healthPlayerTwo -= damage;
 
 
-            if (healthPlayerOne < 0 || healthPlayerTwo < 0)
+            if (healthPlayerOne <= 0 || healthPlayerTwo <= 0)
                 _gameDone = true;
         }
 
@@ -840,6 +850,7 @@ namespace Com.Hypester.DM3
                     }
                     else if (color == 0 && P1_PowerYellow >= Constants.YellowPowerReq) //yellow
                     {
+                        CreateFireball();
                         P1_PowerYellow = 0;
                     }
                 } else
@@ -865,11 +876,51 @@ namespace Com.Hypester.DM3
                     }
                     else if (color == 0 && P2_PowerYellow >= Constants.YellowPowerReq) //yellow
                     {
+                        photonView.RPC("RPC_P2_Create_Fireball", PhotonTargets.Others);
                         P2_PowerYellow = 0;
                         photonView.RPC("RPC_EmptyPower", PhotonTargets.Others, color);
                     }
                 }
             }
+        }
+
+        private void CreateFireball ()
+        {
+            GameObject fireballGO = PhotonNetwork.Instantiate("Fireball", Vector3.zero, Quaternion.identity, 0);
+
+            fireballGO.GetComponent<YellowPower>().ownerPlayer = MyPlayer;
+            fireballGO.name = "Fireball" + MyPlayer.localID;
+        }
+
+        [PunRPC]
+        private void RPC_P2_Create_Fireball()
+        {
+            CreateFireball();
+        }
+
+        [PunRPC]
+        public void FireballHit ()
+        {
+            GameObject fireball = GameObject.FindGameObjectWithTag("ActiveFireball");
+
+            if (fireball.GetComponent<YellowPower>().ownerPlayer == MyPlayer)
+            {
+                GameObject explosion = Instantiate(Resources.Load("ParticleEffects/FireballHit")) as GameObject;
+                explosion.transform.position = GameObject.Find("OpponentAvatar").transform.position;
+
+                if (PhotonNetwork.isMasterClient)
+                    DamagePlayer(EnemyPlayer.localID, Constants.FireballPower);
+            }
+            else
+            {
+                GameObject explosion = Instantiate(Resources.Load("ParticleEffects/FireballHit")) as GameObject;
+                explosion.transform.position = GameObject.Find("MyAvatar").transform.position;
+
+                if (PhotonNetwork.isMasterClient)
+                    DamagePlayer(MyPlayer.localID, Constants.FireballPower);
+            }
+
+            Destroy(fireball);
         }
 
         [PunRPC]
@@ -924,9 +975,9 @@ namespace Com.Hypester.DM3
         }
 
         [PunRPC]
-        private void RPCEndGame ()
+        private void RPC_EndGame (int winnerPlayer)
         {
-            GameObject.Find("PlayScreen").GetComponent<PlayGameCanvas>().EndGame();
+            GameObject.Find("PlayScreen").GetComponent<PlayGameCanvas>().EndGame(winnerPlayer);
             _gameDone = false;
             _isActive = false;
         }

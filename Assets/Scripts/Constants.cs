@@ -16,17 +16,19 @@
         public const int BoosterTwoThreshhold = 8;
         public const int BoosterThreeThreshhold = 10;
 
-        public const float TimeBetweenTurns = 2f;
+        public const float TimeBetweenTurns = 1f;
 
         public const float DistanceBetweenTiles = 1.12f;
 
         public const int BluePowerReq = 12;
         public const int GreenPowerReq = 9;
-        public const int RedPowerReq = 3;
-        public const int YellowPowerReq = 3;
+        public const int RedPowerReq = 99;
+        public const int YellowPowerReq = 9;
 
         public const int HealPower = 50;
+        public const int FireballPower = 50;
 
         public const float DelayAfterTileDestruction = .1f;
+        public const float TileDroppingSpeed = 1400f;
     }
 }

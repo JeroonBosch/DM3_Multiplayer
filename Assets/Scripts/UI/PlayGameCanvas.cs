@@ -48,11 +48,22 @@ namespace Com.Hypester.DM3
 
             if (_finger != null)
             {
-                if (GameObject.Find("FingerTracker"))
+                if (!GameObject.FindGameObjectWithTag("ActiveFireball"))
                 {
-                    Transform tf = GameObject.Find("FingerTracker").transform;
-                    tf.position = _finger.GetWorldPosition(1f);
-                    tf.localPosition = new Vector2(-tf.localPosition.x, -tf.localPosition.y);
+                    if (GameObject.Find("FingerTracker"))
+                    {
+                        Transform tf = GameObject.Find("FingerTracker").transform;
+                        tf.position = _finger.GetWorldPosition(1f);
+                        tf.localPosition = new Vector2(-tf.localPosition.x, -tf.localPosition.y);
+                    }
+                } else 
+                {
+                    Transform fb = GameObject.FindGameObjectWithTag("ActiveFireball").transform;
+                    if (!fb.GetComponent<YellowPower>().isFlying && fb.GetComponent<YellowPower>().isPickedUp)
+                    { 
+                        fb.position = _finger.GetWorldPosition(1f);
+                        fb.GetComponent<YellowPower>().position = fb.localPosition;
+                    }
                 }
             }
         }
@@ -83,45 +94,57 @@ namespace Com.Hypester.DM3
         {
             if (finger.Index == 0 && _game.IsMyTurn())
             {
-                GameObject interactionObject = null;
-
-                GraphicRaycaster gRaycast = GetComponent<GraphicRaycaster>();
-                PointerEventData ped = new PointerEventData(null);
-                ped.position = finger.GetSnapshotScreenPosition(1f);
-                List<RaycastResult> results = new List<RaycastResult>();
-                gRaycast.Raycast(ped, results);
-
-                if (results != null && results.Count > 0)
+                if (!GameObject.FindGameObjectWithTag("ActiveFireball"))
                 {
-                    bool resultFound = false;
-                    for (int i = 0; i < results.Count; i++)
+                    GameObject interactionObject = null;
+
+                    GraphicRaycaster gRaycast = GetComponent<GraphicRaycaster>();
+                    PointerEventData ped = new PointerEventData(null);
+                    ped.position = finger.GetSnapshotScreenPosition(1f);
+                    List<RaycastResult> results = new List<RaycastResult>();
+                    gRaycast.Raycast(ped, results);
+
+                    if (results != null && results.Count > 0)
                     {
-                        if (!resultFound)
-                            if (results[i].gameObject.tag == "Tile" || results[i].gameObject.tag == "Power")
-                            { 
-                                interactionObject = results[i].gameObject;
-                                resultFound = true;
-                            }
+                        bool resultFound = false;
+                        for (int i = 0; i < results.Count; i++)
+                        {
+                            if (!resultFound)
+                                if (results[i].gameObject.tag == "Tile" || results[i].gameObject.tag == "Power")
+                                {
+                                    interactionObject = results[i].gameObject;
+                                    resultFound = true;
+                                }
+                        }
                     }
-                }
 
-                if (interactionObject)
+                    if (interactionObject)
+                    {
+                        if (interactionObject.tag == "Tile")
+                        {
+                            _selectedTiles.Add(interactionObject.GetComponent<BaseTile>().position);
+                            _finger = finger;
+                            _game.MyPlayer.NewSelection(_selectedTiles[0]);
+                        }
+                        else if (interactionObject.tag == "Power")
+                        {
+                            if (interactionObject.name == "MyBlue")
+                                _game.MyPlayer.PowerClicked(1);
+                            if (interactionObject.name == "MyGreen")
+                                _game.MyPlayer.PowerClicked(2);
+                            if (interactionObject.name == "MyRed")
+                                _game.MyPlayer.PowerClicked(3);
+                            if (interactionObject.name == "MyYellow")
+                                _game.MyPlayer.PowerClicked(0);
+                        }
+                    }
+                } else
                 {
-                    if (interactionObject.tag == "Tile")
+                    YellowPower fireball = GameObject.FindGameObjectWithTag("ActiveFireball").GetComponent<YellowPower>();
+                    if (fireball.GetComponent<PhotonView>().isMine)
                     {
-                        _selectedTiles.Add(interactionObject.GetComponent<BaseTile>().position);
+                        fireball.PickUp();
                         _finger = finger;
-                        _game.MyPlayer.NewSelection(_selectedTiles[0]);
-                    } else if (interactionObject.tag == "Power")
-                    {
-                        if (interactionObject.name == "MyBlue")
-                            _game.MyPlayer.PowerClicked(1);
-                        if (interactionObject.name == "MyGreen")
-                            _game.MyPlayer.PowerClicked(2);
-                        if (interactionObject.name == "MyRed")
-                            _game.MyPlayer.PowerClicked(3);
-                        if (interactionObject.name == "MyYellow")
-                            _game.MyPlayer.PowerClicked(0);
                     }
                 }
             }
@@ -131,13 +154,23 @@ namespace Com.Hypester.DM3
         {
             if (finger.Index == 0 && _game.IsMyTurn())
             {
-                if (_selectedTiles.Count > 2) {
-                    _game.MyPlayer.InitiateCombo();
+                if (!GameObject.FindGameObjectWithTag("ActiveFireball")) { 
+                    if (_selectedTiles.Count > 2) {
+                        _game.MyPlayer.InitiateCombo();
+                    } else
+                    {
+                        _game.MyPlayer.RemoveAllSelections();
+                    }
+                    _selectedTiles.Clear();
                 } else
                 {
-                    _game.MyPlayer.RemoveAllSelections();
+                    GameObject fireball = GameObject.FindGameObjectWithTag("ActiveFireball");
+                    if (fireball.GetComponent<PhotonView>().isMine)
+                    {
+                        fireball.GetComponent<YellowPower>().Fly();
+                    }
+
                 }
-                _selectedTiles.Clear();
                 _finger = null;
             }
         }
@@ -187,9 +220,10 @@ namespace Com.Hypester.DM3
             _game.MyPlayer.RemoveSelection(position);
         }
 
-        public void EndGame ()
+        public void EndGame (int winnerPlayer)
         {
             GoToScreen(GameObject.Find("EndScreen").GetComponent<BaseMenuCanvas>());
+            GameObject.Find("EndScreen").GetComponent<EndScreenCanvas>().winnerPlayer = winnerPlayer;
             enabled = false;
         }
 

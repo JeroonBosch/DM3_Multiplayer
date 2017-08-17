@@ -39,7 +39,7 @@ namespace Com.Hypester.DM3
         private void Update()
         {
             if (_animating)
-                transform.localPosition = Vector2.MoveTowards(transform.localPosition, _endPos, 500f * Time.deltaTime);
+                transform.localPosition = Vector2.MoveTowards(transform.localPosition, _endPos, Constants.TileDroppingSpeed * Time.deltaTime);
 
             if (transform.localPosition.x == _endPos.x && transform.localPosition.y == _endPos.y)
                 _animating = false;
