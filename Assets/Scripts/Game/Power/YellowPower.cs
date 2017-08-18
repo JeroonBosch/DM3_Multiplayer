@@ -21,7 +21,7 @@ namespace Com.Hypester.DM3
         private bool _isPickedUp = false;
         public bool isPickedUp { get { return _isPickedUp; } }
 
-        private float _speed = 10f;
+        private float _speed = 20f;
 
         private void Start()
         {
@@ -36,7 +36,7 @@ namespace Com.Hypester.DM3
         {
             if (!photonView.isMine)
             {
-                transform.localPosition = new Vector2 (mirrorPosition.x, mirrorPosition.y + 2f); //No idea why the +2f is needed.
+                transform.localPosition = new Vector2 (mirrorPosition.x, mirrorPosition.y + 2f); //No idea why the +2f is needed, but it is..
             } else
             {
                 if (!_isFlying) { 
@@ -45,8 +45,10 @@ namespace Com.Hypester.DM3
                     _curPos = transform.position;
                 } else
                 {
-                    if (_velocity.x == 0 && _velocity.y == 0)
+                    if (_velocity.x < .3f && _velocity.y < .3f) { 
                         _isFlying = false;
+                        GetComponent<Rigidbody2D>().velocity = new Vector2(0, 0);
+                    }
                     else
                     {
                         position = transform.localPosition;

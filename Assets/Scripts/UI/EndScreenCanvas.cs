@@ -17,7 +17,8 @@ namespace Com.Hypester.DM3
         private Image _enemyRematchButton;
         private GameHandler _game;
 
-        public int winnerPlayer;
+        private int _winnerPlayer;
+        public int winnerPlayer { set { SetWinnerPlayer(value); } }
 
         protected override void Start()
         {
@@ -45,6 +46,8 @@ namespace Com.Hypester.DM3
             _myRematchButton.enabled = true;
             _enemyRematchButton.enabled = false;
 
+            Destroy(_enemyPlayer.Find("Reward").gameObject);
+
             foreach (GameObject go in GameObject.FindGameObjectsWithTag("Player"))
             {
                 go.transform.Find("FingerTracker").GetComponent<Image>().enabled = false;
@@ -55,18 +58,41 @@ namespace Com.Hypester.DM3
         {
             base.Show();
 
-            if (winnerPlayer == 0)
+            foreach (GameObject nameObject in GameObject.FindGameObjectsWithTag("Player_1_Name"))
+            {
+                Text nameText = nameObject.GetComponent<Text>();
+                if (PhotonNetwork.isMasterClient)
+                    nameText.text = _game.MyPlayer.profileName;
+                else
+                    nameText.text = _game.EnemyPlayer.profileName;
+            }
+            foreach (GameObject nameObject in GameObject.FindGameObjectsWithTag("Player_2_Name"))
+            {
+                Text nameText = nameObject.GetComponent<Text>();
+                if (!PhotonNetwork.isMasterClient)
+                    nameText.text = _game.MyPlayer.profileName;
+                else
+                    nameText.text = _game.EnemyPlayer.profileName;
+            }
+        }
+
+        private void SetWinnerPlayer (int winnerPlayer)
+        {
+            _winnerPlayer = winnerPlayer;
+            if (_winnerPlayer == 0)
             {
                 if (PhotonNetwork.isMasterClient)
-                    _enemyPlayer.Find("AvatarWinnerBorder").GetComponent<Image>().enabled = false ;
+                    Destroy(_enemyPlayer.Find("AvatarWinnerBorder").gameObject);
                 else
-                    _myPlayer.Find("AvatarWinnerBorder").GetComponent<Image>().enabled = false;
-            } else
+                    Destroy(_myPlayer.Find("AvatarWinnerBorder").gameObject);
+            }
+            else
             {
                 if (PhotonNetwork.isMasterClient)
-                    _myPlayer.Find("AvatarWinnerBorder").GetComponent<Image>().enabled = false;
+                    Destroy(_myPlayer.Find("AvatarWinnerBorder").gameObject);
                 else
-                    _enemyPlayer.Find("AvatarWinnerBorder").GetComponent<Image>().enabled = false;
+                    Destroy(_enemyPlayer.Find("AvatarWinnerBorder").gameObject);
+                //_enemyPlayer.Find("AvatarWinnerBorder").GetComponent<Image>().enabled = false;
             }
         }
 

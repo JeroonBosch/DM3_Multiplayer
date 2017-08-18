@@ -32,6 +32,8 @@ namespace Com.Hypester.DM3
         public Player MyPlayer { get { return _myPlayer; } }
         public Player EnemyPlayer { get { return _enemyPlayer; } }
 
+        public GameStates gameState;
+
         public float healthPlayerOne;
         public float healthPlayerTwo;
         public float turnTimer;
@@ -72,6 +74,10 @@ namespace Com.Hypester.DM3
             healthPlayerTwo = Constants.PlayerStartHP;
 
             _grid = new Grid();
+
+            gameState = new GameStates();
+            gameState.State = GameStates.EGameState.search;
+
             if (PhotonNetwork.isMasterClient)
             {
                 GenerateGrid();
@@ -84,11 +90,6 @@ namespace Com.Hypester.DM3
             {
                 if (_gridReceived && !_gridVisualized)
                     VisualizeGrid();
-
-                if (IsMyTurn())
-                    GameObject.Find("CurPlayer").GetComponent<Text>().text = "My turn";
-                else
-                    GameObject.Find("CurPlayer").GetComponent<Text>().text = "Wait...";
 
                 if (PhotonNetwork.isMasterClient)
                 {
@@ -242,6 +243,7 @@ namespace Com.Hypester.DM3
                         tile.GetComponent<Image>().enabled = false;
                 }
             }
+            gameState.State = GameStates.EGameState.inTurn;
         }
 
         void GridUpdate()
@@ -272,12 +274,14 @@ namespace Com.Hypester.DM3
                         }
                     }
                 }
+                gameState.State = GameStates.EGameState.inTurn;
             }
         }
 
-        private void EndTurn()
+        private void EndTurn() //both master-client and guest-client execute this.
         {
             turnTimer = 0f;
+            gameState.State = GameStates.EGameState.interim;
 
             if (GameObject.FindGameObjectWithTag("ActiveFireball"))
             {
@@ -648,21 +652,21 @@ namespace Com.Hypester.DM3
                     if (!P2_ShieldActive)
                     {
                         DamagePlayerWithCombo(1, _selectedTiles.Count);
-                        DamagePlayer(1, _baseTiles.FindAll(item => item.collateral == true).Count * 2f);
+                        DamagePlayer(1, _baseTiles.FindAll(item => item.collateral == true).Count * Constants.BoosterCollateralDamage);
                     }
                     else { 
                         P2_ShieldActive = false;
-                        photonView.RPC("RPC_ShieldEffect", PhotonTargets.All, 1); //TODO some animation/particle here.
+                        photonView.RPC("RPC_ShieldEffect", PhotonTargets.All, 1); 
                     }
                     FillPowerBar(0, color, _selectedTiles.Count);
                 } else {
                     if (!P1_ShieldActive) {
                         DamagePlayerWithCombo(0, _selectedTiles.Count);
-                        DamagePlayer(0, _baseTiles.FindAll(item => item.collateral == true).Count * 2f);
+                        DamagePlayer(0, _baseTiles.FindAll(item => item.collateral == true).Count * Constants.BoosterCollateralDamage);
                     }
                     else {
                         P1_ShieldActive = false;
-                        photonView.RPC("RPC_ShieldEffect", PhotonTargets.All, 0); //TODO some animation/particle here.
+                        photonView.RPC("RPC_ShieldEffect", PhotonTargets.All, 0); 
                     }
                     FillPowerBar(1, color, _selectedTiles.Count);
                 }
@@ -757,25 +761,65 @@ namespace Com.Hypester.DM3
             photonView.RPC("RPCSendTile", PhotonTargets.All, tile);
         }
 
-        public void DamagePlayerWithCombo(int playerNumber, float comboSize)
+        public void DamagePlayerWithCombo(int playerNumber, float comboSize) //only master-client side
         {
             if (playerNumber == 0)
-                healthPlayerOne -= (comboSize * comboSize - 2);
+            {
+                if (!P1_ShieldActive)
+                {
+                    healthPlayerOne -= (comboSize * comboSize - 2);
+                }
+                else
+                {
+                    P1_ShieldActive = false;
+                    photonView.RPC("RPC_ShieldEffect", PhotonTargets.All, 0);
+                }
+            }
             else
-                healthPlayerTwo -= (comboSize * comboSize - 2);//Mathf.Pow(comboSize, 2);
-
+            {
+                if (!P2_ShieldActive)
+                {
+                    healthPlayerTwo -= (comboSize * comboSize - 2);//Mathf.Pow(comboSize, 2);
+                }
+                else
+                {
+                    P2_ShieldActive = false;
+                    photonView.RPC("RPC_ShieldEffect", PhotonTargets.All, 1);
+                }
+                
+            }
 
             if (healthPlayerOne <= 0 || healthPlayerTwo <= 0)
                 _gameDone = true;
         }
 
-        public void DamagePlayer (int playerNumber, float damage)
+        public void DamagePlayer (int playerNumber, float damage) //only master-client side
         {
             if (playerNumber == 0)
-                healthPlayerOne -= damage;
+            {
+                if (!P1_ShieldActive)
+                {
+                    healthPlayerOne -= damage;
+                }
+                else
+                {
+                    P1_ShieldActive = false;
+                    photonView.RPC("RPC_ShieldEffect", PhotonTargets.All, 0);
+                }
+            }
             else
-                healthPlayerTwo -= damage;
+            {
+                if (!P2_ShieldActive)
+                {
+                    healthPlayerTwo -= damage;
+                }
+                else
+                {
+                    P2_ShieldActive = false;
+                    photonView.RPC("RPC_ShieldEffect", PhotonTargets.All, 1);
+                }
 
+            }
 
             if (healthPlayerOne <= 0 || healthPlayerTwo <= 0)
                 _gameDone = true;
@@ -890,6 +934,7 @@ namespace Com.Hypester.DM3
 
             fireballGO.GetComponent<YellowPower>().ownerPlayer = MyPlayer;
             fireballGO.name = "Fireball" + MyPlayer.localID;
+            fireballGO.transform.position = GameObject.Find("MyYellow").transform.position;
         }
 
         [PunRPC]
