@@ -8,7 +8,7 @@ namespace Com.Hypester.DM3
         public enum EColor { yellow, blue, green, red };
         protected EColor m_color;
 
-        public enum EBooster { level0, level1, level2, level3 };
+        public enum EBooster { level0, level1, level2, level3, trap };
         protected EBooster m_booster;
 
         public EColor Color

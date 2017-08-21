@@ -26,6 +26,8 @@ namespace Com.Hypester.DM3
         private bool _gridReceived = false;
         private bool _gridVisualized = false;
         private bool _gameDone = false;
+
+        private Text _gameContext;
         #endregion
 
         #region public game logic
@@ -77,6 +79,8 @@ namespace Com.Hypester.DM3
 
             gameState = new GameStates();
             gameState.State = GameStates.EGameState.search;
+
+            _gameContext = GameObject.Find("GameContext").GetComponent<Text>();
 
             if (PhotonNetwork.isMasterClient)
             {
@@ -763,34 +767,45 @@ namespace Com.Hypester.DM3
 
         public void DamagePlayerWithCombo(int playerNumber, float comboSize) //only master-client side
         {
+            float damage = (comboSize * comboSize - 2);
+
             if (playerNumber == 0)
             {
                 if (!P1_ShieldActive)
                 {
-                    healthPlayerOne -= (comboSize * comboSize - 2);
+                    healthPlayerOne -= damage;
+
+                    photonView.RPC("RPC_DamageMessage", PhotonTargets.All, 1, damage);
                 }
                 else
                 {
                     P1_ShieldActive = false;
                     photonView.RPC("RPC_ShieldEffect", PhotonTargets.All, 0);
+                    photonView.RPC("RPC_ShieldMessage", PhotonTargets.All, 0, damage);
                 }
             }
             else
             {
                 if (!P2_ShieldActive)
                 {
-                    healthPlayerTwo -= (comboSize * comboSize - 2);//Mathf.Pow(comboSize, 2);
+                    
+                    healthPlayerTwo -= damage;//Mathf.Pow(comboSize, 2);
+
+                    photonView.RPC("RPC_DamageMessage", PhotonTargets.All, 1, damage);
                 }
                 else
                 {
                     P2_ShieldActive = false;
                     photonView.RPC("RPC_ShieldEffect", PhotonTargets.All, 1);
+                    photonView.RPC("RPC_ShieldMessage", PhotonTargets.All, 1, damage);
                 }
                 
             }
 
             if (healthPlayerOne <= 0 || healthPlayerTwo <= 0)
                 _gameDone = true;
+
+
         }
 
         public void DamagePlayer (int playerNumber, float damage) //only master-client side
@@ -825,6 +840,23 @@ namespace Com.Hypester.DM3
                 _gameDone = true;
         }
 
+        public bool IsMyTurn()
+        {
+            if (_myPlayer == null)
+                return false;
+
+            if (_myPlayer.localID == _curPlayer)
+                return true;
+            return false;
+        }
+
+        public bool InTurnDelay()
+        {
+            /*if (_myPlayer.localID == _curPlayer)
+                return true;*/
+            return false;
+        }
+
         private void FillPowerBar (int playerNumber, int color, int increaseBy)
         {
             if (playerNumber == 0)
@@ -855,23 +887,6 @@ namespace Com.Hypester.DM3
             }
         }
 
-        public bool IsMyTurn()
-        {
-            if (_myPlayer == null)
-                return false;
-
-            if (_myPlayer.localID == _curPlayer)
-                return true;
-            return false;
-        }
-
-        public bool InTurnDelay()
-        {
-            /*if (_myPlayer.localID == _curPlayer)
-                return true;*/
-            return false;
-        }
-
         public void PowerClicked (int color)
         {
             if (PhotonNetwork.isMasterClient) { 
@@ -890,6 +905,7 @@ namespace Com.Hypester.DM3
                     }
                     else if (color == 3 && P1_PowerRed >= Constants.RedPowerReq) //red
                     {
+                        CreateTrap();
                         P1_PowerRed = 0;
                     }
                     else if (color == 0 && P1_PowerYellow >= Constants.YellowPowerReq) //yellow
@@ -915,6 +931,7 @@ namespace Com.Hypester.DM3
                     }
                     else if (color == 3 && P2_PowerRed >= Constants.RedPowerReq) //red
                     {
+                        photonView.RPC("RPC_P2_CreateTrap", PhotonTargets.Others);
                         P2_PowerRed = 0;
                         photonView.RPC("RPC_EmptyPower", PhotonTargets.Others, color);
                     }
@@ -968,6 +985,21 @@ namespace Com.Hypester.DM3
             Destroy(fireball);
         }
 
+        private void CreateTrap()
+        {
+            GameObject trapGO = PhotonNetwork.Instantiate("TrapPower", Vector3.zero, Quaternion.identity, 0);
+
+            trapGO.GetComponent<TrapPower>().ownerPlayer = MyPlayer;
+            trapGO.name = "TrapPower" + MyPlayer.localID;
+            trapGO.transform.position = GameObject.Find("MyRed").transform.position;
+        }
+
+        [PunRPC]
+        private void RPC_P2_CreateTrap()
+        {
+            CreateTrap();
+        }
+
         [PunRPC]
         public void RPCSendTile(Tile tile)
         {
@@ -994,6 +1026,8 @@ namespace Com.Hypester.DM3
                     {
                         GameObject go = Instantiate(Resources.Load("UI/MyTurn")) as GameObject;
                         go.transform.SetParent(transform.parent, false);
+
+                        _gameContext.text = "It is now your turn!";
                     }
                 }
                 else
@@ -1003,6 +1037,8 @@ namespace Com.Hypester.DM3
                         GameObject go = Instantiate(Resources.Load("UI/OpponentsTurn")) as GameObject;
                         go.transform.SetParent(transform.parent, false);
                         go.GetComponent<Text>().text = _enemyPlayer.GetName() + "'s turn!";
+
+                        _gameContext.text = "Waiting for " + _enemyPlayer.GetName() + "'s turn...";
                     }
                 }
             }
@@ -1099,6 +1135,33 @@ namespace Com.Hypester.DM3
                 effectPosition = GameObject.Find("OpponentAvatar").GetComponent<RectTransform>().position;
             effect.transform.position = effectPosition;
         }
+
+        #region RPC Messages
+        [PunRPC]
+        private void RPC_DamageMessage(int targetPlayer, float damage)
+        {
+            if (_myPlayer.localID == targetPlayer)
+            {
+                _gameContext.text = "You received " + damage + " damage!";
+            }
+            else
+            {
+                _gameContext.text = "You dealt" + _enemyPlayer.GetName() + " " + damage + " damage!";
+            }
+        }
+
+        [PunRPC]
+        private void RPC_ShieldMessage (int targetPlayer, float damage)
+        {
+            if (_myPlayer.localID == targetPlayer)
+            {
+                _gameContext.text = "You blocked " + damage + " damage with your shield!";
+            } else
+            {
+                _gameContext.text = _enemyPlayer.GetName() + " blocked " + damage + " damage with a shield!";
+            }
+        }
+        #endregion
 
         #region Serialization
         public static readonly byte[] memTile = new byte[4 * 4];

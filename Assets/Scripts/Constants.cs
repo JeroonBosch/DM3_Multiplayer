@@ -24,11 +24,11 @@
 
         public const int BluePowerReq = 12;
         public const int GreenPowerReq = 9;
-        public const int RedPowerReq = 99;
-        public const int YellowPowerReq = 6;
+        public const int RedPowerReq = 9;
+        public const int YellowPowerReq = 12;
 
         public const int HealPower = 50;
-        public const int FireballPower = 50;
+        public const int FireballPower = 100;
 
         public const float DelayAfterTileDestruction = .1f;
         public const float TileDroppingSpeed = 1400f;

@@ -48,7 +48,7 @@ namespace Com.Hypester.DM3
 
             if (_finger != null)
             {
-                if (!GameObject.FindGameObjectWithTag("ActiveFireball"))
+                if (!GameObject.FindGameObjectWithTag("ActiveFireball") && !GameObject.FindGameObjectWithTag("ActiveTrap"))
                 {
                     if (GameObject.Find("FingerTracker"))
                     {
@@ -58,11 +58,28 @@ namespace Com.Hypester.DM3
                     }
                 } else 
                 {
-                    Transform fb = GameObject.FindGameObjectWithTag("ActiveFireball").transform;
-                    if (!fb.GetComponent<YellowPower>().isFlying && fb.GetComponent<YellowPower>().isPickedUp)
-                    { 
-                        fb.position = _finger.GetWorldPosition(1f);
-                        fb.GetComponent<YellowPower>().position = fb.localPosition;
+                    if (GameObject.FindGameObjectWithTag("ActiveFireball"))
+                    {
+                        Transform fb = GameObject.FindGameObjectWithTag("ActiveFireball").transform;
+                        if (!fb.GetComponent<YellowPower>().isFlying && fb.GetComponent<YellowPower>().isPickedUp)
+                        {
+                            fb.position = _finger.GetWorldPosition(1f);
+                            fb.GetComponent<YellowPower>().position = fb.localPosition;
+                        }
+                    } else
+                    {
+                        Transform trap = GameObject.FindGameObjectWithTag("ActiveTrap").transform;
+                        if (trap.GetComponent<TrapPower>().isPickedUp)
+                        {
+                            Vector2 vec = FindNearestTileToFinger();
+                            BaseTile trapTile = _game.BaseTileAtPos(vec);
+                            if (trapTile != null)
+                            {
+                                trap.GetComponent<TrapPower>().overBasetile = trapTile;
+                            }
+                            //trap.position = _finger.GetWorldPosition(1f);
+                            //trap.GetComponent<TrapPower>().position = trap.localPosition;
+                        }
                     }
                 }
             }
@@ -94,7 +111,7 @@ namespace Com.Hypester.DM3
         {
             if (finger.Index == 0 && _game.IsMyTurn())
             {
-                if (!GameObject.FindGameObjectWithTag("ActiveFireball"))
+                if (!GameObject.FindGameObjectWithTag("ActiveFireball") && !GameObject.FindGameObjectWithTag("ActiveTrap"))
                 {
                     GameObject interactionObject = null;
 
@@ -140,11 +157,22 @@ namespace Com.Hypester.DM3
                     }
                 } else
                 {
-                    YellowPower fireball = GameObject.FindGameObjectWithTag("ActiveFireball").GetComponent<YellowPower>();
-                    if (fireball.GetComponent<PhotonView>().isMine)
+                    if (GameObject.FindGameObjectWithTag("ActiveFireball")) { 
+                        YellowPower fireball = GameObject.FindGameObjectWithTag("ActiveFireball").GetComponent<YellowPower>();
+                        if (fireball.GetComponent<PhotonView>().isMine)
+                        {
+                            fireball.PickUp();
+                            _finger = finger;
+                        }
+                    }
+                    else
                     {
-                        fireball.PickUp();
-                        _finger = finger;
+                        TrapPower trap = GameObject.FindGameObjectWithTag("ActiveTrap").GetComponent<TrapPower>();
+                        if (trap.GetComponent<PhotonView>().isMine)
+                        {
+                            trap.PickUp();
+                            _finger = finger;
+                        }
                     }
                 }
             }
@@ -154,7 +182,7 @@ namespace Com.Hypester.DM3
         {
             if (finger.Index == 0 && _game.IsMyTurn())
             {
-                if (!GameObject.FindGameObjectWithTag("ActiveFireball")) { 
+                if (!GameObject.FindGameObjectWithTag("ActiveFireball") && !GameObject.FindGameObjectWithTag("ActiveTrap")) { 
                     if (_selectedTiles.Count > 2) {
                         _game.MyPlayer.InitiateCombo();
                     } else
@@ -164,12 +192,21 @@ namespace Com.Hypester.DM3
                     _selectedTiles.Clear();
                 } else
                 {
-                    GameObject fireball = GameObject.FindGameObjectWithTag("ActiveFireball");
-                    if (fireball.GetComponent<PhotonView>().isMine)
+                    if (GameObject.FindGameObjectWithTag("ActiveFireball"))
                     {
-                        fireball.GetComponent<YellowPower>().Fly();
+                        GameObject fireball = GameObject.FindGameObjectWithTag("ActiveFireball");
+                        if (fireball.GetComponent<PhotonView>().isMine)
+                        {
+                            fireball.GetComponent<YellowPower>().Fly();
+                        }
+                    } else
+                    {
+                        TrapPower trap = GameObject.FindGameObjectWithTag("ActiveTrap").GetComponent<TrapPower>();
+                        if (trap.GetComponent<PhotonView>().isMine)
+                        {
+                            trap.GetComponent<TrapPower>().Place();
+                        }
                     }
-
                 }
                 _finger = null;
             }
