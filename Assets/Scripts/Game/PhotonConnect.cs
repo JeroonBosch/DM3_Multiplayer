@@ -22,9 +22,9 @@ namespace Com.Hypester.DM3
         private void Update()
         {
             if (PhotonNetwork.inRoom && SceneManager.GetActiveScene().name != "NormalGame")
-                if (PhotonNetwork.room.PlayerCount == 2) { 
+                //if (PhotonNetwork.room.PlayerCount == 2) { 
                     PhotonNetwork.LoadLevel("NormalGame");
-                }
+                //}
 
             if (_connect && !PhotonNetwork.connecting && !PhotonNetwork.connected)
                 PhotonNetwork.ConnectUsingSettings("v0.1");
@@ -105,6 +105,8 @@ namespace Com.Hypester.DM3
                 playerGO.GetComponent<Player>().localID = 0;
             else
                 playerGO.GetComponent<Player>().localID = 1;
+
+            playerGO.GetComponent<Player>().UpdateLabels();
         }
 
         public void Rematch ()

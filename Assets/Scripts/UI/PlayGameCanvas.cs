@@ -25,31 +25,32 @@ namespace Com.Hypester.DM3
         protected override void Update()
         {
             base.Update();
-            if (_selectedTiles.Count > 0)
-            {
-                Vector2 vec = FindNearestTileToFinger();
-                //Select new tile.
-                if (!_selectedTiles.Contains(vec) && _game.TileAtPos(new Vector2(vec.x, vec.y)).color == _game.TileAtPos(new Vector2(_selectedTiles[0].x, _selectedTiles[0].y)).color && IsAdjacentPosition(vec, _selectedTiles[_selectedTiles.Count-1]))
-                {
-                    _selectedTiles.Add(vec);
-                    NewSelectedTile(vec);
-                }
-                //Remove if already selected, plus remove all previously selected ones.
-                else if (_selectedTiles.Contains(vec) && _selectedTiles[_selectedTiles.Count - 1] != vec && IsAdjacentPosition(vec, _selectedTiles[_selectedTiles.Count - 1]))
-                {
-                    int index = _selectedTiles.IndexOf(vec);
-                    for (int i = index + 1; i < _selectedTiles.Count; i++)
-                    {
-                        RemoveSelectedTile(_selectedTiles[i]);
-                        _selectedTiles.RemoveAt(i);
-                    }
-                }
-            }
 
             if (_finger != null)
             {
                 if (!GameObject.FindGameObjectWithTag("ActiveFireball") && !GameObject.FindGameObjectWithTag("ActiveTrap"))
                 {
+                    if (_selectedTiles.Count > 0)
+                    {
+                        Vector2 vec = FindNearestTileToFinger();
+                        //Select new tile.
+                        if (!_selectedTiles.Contains(vec) && _game.TileAtPos(new Vector2(vec.x, vec.y)).color == _game.TileAtPos(new Vector2(_selectedTiles[0].x, _selectedTiles[0].y)).color && IsAdjacentPosition(vec, _selectedTiles[_selectedTiles.Count - 1]))
+                        {
+                            _selectedTiles.Add(vec);
+                            NewSelectedTile(vec);
+                        }
+                        //Remove if already selected, plus remove all previously selected ones.
+                        else if (_selectedTiles.Contains(vec) && _selectedTiles[_selectedTiles.Count - 1] != vec && IsAdjacentPosition(vec, _selectedTiles[_selectedTiles.Count - 1]))
+                        {
+                            int index = _selectedTiles.IndexOf(vec);
+                            for (int i = index + 1; i < _selectedTiles.Count; i++)
+                            {
+                                RemoveSelectedTile(_selectedTiles[i]);
+                                _selectedTiles.RemoveAt(i);
+                            }
+                        }
+                    }
+
                     if (GameObject.Find("FingerTracker"))
                     {
                         Transform tf = GameObject.Find("FingerTracker").transform;
@@ -77,8 +78,7 @@ namespace Com.Hypester.DM3
                             {
                                 trap.GetComponent<TrapPower>().overBasetile = trapTile;
                             }
-                            //trap.position = _finger.GetWorldPosition(1f);
-                            //trap.GetComponent<TrapPower>().position = trap.localPosition;
+                            trap.position = _finger.GetWorldPosition(1f);
                         }
                     }
                 }
@@ -168,11 +168,8 @@ namespace Com.Hypester.DM3
                     else
                     {
                         TrapPower trap = GameObject.FindGameObjectWithTag("ActiveTrap").GetComponent<TrapPower>();
-                        if (trap.GetComponent<PhotonView>().isMine)
-                        {
-                            trap.PickUp();
-                            _finger = finger;
-                        }
+                        trap.PickUp();
+                        _finger = finger;
                     }
                 }
             }
@@ -202,10 +199,7 @@ namespace Com.Hypester.DM3
                     } else
                     {
                         TrapPower trap = GameObject.FindGameObjectWithTag("ActiveTrap").GetComponent<TrapPower>();
-                        if (trap.GetComponent<PhotonView>().isMine)
-                        {
-                            trap.GetComponent<TrapPower>().Place();
-                        }
+                        trap.GetComponent<TrapPower>().Place();
                     }
                 }
                 _finger = null;

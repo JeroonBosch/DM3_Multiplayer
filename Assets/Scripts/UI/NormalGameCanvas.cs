@@ -59,8 +59,6 @@ namespace Com.Hypester.DM3
             PhotonConnect.Instance.MatchPlayers();
             _findingMatch = true;
             Button readyButton = transform.Find("ReadyButton").GetComponent<Button>();
-            Text buttonText = readyButton.transform.Find("Text").GetComponent<Text>();
-            buttonText.text = "Finding match...";
             readyButton.interactable = false;
             findOpponent.SetActive(true);
         }
@@ -68,8 +66,6 @@ namespace Com.Hypester.DM3
         private void ResetReadyButton ()
         {
             Button readyButton = transform.Find("ReadyButton").GetComponent<Button>();
-            Text buttonText = readyButton.transform.Find("Text").GetComponent<Text>();
-            buttonText.text = "Boot Camp";
             readyButton.interactable = true;
             PhotonConnect.Instance.ConnectNormalGameroom();
             findOpponent.SetActive(false);

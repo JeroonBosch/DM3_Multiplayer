@@ -20,6 +20,8 @@ namespace Com.Hypester.DM3
         private int _boosterLevel = 0;
         public int boosterLevel { get { return _boosterLevel; } set { if (_boosterLevel != value) { _boosterLevel = value; BoosterChange(); } } }
 
+        private GameObject _trapHover;
+
         private bool _selected;
         public bool SetSelected { set { _selected = value; SelectionChange(); } }
 
@@ -29,14 +31,14 @@ namespace Com.Hypester.DM3
         /*private bool _isBeingDestroyed;
         public bool isBeingDestroyed { get { return _isBeingDestroyed; }}*/
 
-        private void Start()
+        protected virtual void Start()
         {
             _startPos = new Vector2();
             _endPos = new Vector2();
             _animating = false;
         }
 
-        private void Update()
+        protected virtual void Update()
         {
             if (_animating)
                 transform.localPosition = Vector2.MoveTowards(transform.localPosition, _endPos, Constants.TileDroppingSpeed * Time.deltaTime);
@@ -45,7 +47,7 @@ namespace Com.Hypester.DM3
                 _animating = false;
         }
 
-        private void ColorChange ()
+        protected void ColorChange ()
         {
             if (_color < Constants.AmountOfColors)
                 GetComponent<Image>().sprite = HexSprite(TileTypes.EColor.yellow + _color);
@@ -53,7 +55,7 @@ namespace Com.Hypester.DM3
                 GetComponent<Image>().enabled = false;
         }
 
-        private void BoosterChange()
+        protected void BoosterChange()
         {
             if (_boosterObj != null)
             {
@@ -77,9 +79,36 @@ namespace Com.Hypester.DM3
                 _boosterObj.transform.SetParent(transform, false);
                 _boosterObj.transform.rotation = new Quaternion(0f, 0f, 0f, _boosterObj.transform.rotation.w);
             }
+            else if (_boosterLevel == 4 || _boosterLevel == 5)
+            {
+                _boosterObj = Instantiate(Resources.Load("Tiles/Modifications/BoosterTrap")) as GameObject;
+                _boosterObj.transform.SetParent(transform, false);
+                _boosterObj.transform.rotation = new Quaternion(0f, 0f, 0f, _boosterObj.transform.rotation.w);
+
+                if (_boosterLevel == 4)
+                    _boosterObj.GetComponent<TrapBooster>().ownerPlayer = 0;
+                else
+                    _boosterObj.GetComponent<TrapBooster>().ownerPlayer = 1;
+            }
         }
 
-        private void SelectionChange()
+        public void TrapHovered ()
+        {
+            _trapHover = Instantiate(Resources.Load("Tiles/Modifications/BoosterTrapHover")) as GameObject;
+            _trapHover.transform.SetParent(transform, false);
+            _trapHover.transform.rotation = new Quaternion(0f, 0f, 0f, _trapHover.transform.rotation.w);
+        }
+
+        public void TrapNotHovered()
+        {
+            if (_trapHover != null)
+            {
+                Destroy(_trapHover);
+                _trapHover = null;
+            }
+        }
+
+        protected void SelectionChange()
         {
             if (_selected)
                 GetComponent<Image>().sprite = HexSpriteSelected(TileTypes.EColor.yellow + _color);
@@ -87,7 +116,7 @@ namespace Com.Hypester.DM3
                 GetComponent<Image>().sprite = HexSprite(TileTypes.EColor.yellow + _color);
         }
 
-        private void CollateralChange ()
+        protected void CollateralChange ()
         {
             if (!_selected && _collateral)
                 GetComponent<Image>().sprite = HexSpriteCollateral(TileTypes.EColor.yellow + _color);
@@ -216,7 +245,7 @@ namespace Com.Hypester.DM3
             return toDestroy;
         }
 
-        private bool Exists(float x, float y)
+        protected bool Exists(float x, float y)
         {
             if (x < Constants.gridXsize && x > -1 && y < Constants.gridYsize && y > -1)
                 return true;

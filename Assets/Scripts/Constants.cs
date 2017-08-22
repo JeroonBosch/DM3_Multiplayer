@@ -2,9 +2,8 @@
 {
     public static class Constants
     {
-        public const int PlayerStartHP = 500;
+        public const int PlayerStartHP = 800;
         public const float TurnTime = 14f;
-        public const int TurnPassHealAmount = 5;
 
         public const int gridXsize = 10;
         public const int gridYsize = 8;

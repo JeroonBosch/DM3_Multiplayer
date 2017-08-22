@@ -41,10 +41,7 @@ namespace Com.Hypester.DM3
             _yellowPowerText = GameObject.Find("MyYellowPower").gameObject.GetComponent<Text>();
             _yellowPowerImage = GameObject.Find("MyYellow").gameObject.GetComponent<Image>();
 
-            if (!PhotonNetwork.isMasterClient) {
-                GameObject.Find("MyAvatar").GetComponent<Image>().sprite = Resources.Load<Sprite>("UI/AvatarA");
-                GameObject.Find("OpponentAvatar").GetComponent<Image>().sprite = Resources.Load<Sprite>("UI/AvatarB");
-            }
+            SetAvatars();
         }
 
         private void Update()
@@ -64,11 +61,9 @@ namespace Com.Hypester.DM3
                     //timer
                     if ((_game.IsMyTurn() && playerNumber == 0) || (!_game.IsMyTurn() && playerNumber == 1)) { 
                         SetTimer(_game.turnTimer);
-                        //transform.localScale = new Vector3(1f, 1f, 1f);
                     }
                     else { 
                         SetTimer(Constants.TurnTime); //invisible.
-                        //transform.localScale = new Vector3(.8f, .8f, 1f);
                     }
 
                     if (_game.MyPlayer.localID == 0 && playerNumber == 0)
@@ -130,6 +125,15 @@ namespace Com.Hypester.DM3
             } else
             {
                 _game = GameObject.Find("Grid").GetComponent<GameHandler>();
+            }
+        }
+
+        public void SetAvatars ()
+        {
+            if (!PhotonNetwork.isMasterClient)
+            {
+                GameObject.Find("MyAvatar").GetComponent<Image>().sprite = Resources.Load<Sprite>("UI/AvatarB");
+                GameObject.Find("OpponentAvatar").GetComponent<Image>().sprite = Resources.Load<Sprite>("UI/AvatarA");
             }
         }
 

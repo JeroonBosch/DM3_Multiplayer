@@ -28,12 +28,21 @@ namespace Com.Hypester.DM3
                 transform.Find("FingerTracker").GetComponent<Image>().enabled = false;
             }
 
-            if (localID == 0) {
+            wantsRematch = false;
+
+            UpdateLabels();
+        }
+
+        public void UpdateLabels ()
+        {
+            if (localID == 0)
+            {
                 foreach (GameObject player1name in GameObject.FindGameObjectsWithTag("Player_1_Name"))
                 {
                     player1name.GetComponent<Text>().text = profileName;
                 }
-            } else
+            }
+            else
             {
                 foreach (GameObject player2name in GameObject.FindGameObjectsWithTag("Player_2_Name"))
                 {
@@ -41,7 +50,20 @@ namespace Com.Hypester.DM3
                 }
             }
 
-            wantsRematch = false;
+            if (photonView.isMine)
+            {
+                foreach (GameObject myName in GameObject.FindGameObjectsWithTag("MyPlayer_Name"))
+                {
+                    myName.GetComponent<Text>().text = profileName;
+                }
+            }
+            else
+            {
+                foreach (GameObject myName in GameObject.FindGameObjectsWithTag("OpponentPlayer_Name"))
+                {
+                    myName.GetComponent<Text>().text = profileName;
+                }
+            }
         }
 
         public void Reset()
@@ -155,20 +177,7 @@ namespace Com.Hypester.DM3
         {
             profileName = profName;
 
-            if (localID == 0)
-            {
-                foreach (GameObject player1name in GameObject.FindGameObjectsWithTag("Player_1_Name"))
-                {
-                    player1name.GetComponent<Text>().text = profileName;
-                }
-            }
-            else
-            {
-                foreach (GameObject player2name in GameObject.FindGameObjectsWithTag("Player_2_Name"))
-                {
-                    player2name.GetComponent<Text>().text = profileName;
-                }
-            }
+            UpdateLabels();
         }
 
         public void PowerClicked (int color)
