@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-using System.Collections;
+using System.Collections.Generic;
 
 namespace Com.Hypester.DM3
 {
@@ -11,18 +11,67 @@ namespace Com.Hypester.DM3
         private float _showTime;
         private float _timer;
 
-        private BufferedText[] bufferedText;
+        private List<BufferedText> bufferedText;
 
-        // Use this for initialization
         void Start()
         {
             _text = GetComponent<Text>();
+
+            bufferedText = new List<BufferedText>();
         }
 
-        // Update is called once per frame
         void FixedUpdate()
         {
             _timer += Time.fixedDeltaTime;
+
+            if (bufferedText.Count > 1)
+            {
+                if (_timer - _showTime > bufferedText[0].showTime)
+                {
+                    _showTime = _timer;
+                    _text.text = bufferedText[0].text;
+                    bufferedText.RemoveAt(0);
+                }
+            } else
+            {
+                if (_timer - _showTime > Constants.MinimumTextTime)
+                {
+                    _text.text = "";
+                }
+            }
+        }
+
+        public void ShowText(string text)
+        {
+            if (_text.text == "") {
+                _text.text = text;
+                _showTime = _timer;
+            }
+            else {
+                BufferedText newBuffer = new BufferedText(text, Constants.MinimumTextTime);
+                bufferedText.Add(newBuffer);
+            }
+        }
+
+        public void ShowLargeText(string text)
+        {
+            GameObject go = Instantiate(Resources.Load("UI/LargeText")) as GameObject;
+            go.transform.SetParent(transform.parent, false);
+            go.GetComponent<Text>().text = text;
+        }
+
+        public void ShowMyText(string text)
+        {
+            GameObject go = Instantiate(Resources.Load("UI/MyPlayerText")) as GameObject;
+            go.transform.SetParent(transform.parent, false);
+            go.GetComponent<Text>().text = text;
+        }
+
+        public void ShowEnemyText(string text)
+        {
+            GameObject go = Instantiate(Resources.Load("UI/EnemyPlayerText")) as GameObject;
+            go.transform.SetParent(transform.parent, false);
+            go.GetComponent<Text>().text = text;
         }
     }
 
@@ -30,5 +79,11 @@ namespace Com.Hypester.DM3
     {
         public string text;
         public float showTime;
+
+        public BufferedText(string text, float showTime)
+        {
+            this.text = text;
+            this.showTime = showTime;
+        }
     }
 }

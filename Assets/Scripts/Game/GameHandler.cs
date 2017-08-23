@@ -27,7 +27,7 @@ namespace Com.Hypester.DM3
         private bool _gridVisualized = false;
         private bool _gameDone = false;
 
-        private Text _gameContext;
+        private GameContext _gameContext;
         #endregion
 
         #region public game logic
@@ -80,7 +80,7 @@ namespace Com.Hypester.DM3
             gameState = new GameStates();
             SetGameState(GameStates.EGameState.search);
 
-            _gameContext = GameObject.Find("GameContext").GetComponent<Text>();
+            _gameContext = GameObject.Find("GameContext").GetComponent<GameContext>();
 
             if (PhotonNetwork.isMasterClient)
             {
@@ -192,9 +192,46 @@ namespace Com.Hypester.DM3
                 else
                 {
                     _curPlayer = (int)stream.ReceiveNext();
+                    float prevHealthOne = healthPlayerOne;
                     healthPlayerOne = (float)stream.ReceiveNext();
+                    float prevHealthTwo = healthPlayerTwo;
                     healthPlayerTwo = (float)stream.ReceiveNext();
+
+                    if (prevHealthOne != healthPlayerOne)
+                    {
+                        photonView.RPC("RPC_HealthChanged", PhotonTargets.MasterClient, 0);
+                        if (MyPlayer.localID == 0)
+                            _gameContext.ShowMyText(healthPlayerOne + "/" + Constants.PlayerStartHP);
+                        else
+                            _gameContext.ShowEnemyText(healthPlayerOne + "/" + Constants.PlayerStartHP);
+                    }
+                    if (prevHealthTwo != healthPlayerTwo)
+                    {
+                        photonView.RPC("RPC_HealthChanged", PhotonTargets.MasterClient, 1);
+                        if (MyPlayer.localID == 1)
+                            _gameContext.ShowMyText(healthPlayerTwo + "/" + Constants.PlayerStartHP);
+                        else
+                            _gameContext.ShowEnemyText(healthPlayerTwo + "/" + Constants.PlayerStartHP);
+                    }
                 }
+            }
+        }
+
+        [PunRPC]
+        private void RPC_HealthChanged (int targetPlayer)
+        {
+            if (targetPlayer == 0)
+            {
+                if (MyPlayer.localID == 0)
+                    _gameContext.ShowMyText(healthPlayerOne + "/" + Constants.PlayerStartHP);
+                else
+                    _gameContext.ShowEnemyText(healthPlayerOne + "/" + Constants.PlayerStartHP);
+            } else
+            {
+                if (MyPlayer.localID == 1)
+                    _gameContext.ShowMyText(healthPlayerTwo + "/" + Constants.PlayerStartHP);
+                else
+                    _gameContext.ShowEnemyText(healthPlayerTwo + "/" + Constants.PlayerStartHP);
             }
         }
 
@@ -704,25 +741,10 @@ namespace Com.Hypester.DM3
 
                 if ((_curPlayer == 0 && !trapped) || (_curPlayer == 1 && trapped))
                 {
-                    if (!P2_ShieldActive)
-                    {
-                        DamagePlayerWithCombo(1, _selectedTiles.Count);
-                        DamagePlayer(1, _baseTiles.FindAll(item => item.collateral == true).Count * Constants.BoosterCollateralDamage);
-                    }
-                    else { 
-                        P2_ShieldActive = false;
-                        photonView.RPC("RPC_ShieldEffect", PhotonTargets.All, 1); 
-                    }
+                    DamagePlayerWithCombo(1, _selectedTiles.Count, _baseTiles.FindAll(item => item.collateral == true).Count * Constants.BoosterCollateralDamage);
                     FillPowerBar(0, color, _selectedTiles.Count);
                 } else {
-                    if (!P1_ShieldActive) {
-                        DamagePlayerWithCombo(0, _selectedTiles.Count);
-                        DamagePlayer(0, _baseTiles.FindAll(item => item.collateral == true).Count * Constants.BoosterCollateralDamage);
-                    }
-                    else {
-                        P1_ShieldActive = false;
-                        photonView.RPC("RPC_ShieldEffect", PhotonTargets.All, 0); 
-                    }
+                    DamagePlayerWithCombo(0, _selectedTiles.Count, _baseTiles.FindAll(item => item.collateral == true).Count * Constants.BoosterCollateralDamage);
                     FillPowerBar(1, color, _selectedTiles.Count);
                 }
             }
@@ -733,6 +755,9 @@ namespace Com.Hypester.DM3
                 if (BaseTileAtPos(pos).boosterLevel >= 4)
                     trapped = true;
             }
+
+            if (trapped)
+                _gameContext.ShowLargeText("Trap was triggered!");
 
             int count = 0;
             foreach (Vector2 pos in _selectedTiles)
@@ -776,12 +801,14 @@ namespace Com.Hypester.DM3
 
             //Explosion effect
             GameObject expl = null;
-            if (baseTile.boosterLevel == 1 || baseTile.boosterLevel >= 4)
+            if (baseTile.boosterLevel == 1)
                 expl = Instantiate(Resources.Load("ParticleEffects/Booster_One_Explosion")) as GameObject;
             else if (baseTile.boosterLevel == 2)
                 expl = Instantiate(Resources.Load("ParticleEffects/Booster_Two_Explosion")) as GameObject;
             else if (baseTile.boosterLevel == 3)
                 expl = Instantiate(Resources.Load("ParticleEffects/Booster_Three_Explosion")) as GameObject;
+            else if (baseTile.boosterLevel >= 4)
+                expl = Instantiate(Resources.Load("ParticleEffects/Booster_Trap_Explosion")) as GameObject;
             else { 
                 if (!collateral) { 
                     expl = Instantiate(Resources.Load("ParticleEffects/TileDestroyedTimer")) as GameObject;
@@ -819,9 +846,9 @@ namespace Com.Hypester.DM3
             photonView.RPC("RPCSendTile", PhotonTargets.All, tile);
         }
 
-        public void DamagePlayerWithCombo(int playerNumber, float comboSize) //only master-client side
+        public void DamagePlayerWithCombo(int playerNumber, float comboSize, float collateralDamage) //only master-client side
         {
-            float damage = (comboSize * comboSize - 2);
+            float damage = (comboSize * comboSize - 2) + collateralDamage;
 
             if (playerNumber == 0)
             {
@@ -829,7 +856,7 @@ namespace Com.Hypester.DM3
                 {
                     healthPlayerOne -= damage;
 
-                    photonView.RPC("RPC_DamageMessage", PhotonTargets.All, 0, damage);
+                    photonView.RPC("RPC_DamageComboMessage", PhotonTargets.All, 0, (comboSize * comboSize - 2), collateralDamage);
                 }
                 else
                 {
@@ -845,7 +872,7 @@ namespace Com.Hypester.DM3
                     
                     healthPlayerTwo -= damage;//Mathf.Pow(comboSize, 2);
 
-                    photonView.RPC("RPC_DamageMessage", PhotonTargets.All, 1, damage);
+                    photonView.RPC("RPC_DamageComboMessage", PhotonTargets.All, 1, (comboSize * comboSize - 2), collateralDamage);
                 }
                 else
                 {
@@ -948,7 +975,7 @@ namespace Com.Hypester.DM3
 
         public void PowerClicked (int color)
         {
-            if (PhotonNetwork.isMasterClient) { 
+            if (PhotonNetwork.isMasterClient) {
                 if (_curPlayer == 0) { 
                     if (color == 1 && P1_PowerBlue >= Constants.BluePowerReq) //blue
                     {
@@ -966,11 +993,17 @@ namespace Com.Hypester.DM3
                     {
                         CreateTrap();
                         P1_PowerRed = 0;
+
+                        _gameContext.ShowText("You placed a trap. Don't trigger it yourself!");
+                        photonView.RPC("RPC_MessageTrap", PhotonTargets.Others);
                     }
                     else if (color == 0 && P1_PowerYellow >= Constants.YellowPowerReq) //yellow
                     {
                         CreateFireball();
                         P1_PowerYellow = 0;
+
+                        _gameContext.ShowText("Touch the fireball and throw it!");
+                        photonView.RPC("RPC_MessageFireball", PhotonTargets.Others); 
                     }
                 } else
                 {
@@ -993,12 +1026,16 @@ namespace Com.Hypester.DM3
                         photonView.RPC("RPC_P2_CreateTrap", PhotonTargets.Others);
                         P2_PowerRed = 0;
                         photonView.RPC("RPC_EmptyPower", PhotonTargets.Others, color);
+
+                        _gameContext.ShowText("Opponent placed a trap. Be careful!");
                     }
                     else if (color == 0 && P2_PowerYellow >= Constants.YellowPowerReq) //yellow
                     {
                         photonView.RPC("RPC_P2_Create_Fireball", PhotonTargets.Others);
                         P2_PowerYellow = 0;
                         photonView.RPC("RPC_EmptyPower", PhotonTargets.Others, color);
+
+                        _gameContext.ShowText("Opponent summoned a fireball!");
                     }
                 }
             }
@@ -1017,6 +1054,7 @@ namespace Com.Hypester.DM3
         private void RPC_P2_Create_Fireball()
         {
             CreateFireball();
+            _gameContext.ShowText("Touch the fireball and throw it!");
         }
 
         [PunRPC]
@@ -1057,6 +1095,7 @@ namespace Com.Hypester.DM3
         private void RPC_P2_CreateTrap()
         {
             CreateTrap();
+            _gameContext.ShowText("You placed a trap. Don't trigger it yourself!");
         }
 
         [PunRPC]
@@ -1076,24 +1115,13 @@ namespace Com.Hypester.DM3
             if (_myPlayer != null) { 
                 if (curPlayer == _myPlayer.localID) //Reversed
                 {
-                    if (GameObject.FindGameObjectWithTag("TurnText") == null)
-                    {
-                        GameObject go = Instantiate(Resources.Load("UI/MyTurn")) as GameObject;
-                        go.transform.SetParent(transform.parent, false);
-
-                        //_gameContext.text = "It is now your turn!";
-                    }
+                   // _gameContext.ShowText("It is now your turn!");
+                    _gameContext.ShowLargeText("Your turn!");
                 }
                 else
                 {
-                    if (GameObject.FindGameObjectWithTag("TurnText") == null)
-                    {
-                        GameObject go = Instantiate(Resources.Load("UI/OpponentsTurn")) as GameObject;
-                        go.transform.SetParent(transform.parent, false);
-                        go.GetComponent<Text>().text = _enemyPlayer.GetName() + "'s turn!";
-
-                        //_gameContext.text = "Waiting for " + _enemyPlayer.GetName() + "'s turn...";
-                    }
+                   // _gameContext.ShowText("Waiting for " + _enemyPlayer.GetName() + "'s turn...");
+                    _gameContext.ShowLargeText(_enemyPlayer.GetName() + "'s turn!");
                 }
             }
         }
@@ -1183,10 +1211,20 @@ namespace Com.Hypester.DM3
         {
             GameObject effect = Instantiate(Resources.Load("ParticleEffects/HealEffect")) as GameObject;
             Vector2 effectPosition = new Vector2();
+
+            float healthLeft = healthPlayerOne;
             if (_myPlayer.localID == targetPlayer)
+            {
+                _gameContext.ShowText("You healed for " +  Constants.HealPower +  "!");
+
                 effectPosition = GameObject.Find("MyAvatar").GetComponent<RectTransform>().position;
+            }
             else
+            {
+                _gameContext.ShowText("Opponent healed for " + Constants.HealPower + "!");
+
                 effectPosition = GameObject.Find("OpponentAvatar").GetComponent<RectTransform>().position;
+            }
             effect.transform.position = effectPosition;
         }
 
@@ -1196,11 +1234,24 @@ namespace Com.Hypester.DM3
         {
             if (_myPlayer.localID == targetPlayer)
             {
-                _gameContext.text = "You received " + damage + " damage!";
+                _gameContext.ShowText("You received " + damage + " damage!");
             }
             else
             {
-                _gameContext.text = "You dealt " + _enemyPlayer.GetName() + " " + damage + " damage!";
+                _gameContext.ShowText("You dealt " + _enemyPlayer.GetName() + " " + damage + " damage!");
+            }
+        }
+
+        [PunRPC]
+        private void RPC_DamageComboMessage(int targetPlayer, float comboDamage, float collateralDamage)
+        {
+            if (_myPlayer.localID == targetPlayer)
+            {
+                _gameContext.ShowText("You received " + comboDamage + " + " + collateralDamage + " damage!");
+            }
+            else
+            {
+                _gameContext.ShowText("You dealt " + _enemyPlayer.GetName() + " " + comboDamage + " + " + collateralDamage + " damage!");
             }
         }
 
@@ -1209,11 +1260,26 @@ namespace Com.Hypester.DM3
         {
             if (_myPlayer.localID == targetPlayer)
             {
-                _gameContext.text = "You blocked " + damage + " damage with your shield!";
+                _gameContext.ShowText("You blocked " + damage + " damage with your shield!");
+                _gameContext.ShowMyText("Good block!");
             } else
             {
-                _gameContext.text = _enemyPlayer.GetName() + " blocked " + damage + " damage with a shield!";
+                _gameContext.ShowText(_enemyPlayer.GetName() + " blocked " + damage + " damage with a shield!");
+                _gameContext.ShowEnemyText("Damage blocked...");
             }
+        }
+
+        [PunRPC]
+        private void RPC_MessageFireball ()
+        {
+
+            _gameContext.ShowText("Opponent summoned a fireball!");
+        }
+
+        [PunRPC]
+        private void RPC_MessageTrap()
+        {
+            _gameContext.ShowText("Opponent placed a trap. Be careful!");
         }
         #endregion
 

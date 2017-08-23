@@ -42,6 +42,9 @@ namespace Com.Hypester.DM3
             if (_isPickedUp && _overBasetile != null) {
                 _overBasetile.TrapNotHovered();
                 _game.photonView.RPC("RPC_CreateTrapBooster", PhotonTargets.All, _overBasetile.position, ownerPlayer.localID);
+
+                GameObject placeParticle = Instantiate(Resources.Load("ParticleEffects/TrapPlaced")) as GameObject;
+                placeParticle.transform.position = _overBasetile.transform.position;
                 Destroy(gameObject);
             } else
             {

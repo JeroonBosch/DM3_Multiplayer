@@ -31,5 +31,7 @@
 
         public const float DelayAfterTileDestruction = .1f;
         public const float TileDroppingSpeed = 1400f;
+
+        public const float MinimumTextTime = 3f; //3 seconds
     }
 }
