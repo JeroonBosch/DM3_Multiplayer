@@ -108,10 +108,6 @@ namespace Com.Hypester.DM3
                 Vector2 p1 = new Vector2(_startPosition.x + 5 * _randomDirection, _startPosition.y);
                 Vector2 p2 = new Vector2(_endPosition.x + 5 * _randomDirection, _endPosition.y);
                 Vector3 p3 = _endPosition;
-                Debug.Log(p0);
-                Debug.Log(p1);
-                Debug.Log(p2);
-                Debug.Log(p3);
                 _rt.position = CalculateBezierPoint(t, p0, p1, p2, p3);
             }
         }
