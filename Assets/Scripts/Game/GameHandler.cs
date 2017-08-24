@@ -28,6 +28,10 @@ namespace Com.Hypester.DM3
         private bool _gameDone = false;
 
         private GameContext _gameContext;
+
+        private float _timer = 0f; //Generic timer.
+
+        private bool _rematchRequested = false;
         #endregion
 
         #region public game logic
@@ -104,7 +108,6 @@ namespace Com.Hypester.DM3
                         if (!_gameDone)
                         {
                             Refill();
-                            turnTimer = 0f;
                             _MC_endTurnDelay = false;
                             _MC_endTurnDelayTimer = 0f;
                         }
@@ -116,6 +119,34 @@ namespace Com.Hypester.DM3
                             photonView.RPC("RPC_EndGame", PhotonTargets.All, winnerPlayer);
                         }
                     }
+
+                    if (gameState.State == GameStates.EGameState.inTurn && GridHasEmptyTiles())
+                    {
+                        Debug.Log("Missing some tiles.");
+                        GridUpdate();
+                    }
+                } else
+                {
+                    if (gameState.State == GameStates.EGameState.inTurn && GridHasEmptyTiles())
+                    {
+                        photonView.RPC("RPC_RequestGridData", PhotonTargets.MasterClient);
+                    }
+                }
+            }
+
+            RematchUpdate();
+        }
+
+        private void RematchUpdate()
+        {
+            if (_rematchRequested) { 
+                _timer += Time.deltaTime;
+
+                if (_timer > 2f)
+                {
+                    _rematchRequested = false;
+                    _timer = 0f;
+                    PhotonNetwork.LoadLevel("NormalGame");
                 }
             }
         }
@@ -123,7 +154,7 @@ namespace Com.Hypester.DM3
         private void FixedUpdate()
         {
             //Do timer stuff in Fixed update, for consistency.
-            if (_isActive)
+            if (_isActive && gameState.State == GameStates.EGameState.inTurn)
             {
                 if (turnTimer > Constants.TurnTime)
                 {
@@ -131,7 +162,8 @@ namespace Com.Hypester.DM3
                 }
                 else
                     turnTimer += Time.fixedDeltaTime;
-            }
+            } else
+                turnTimer = 0f;
         }
 
         public void Show()
@@ -139,6 +171,8 @@ namespace Com.Hypester.DM3
             if (!_isActive)
             {
                 _isActive = true;
+                SetGameState(GameStates.EGameState.matchFound);
+
                 Player[] players = FindObjectsOfType<Player>();
                 foreach (Player player in players)
                 {
@@ -338,8 +372,23 @@ namespace Com.Hypester.DM3
                         }
                     }
                 }
-                gameState.State = GameStates.EGameState.inTurn;
+                SetGameState(GameStates.EGameState.inTurn);
             }
+        }
+
+        private bool GridHasEmptyTiles()
+        {
+            bool hasEmptyTiles = false;
+            for (int x = 0; x < Constants.gridXsize; x++)
+            {
+                for (int y = 0; y < Constants.gridYsize; y++)
+                {
+                    BaseTile baseTile = BaseTileAtPos(new Vector2(x, y));
+                    if (baseTile.color >= Constants.AmountOfColors)
+                        hasEmptyTiles = true;
+                }
+            }
+            return hasEmptyTiles;
         }
 
         //Refill function
@@ -593,6 +642,13 @@ namespace Com.Hypester.DM3
         }
 
         [PunRPC]
+        public void RPC_RequestGridData()
+        {
+            Debug.Log("Grid did not render properly, requesting update.");
+            photonView.RPC("RPCSendGridData", PhotonTargets.Others, _grid);
+        }
+
+        [PunRPC]
         public void RPCSendGridData(Grid grid)
         {
             _gridReceived = true;
@@ -798,6 +854,10 @@ namespace Com.Hypester.DM3
             BaseTile baseTile = BaseTileAtPos(pos);
             go.transform.position = baseTile.transform.position;
             go.GetComponent<TileExplosion>().Init(targetPlayer, count, baseTile.HexSprite(TileTypes.EColor.yellow + baseTile.color));
+
+            GameObject boosterFiller = Instantiate(Resources.Load("ParticleEffects/BoosterFiller")) as GameObject;
+            boosterFiller.transform.position = baseTile.transform.position;
+            boosterFiller.GetComponent<BoosterFiller>().Init(targetPlayer, count, baseTile.color);
 
             //Explosion effect
             GameObject expl = null;
@@ -1176,7 +1236,7 @@ namespace Com.Hypester.DM3
         public void SendRematchRequest()
         {
             Debug.Log("Rematch order gotten, reloading Scene.");
-            PhotonNetwork.LoadLevel("NormalGame");
+            _rematchRequested = true;
         }
 
         [PunRPC]
@@ -1212,7 +1272,6 @@ namespace Com.Hypester.DM3
             GameObject effect = Instantiate(Resources.Load("ParticleEffects/HealEffect")) as GameObject;
             Vector2 effectPosition = new Vector2();
 
-            float healthLeft = healthPlayerOne;
             if (_myPlayer.localID == targetPlayer)
             {
                 _gameContext.ShowText("You healed for " +  Constants.HealPower +  "!");

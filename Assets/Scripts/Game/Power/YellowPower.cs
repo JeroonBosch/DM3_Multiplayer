@@ -51,7 +51,7 @@ namespace Com.Hypester.DM3
                     }
                     else
                     {
-                        position = transform.localPosition;
+                        //position = transform.localPosition;
                     }
 
                     if (transform.localPosition.x > 5f || transform.localPosition.y > 5f || transform.localPosition.x < -5f || transform.localPosition.y < -5f)
@@ -104,11 +104,19 @@ namespace Com.Hypester.DM3
                 Rigidbody2D rb = gameObject.GetComponent<Rigidbody2D>();
                 rb.velocity = _velocity * _speed;
 
-                Debug.Log("Fly w " + _velocity);
+                photonView.RPC("RPC_Fly", PhotonTargets.Others, _velocity);
             } else
             {
                 _isPickedUp = false;
             }
+        }
+
+        [PunRPC]
+        private void RPC_Fly (Vector2 velo)
+        {
+            Vector2 mirrorVelocity = new Vector2(-velo.x, -velo.y);
+            Rigidbody2D rb = gameObject.GetComponent<Rigidbody2D>();
+            rb.velocity = mirrorVelocity * _speed;
         }
     }
 }
