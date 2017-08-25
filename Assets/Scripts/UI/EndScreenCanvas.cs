@@ -23,6 +23,7 @@ namespace Com.Hypester.DM3
         protected override void Start()
         {
             base.Start();
+            Hide();
             _game = GameObject.Find("Grid").GetComponent<GameHandler>();
 
             if (PhotonNetwork.isMasterClient)

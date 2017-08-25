@@ -46,6 +46,8 @@ namespace Com.Hypester.DM3
                 GameObject placeParticle = Instantiate(Resources.Load("ParticleEffects/TrapPlaced")) as GameObject;
                 placeParticle.transform.position = _overBasetile.transform.position;
                 Destroy(gameObject);
+
+               _game.ResetTimer();
             } else
             {
                 _isPickedUp = false;

@@ -36,16 +36,27 @@ namespace Com.Hypester.DM3
         {
             if (!photonView.isMine)
             {
-                transform.localPosition = new Vector2 (mirrorPosition.x, mirrorPosition.y + 2f); //No idea why the +2f is needed, but it is..
-            } else
+                if (!_isFlying)
+                    transform.localPosition = new Vector2(mirrorPosition.x, mirrorPosition.y + 2f); //No idea why the +2f is needed, but it is..
+                else
+                {
+                    Vector2 mirrorVelocity = new Vector2(-_velocity.x, -_velocity.y);
+                    Rigidbody2D rb = gameObject.GetComponent<Rigidbody2D>();
+                    rb.velocity = mirrorVelocity * _speed;
+                }
+            }
+            else
             {
-                if (!_isFlying) { 
+                if (!_isFlying)
+                {
                     _velocity = new Vector2(_curPos.x - _lastPos.x, _curPos.y - _lastPos.y);
                     _lastPos = _curPos;
                     _curPos = transform.position;
-                } else
+                }
+                else
                 {
-                    if (_velocity.x < .3f && _velocity.y < .3f) { 
+                    if (_velocity.x < .3f && _velocity.y < .3f)
+                    {
                         _isFlying = false;
                         GetComponent<Rigidbody2D>().velocity = new Vector2(0, 0);
                     }
@@ -57,7 +68,8 @@ namespace Com.Hypester.DM3
                     if (transform.localPosition.x > 5f || transform.localPosition.y > 5f || transform.localPosition.x < -5f || transform.localPosition.y < -5f)
                     {
                         Destroy(gameObject);
-                    } 
+                        photonView.RPC("RPC_DestroyFireball", PhotonTargets.Others);
+                    }
                 }
             }
         }
@@ -77,21 +89,23 @@ namespace Com.Hypester.DM3
 
         private void OnTriggerEnter2D(Collider2D collision)
         {
-            if (collision.gameObject.tag == "Hitbox" && photonView.isMine) { 
+            if (collision.gameObject.tag == "Hitbox" && photonView.isMine)
+            {
                 _game.photonView.RPC("FireballHit", PhotonTargets.All);
-            } else
+            }
+            else
             {
                 Debug.Log("hit " + collision.gameObject.name);
             }
         }
 
-        public void PickUp ()
+        public void PickUp()
         {
             _isPickedUp = true;
             Debug.Log("Fireball picked up.");
         }
 
-        private Vector2 MirrorPosition (Vector2 pos)
+        private Vector2 MirrorPosition(Vector2 pos)
         {
             Vector2 mirrored = new Vector2(-pos.x, -pos.y);
             return mirrored;
@@ -99,24 +113,34 @@ namespace Com.Hypester.DM3
 
         public void Fly()
         {
-            if (_isPickedUp && !_isFlying) {
+            if (_isPickedUp && !_isFlying)
+            {
                 _isFlying = true;
                 Rigidbody2D rb = gameObject.GetComponent<Rigidbody2D>();
                 rb.velocity = _velocity * _speed;
 
                 photonView.RPC("RPC_Fly", PhotonTargets.Others, _velocity);
-            } else
+            }
+            else
             {
                 _isPickedUp = false;
             }
         }
 
         [PunRPC]
-        private void RPC_Fly (Vector2 velo)
+        private void RPC_Fly(Vector2 velo)
         {
-            Vector2 mirrorVelocity = new Vector2(-velo.x, -velo.y);
+            _isFlying = true;
+            _velocity = velo;
+            Vector2 mirrorVelocity = new Vector2(-_velocity.x, -_velocity.y);
             Rigidbody2D rb = gameObject.GetComponent<Rigidbody2D>();
             rb.velocity = mirrorVelocity * _speed;
+        }
+
+        [PunRPC]
+        private void RPC_DestroyFireball()
+        {
+            Destroy(gameObject);
         }
     }
 }

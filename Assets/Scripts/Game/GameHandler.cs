@@ -110,6 +110,12 @@ namespace Com.Hypester.DM3
                             Refill();
                             _MC_endTurnDelay = false;
                             _MC_endTurnDelayTimer = 0f;
+
+                            if (_curPlayer == 0)
+                                _curPlayer = 1;
+                            else
+                                _curPlayer = 0;
+                            photonView.RPC("RPCTurnWarning", PhotonTargets.All, _curPlayer);
                         }
                         else {
                             int winnerPlayer = 0;
@@ -207,7 +213,7 @@ namespace Com.Hypester.DM3
                     playerInterface.SetAvatars();
                 }
 
-                photonView.RPC("RPCTurnWarning", PhotonTargets.All, _curPlayer);
+                //photonView.RPC("RPCTurnWarning", PhotonTargets.All, _curPlayer);
                 _myPlayer.Reset();
                 _enemyPlayer.Reset();
             }
@@ -231,41 +237,51 @@ namespace Com.Hypester.DM3
                     float prevHealthTwo = healthPlayerTwo;
                     healthPlayerTwo = (float)stream.ReceiveNext();
 
-                    if (prevHealthOne != healthPlayerOne)
+                    if (prevHealthOne != healthPlayerOne) 
                     {
-                        photonView.RPC("RPC_HealthChanged", PhotonTargets.MasterClient, 0);
+                        float difference = healthPlayerOne - prevHealthOne;
+                        string diffString = difference.ToString();
+                        if (difference > 0)
+                            diffString = "+" + difference.ToString();
+
+                        photonView.RPC("RPC_HealthChanged", PhotonTargets.MasterClient, 0, diffString);
                         if (MyPlayer.localID == 0)
-                            _gameContext.ShowMyText(healthPlayerOne + "/" + Constants.PlayerStartHP);
+                            _gameContext.ShowMyText(difference.ToString());
                         else
-                            _gameContext.ShowEnemyText(healthPlayerOne + "/" + Constants.PlayerStartHP);
+                            _gameContext.ShowEnemyText(difference.ToString());
                     }
                     if (prevHealthTwo != healthPlayerTwo)
                     {
-                        photonView.RPC("RPC_HealthChanged", PhotonTargets.MasterClient, 1);
+                        float difference = healthPlayerTwo - prevHealthTwo;
+                        string diffString = difference.ToString();
+                        if (difference > 0)
+                            diffString = "+" + difference.ToString();
+
+                        photonView.RPC("RPC_HealthChanged", PhotonTargets.MasterClient, 1, diffString);
                         if (MyPlayer.localID == 1)
-                            _gameContext.ShowMyText(healthPlayerTwo + "/" + Constants.PlayerStartHP);
+                            _gameContext.ShowMyText(difference.ToString());
                         else
-                            _gameContext.ShowEnemyText(healthPlayerTwo + "/" + Constants.PlayerStartHP);
+                            _gameContext.ShowEnemyText(difference.ToString());
                     }
                 }
             }
         }
 
         [PunRPC]
-        private void RPC_HealthChanged (int targetPlayer)
+        private void RPC_HealthChanged (int targetPlayer, string difference)
         {
             if (targetPlayer == 0)
             {
                 if (MyPlayer.localID == 0)
-                    _gameContext.ShowMyText(healthPlayerOne + "/" + Constants.PlayerStartHP);
+                    _gameContext.ShowMyText(difference);
                 else
-                    _gameContext.ShowEnemyText(healthPlayerOne + "/" + Constants.PlayerStartHP);
+                    _gameContext.ShowEnemyText(difference);
             } else
             {
                 if (MyPlayer.localID == 1)
-                    _gameContext.ShowMyText(healthPlayerTwo + "/" + Constants.PlayerStartHP);
+                    _gameContext.ShowMyText(difference);
                 else
-                    _gameContext.ShowEnemyText(healthPlayerTwo + "/" + Constants.PlayerStartHP);
+                    _gameContext.ShowEnemyText(difference);
             }
         }
 
@@ -674,16 +690,21 @@ namespace Com.Hypester.DM3
             //Master client will sync this.
             if (PhotonNetwork.isMasterClient)
             {
-                if (_curPlayer == 0)
-                    _curPlayer = 1;
-                else
-                    _curPlayer = 0;
-
-                photonView.RPC("RPCTurnWarning", PhotonTargets.All, _curPlayer);
-
                 _MC_endTurnDelay = true;
                 _MC_endTurnDelayTimer = 0f;
             }
+        }
+
+        public void ResetTimer ()
+        {
+            turnTimer = 0f;
+            photonView.RPC("RPC_ResetTimer", PhotonTargets.Others);
+        }
+
+        [PunRPC]
+        private void RPC_ResetTimer ()
+        {
+            turnTimer = 0f;
         }
 
         public void AddToSelection(Vector2 pos)
@@ -855,9 +876,11 @@ namespace Com.Hypester.DM3
             go.transform.position = baseTile.transform.position;
             go.GetComponent<TileExplosion>().Init(targetPlayer, count, baseTile.HexSprite(TileTypes.EColor.yellow + baseTile.color));
 
-            GameObject boosterFiller = Instantiate(Resources.Load("ParticleEffects/BoosterFiller")) as GameObject;
-            boosterFiller.transform.position = baseTile.transform.position;
-            boosterFiller.GetComponent<BoosterFiller>().Init(targetPlayer, count, baseTile.color);
+            if (!collateral) { 
+                GameObject boosterFiller = Instantiate(Resources.Load("ParticleEffects/BoosterFiller")) as GameObject;
+                boosterFiller.transform.position = baseTile.transform.position;
+                boosterFiller.GetComponent<BoosterFiller>().Init(targetPlayer, count, baseTile.color);
+            }
 
             //Explosion effect
             GameObject expl = null;
@@ -1127,16 +1150,20 @@ namespace Com.Hypester.DM3
                 GameObject explosion = Instantiate(Resources.Load("ParticleEffects/FireballHit")) as GameObject;
                 explosion.transform.position = GameObject.Find("OpponentAvatar").transform.position;
 
-                if (PhotonNetwork.isMasterClient)
+                if (PhotonNetwork.isMasterClient) { 
                     DamagePlayer(EnemyPlayer.localID, Constants.FireballPower);
+                    ResetTimer();
+                }
             }
             else
             {
                 GameObject explosion = Instantiate(Resources.Load("ParticleEffects/FireballHit")) as GameObject;
                 explosion.transform.position = GameObject.Find("MyAvatar").transform.position;
 
-                if (PhotonNetwork.isMasterClient)
+                if (PhotonNetwork.isMasterClient) { 
                     DamagePlayer(MyPlayer.localID, Constants.FireballPower);
+                    ResetTimer();
+                }
             }
 
             Destroy(fireball);
