@@ -115,7 +115,7 @@ namespace Com.Hypester.DM3
                                 _curPlayer = 1;
                             else
                                 _curPlayer = 0;
-                            photonView.RPC("RPCTurnWarning", PhotonTargets.All, _curPlayer);
+                            photonView.RPC("RPC_TurnEnded", PhotonTargets.All, _curPlayer);
                         }
                         else {
                             int winnerPlayer = 0;
@@ -126,14 +126,14 @@ namespace Com.Hypester.DM3
                         }
                     }
 
-                    if (gameState.State == GameStates.EGameState.inTurn && GridHasEmptyTiles())
+                    if (gameState.State == GameStates.EGameState.inTurn && _baseTiles != null && GridHasEmptyTiles())
                     {
                         Debug.Log("Missing some tiles.");
                         GridUpdate();
                     }
                 } else
                 {
-                    if (gameState.State == GameStates.EGameState.inTurn && GridHasEmptyTiles())
+                    if (gameState.State == GameStates.EGameState.inTurn && _baseTiles != null && GridHasEmptyTiles())
                     {
                         photonView.RPC("RPC_RequestGridData", PhotonTargets.MasterClient);
                     }
@@ -199,7 +199,6 @@ namespace Com.Hypester.DM3
                 }
 
 
-                Debug.Log("My Local ID: " + _myPlayer.localID + " (0 is Master Client)");
                 if (_myPlayer.localID == 1 && !PhotonNetwork.isMasterClient)
                 {
                     transform.rotation = new Quaternion(0f, 0f, 180f, transform.rotation.w);
@@ -213,7 +212,6 @@ namespace Com.Hypester.DM3
                     playerInterface.SetAvatars();
                 }
 
-                //photonView.RPC("RPCTurnWarning", PhotonTargets.All, _curPlayer);
                 _myPlayer.Reset();
                 _enemyPlayer.Reset();
             }
@@ -713,6 +711,7 @@ namespace Com.Hypester.DM3
             BaseTileAtPos(pos).SetSelected = true;
 
             RecalculateCollateral();
+            RecalculateDamage();
         }
 
         public void RemoveFromSelection(Vector2 pos)
@@ -722,6 +721,20 @@ namespace Com.Hypester.DM3
 
             if (BaseTileAtPos(pos).boosterLevel > 0)
                 RecalculateCollateral();
+            RecalculateDamage();
+        }
+
+        public void RemoveSelections()
+        {
+            _selectedTiles.Clear();
+            foreach (BaseTile tile in FindObjectsOfType<BaseTile>())
+            {
+                tile.SetSelected = false;
+                tile.collateral = false;
+            }
+
+            RecalculateCollateral();
+            RecalculateDamage();
         }
 
         private void RecalculateCollateral ()
@@ -743,6 +756,25 @@ namespace Com.Hypester.DM3
             }
 
             LoopCollateralDamage(collateral);
+        }
+
+        private void RecalculateDamage ()
+        {
+            foreach (Player player in FindObjectsOfType<Player>())
+            {
+                if (_curPlayer != player.localID) //Show potential damage on the target player.
+                {
+                    float targetPlayerHealth;
+                    if (player.localID == 0)
+                        targetPlayerHealth = healthPlayerOne;
+                    else
+                        targetPlayerHealth = healthPlayerTwo;
+
+                    float damage = (_selectedTiles.Count * _selectedTiles.Count - 2) + _baseTiles.FindAll(item => item.collateral == true).Count * Constants.BoosterCollateralDamage;
+                    float calculatedDamage = targetPlayerHealth - damage;
+                    player.FindInterface().SetHitpoints(calculatedDamage, Constants.PlayerStartHP);
+                }
+            }
         }
 
         private void LoopCollateralDamage(List<BaseTile> collateral)
@@ -767,16 +799,6 @@ namespace Com.Hypester.DM3
 
             if (anyChanges)
                 LoopCollateralDamage(collateral);
-        }
-
-        public void RemoveSelections()
-        {
-            _selectedTiles.Clear();
-            foreach (BaseTile tile in FindObjectsOfType<BaseTile>())
-            {
-                tile.SetSelected = false;
-                tile.collateral = false;
-            }
         }
 
         public List<BaseTile> FindAdjacentTiles(Vector2 position, float radius)
@@ -1005,8 +1027,10 @@ namespace Com.Hypester.DM3
 
             }
 
-            if (healthPlayerOne <= 0 || healthPlayerTwo <= 0)
+            if (healthPlayerOne <= 0 || healthPlayerTwo <= 0) { 
                 _gameDone = true;
+                EndTurn(); //Fireball should end the game.
+            }
         }
 
         public bool IsMyTurn()
@@ -1016,13 +1040,6 @@ namespace Com.Hypester.DM3
 
             if (_myPlayer.localID == _curPlayer)
                 return true;
-            return false;
-        }
-
-        public bool InTurnDelay()
-        {
-            /*if (_myPlayer.localID == _curPlayer)
-                return true;*/
             return false;
         }
 
@@ -1038,6 +1055,15 @@ namespace Com.Hypester.DM3
                     P1_PowerRed = Mathf.Min(P1_PowerRed + increaseBy, Constants.RedPowerReq);
                 else if (color == 0)
                     P1_PowerYellow = Mathf.Min(P1_PowerYellow + increaseBy, Constants.YellowPowerReq);
+
+                if (P1_PowerBlue == Constants.BluePowerReq)
+                    _gameContext.ShowText("Shield ability available!");
+                if (P1_PowerGreen == Constants.GreenPowerReq)
+                    _gameContext.ShowText("Heal ability available!");
+                if (P1_PowerRed == Constants.RedPowerReq)
+                    _gameContext.ShowText("Trap ability available!");
+                if (P1_PowerYellow == Constants.YellowPowerReq)
+                    _gameContext.ShowText("Fireball ability available!");
             } else
             {
                 if (color == 1) { 
@@ -1197,7 +1223,7 @@ namespace Com.Hypester.DM3
         }
 
         [PunRPC]
-        private void RPCTurnWarning(int curPlayer)
+        private void RPC_TurnEnded(int curPlayer)
         {
             if (_myPlayer != null) { 
                 if (curPlayer == _myPlayer.localID) //Reversed
@@ -1210,6 +1236,17 @@ namespace Com.Hypester.DM3
                    // _gameContext.ShowText("Waiting for " + _enemyPlayer.GetName() + "'s turn...");
                     _gameContext.ShowLargeText(_enemyPlayer.GetName() + "'s turn!");
                 }
+            }
+
+            if (MyPlayer.localID == 0)
+            {
+                MyPlayer.FindInterface().UpdateShadowhealth(healthPlayerOne);
+                EnemyPlayer.FindInterface().UpdateShadowhealth(healthPlayerTwo);
+            }
+            else
+            {
+                MyPlayer.FindInterface().UpdateShadowhealth(healthPlayerTwo);
+                EnemyPlayer.FindInterface().UpdateShadowhealth(healthPlayerOne);
             }
         }
 
@@ -1243,6 +1280,15 @@ namespace Com.Hypester.DM3
                 P2_PowerRed = value;
             else if (color == 0)
                 P2_PowerYellow = value;
+
+            if (P2_PowerBlue == Constants.BluePowerReq)
+                _gameContext.ShowText("Shield ability available!");
+            if (P2_PowerGreen == Constants.GreenPowerReq)
+                _gameContext.ShowText("Heal ability available!");
+            if (P2_PowerRed == Constants.RedPowerReq)
+                _gameContext.ShowText("Trap ability available!");
+            if (P2_PowerYellow == Constants.YellowPowerReq)
+                _gameContext.ShowText("Fireball ability available!");
         }
 
         [PunRPC]
@@ -1290,6 +1336,8 @@ namespace Com.Hypester.DM3
                 Vector2 effectPosition = new Vector2();
                 effectPosition = GameObject.Find("MyAvatar").GetComponent<RectTransform>().position;
                 effect.transform.position = effectPosition;
+
+                _gameContext.ShowText("Shield is now active. The next damage against you is blocked.");
             }
         }
 
@@ -1318,27 +1366,27 @@ namespace Com.Hypester.DM3
         [PunRPC]
         private void RPC_DamageMessage(int targetPlayer, float damage)
         {
-            if (_myPlayer.localID == targetPlayer)
+            /*if (_myPlayer.localID == targetPlayer)
             {
                 _gameContext.ShowText("You received " + damage + " damage!");
             }
             else
             {
                 _gameContext.ShowText("You dealt " + _enemyPlayer.GetName() + " " + damage + " damage!");
-            }
+            }*/
         }
 
         [PunRPC]
         private void RPC_DamageComboMessage(int targetPlayer, float comboDamage, float collateralDamage)
         {
-            if (_myPlayer.localID == targetPlayer)
+            /*if (_myPlayer.localID == targetPlayer)
             {
                 _gameContext.ShowText("You received " + comboDamage + " + " + collateralDamage + " damage!");
             }
             else
             {
                 _gameContext.ShowText("You dealt " + _enemyPlayer.GetName() + " " + comboDamage + " + " + collateralDamage + " damage!");
-            }
+            }*/
         }
 
         [PunRPC]

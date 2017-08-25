@@ -6,11 +6,13 @@ namespace Com.Hypester.DM3
 {
     public class PlayerInterface : MonoBehaviour
     {
-        public int playerNumber;
+        public int playerNumber; //0 for MyAvatar and 1 for Opponent
+
         //public string avatarString;
 
         private GameHandler _game;
         private GameObject _health;
+        private GameObject _shadowHealth;
         private GameObject _healthText;
         //private Sprite[] _healthSprites;
         private GameObject _timer;
@@ -31,6 +33,7 @@ namespace Com.Hypester.DM3
             //_healthSprites = Resources.LoadAll<Sprite>("Spritesheets/AvatarHealth256x256");
             //_timerSprites = Resources.LoadAll<Sprite>("Spritesheets/AvatarTimer256x256");
             _health = transform.Find("Health").gameObject;
+            _shadowHealth = transform.Find("ShadowHealth").gameObject;
             _healthText = _health.transform.Find("HealthText").gameObject;
             _timer = transform.Find("Timer").gameObject;
 
@@ -53,12 +56,12 @@ namespace Com.Hypester.DM3
                 if (_game.MyPlayer != null) {
 
                     //health
-                    if ((_game.MyPlayer.localID == 0 && playerNumber == 0) || (_game.MyPlayer.localID == 1 && playerNumber == 1)) {
+                    /*if ((_game.MyPlayer.localID == 0 && playerNumber == 0) || (_game.MyPlayer.localID == 1 && playerNumber == 1)) {
                         SetHitpoints(_game.healthPlayerOne, Constants.PlayerStartHP);
                     }
                     else { 
                         SetHitpoints(_game.healthPlayerTwo, Constants.PlayerStartHP);
-                    }
+                    }*/
 
                     //timer
                     if ((_game.IsMyTurn() && playerNumber == 0) || (!_game.IsMyTurn() && playerNumber == 1)) { 
@@ -151,6 +154,13 @@ namespace Com.Hypester.DM3
            // _health.GetComponent<Image>().sprite = assignedSprite; //for color change
             _health.GetComponent<Image>().fillAmount = ratio;
             _healthText.GetComponent<Text>().text = hitpoints + "/" + maxHealth;
+        }
+
+        public void UpdateShadowhealth (float hitpoints)
+        {
+            float ratio = hitpoints / Constants.PlayerStartHP;
+            _shadowHealth.GetComponent<Image>().fillAmount = ratio;
+            //_health.GetComponent<Image>().fillAmount = ratio;
         }
 
         public GameObject GetTimer()

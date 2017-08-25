@@ -66,6 +66,19 @@ namespace Com.Hypester.DM3
             }
         }
 
+        public PlayerInterface FindInterface ()
+        {
+            PlayerInterface playerInterface = null;
+
+            foreach (PlayerInterface tryInterface in FindObjectsOfType<PlayerInterface>())
+            {
+                if ((photonView.isMine && tryInterface.playerNumber == 0) || (!photonView.isMine && tryInterface.playerNumber == 1))
+                    return tryInterface;
+            }
+
+            return playerInterface;
+        }
+
         public void Reset()
         {
             Start();
