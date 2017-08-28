@@ -104,6 +104,11 @@ namespace Com.Hypester.DM3
                     if (_MC_endTurnDelay)
                         _MC_endTurnDelayTimer += Time.deltaTime;
 
+                    //bool healthDoneDropping = false;
+                    //if (MyPlayer.FindInterface().GetShownHitpoints() <= MyPlayer.GetHealth() && EnemyPlayer.FindInterface().GetShownHitpoints() <= EnemyPlayer.GetHealth())
+                    //    healthDoneDropping = true;
+                    
+
                     if (_MC_endTurnDelayTimer > Constants.TimeBetweenTurns) {
                         if (!_gameDone)
                         {
@@ -772,7 +777,7 @@ namespace Com.Hypester.DM3
 
                     float damage = (_selectedTiles.Count * _selectedTiles.Count - 2) + _baseTiles.FindAll(item => item.collateral == true).Count * Constants.BoosterCollateralDamage;
                     float calculatedDamage = targetPlayerHealth - damage;
-                    player.FindInterface().SetHitpoints(calculatedDamage, Constants.PlayerStartHP);
+                    player.FindInterface().SetHitpoints(calculatedDamage);
                 }
             }
         }
@@ -819,6 +824,16 @@ namespace Com.Hypester.DM3
         {
             //Both host and client execute this command.
             bool trapped = false;
+
+            /*if (MyPlayer.localID == 0) {
+                MyPlayer.FindInterface().SetHitpoints(healthPlayerOne);
+                EnemyPlayer.FindInterface().SetHitpoints(healthPlayerTwo);
+            } else
+            {
+                EnemyPlayer.FindInterface().SetHitpoints(healthPlayerOne);
+                MyPlayer.FindInterface().SetHitpoints(healthPlayerTwo);
+            }
+            RecalculateDamage();*/
 
             //Only master client will update the _grid and then sync it.
             if (PhotonNetwork.isMasterClient)

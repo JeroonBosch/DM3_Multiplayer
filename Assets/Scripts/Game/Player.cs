@@ -79,6 +79,13 @@ namespace Com.Hypester.DM3
             return playerInterface;
         }
 
+        public float GetHealth ()
+        {
+            if (localID == 0)
+                return _game.GetComponent<GameHandler>().healthPlayerOne;
+            return _game.GetComponent<GameHandler>().healthPlayerTwo;
+        }
+
         public void Reset()
         {
             Start();

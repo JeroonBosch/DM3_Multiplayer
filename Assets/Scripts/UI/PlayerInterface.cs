@@ -18,6 +18,8 @@ namespace Com.Hypester.DM3
         private GameObject _timer;
         //private Sprite[] _timerSprites;
 
+        private bool _animateHealth;
+
         private Text _bluePowerText;
         private Image _bluePowerImage;
         private Text _greenPowerText;
@@ -55,23 +57,31 @@ namespace Com.Hypester.DM3
 
                 if (_game.MyPlayer != null) {
 
-                    //health
-                    /*if ((_game.MyPlayer.localID == 0 && playerNumber == 0) || (_game.MyPlayer.localID == 1 && playerNumber == 1)) {
-                        SetHitpoints(_game.healthPlayerOne, Constants.PlayerStartHP);
+                    if (_animateHealth) {
+                        //health
+                        if ((_game.MyPlayer.localID == 0 && IsMyInterface()) || (_game.MyPlayer.localID == 1 && !IsMyInterface())) {
+                            if (GetShownHitpoints() >= _game.healthPlayerOne)
+                                SetHitpoints(GetShownHitpoints() - Time.deltaTime * Constants.HealthDroppingSpeed);
+                            else
+                                _animateHealth = false;
+                        }
+                        else {
+                            if (GetShownHitpoints() >= _game.healthPlayerTwo)
+                                SetHitpoints(GetShownHitpoints() - Time.deltaTime * Constants.HealthDroppingSpeed);
+                            //else
+                               _animateHealth = false;
+                        }
                     }
-                    else { 
-                        SetHitpoints(_game.healthPlayerTwo, Constants.PlayerStartHP);
-                    }*/
 
                     //timer
-                    if ((_game.IsMyTurn() && playerNumber == 0) || (!_game.IsMyTurn() && playerNumber == 1)) { 
+                    if ((_game.IsMyTurn() && IsMyInterface()) || (!_game.IsMyTurn() && !IsMyInterface())) { 
                         SetTimer(_game.turnTimer);
                     }
                     else { 
                         SetTimer(Constants.TurnTime); //invisible.
                     }
 
-                    if (_game.MyPlayer.localID == 0 && playerNumber == 0)
+                    if (_game.MyPlayer.localID == 0 && IsMyInterface())
                     {
                         //powers
                         _bluePowerText.text = _game.P1_PowerBlue + "/" + Constants.BluePowerReq;
@@ -142,9 +152,9 @@ namespace Com.Hypester.DM3
             }
         }
 
-        public void SetHitpoints(float hitpoints, float maxHealth)
+        public void SetHitpoints(float hitpoints)
         {
-            float ratio = hitpoints / maxHealth;
+            float ratio = hitpoints / Constants.PlayerStartHP;
            // int select = Mathf.FloorToInt(ratio * _healthSprites.Length);
            // select = _healthSprites.Length - select;
            // select -= 5; //needed for the radial thing. Still keeping the color change.
@@ -153,7 +163,12 @@ namespace Com.Hypester.DM3
             //Sprite assignedSprite = _healthSprites[select];
            // _health.GetComponent<Image>().sprite = assignedSprite; //for color change
             _health.GetComponent<Image>().fillAmount = ratio;
-            _healthText.GetComponent<Text>().text = hitpoints + "/" + maxHealth;
+            //_healthText.GetComponent<Text>().text = hitpoints + "/" + Constants.PlayerStartHP;
+        }
+
+        public float GetShownHitpoints ()
+        {
+            return _health.GetComponent<Image>().fillAmount * Constants.PlayerStartHP;
         }
 
         public void UpdateShadowhealth (float hitpoints)
@@ -161,6 +176,20 @@ namespace Com.Hypester.DM3
             float ratio = hitpoints / Constants.PlayerStartHP;
             _shadowHealth.GetComponent<Image>().fillAmount = ratio;
             //_health.GetComponent<Image>().fillAmount = ratio;
+        }
+
+        public void AnimateHealth ()
+        {
+            if ((_game.MyPlayer.localID == 0 && IsMyInterface()) || (_game.MyPlayer.localID == 1 && !IsMyInterface()))
+            {
+                if (GetShownHitpoints() >= _game.healthPlayerOne)
+                    _animateHealth = true;
+            } else
+            {
+                if (GetShownHitpoints() >= _game.healthPlayerTwo)
+                    _animateHealth = true;
+            }
+                
         }
 
         public GameObject GetTimer()
@@ -183,6 +212,13 @@ namespace Com.Hypester.DM3
         public void SetTimerActive(bool active)
         {
             _timer.SetActive(active);
+        }
+
+        private bool IsMyInterface ()
+        {
+            if (playerNumber == 0)
+                return true;
+            return false;
         }
     }
 }
