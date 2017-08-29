@@ -733,16 +733,18 @@ namespace Com.Hypester.DM3
             turnTimer = 0f;
         }
 
-        public void AddToSelection(Vector2 pos)
+        public void AddToSelection(Vector2 pos) //master-client and guest side, both.
         {
             _selectedTiles.Add(pos);
             BaseTileAtPos(pos).SetSelected = true;
 
             RecalculateCollateral();
             RecalculateDamage();
+
+            iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.SelectionChange);
         }
 
-        public void RemoveFromSelection(Vector2 pos)
+        public void RemoveFromSelection(Vector2 pos) //master-client and guest side, both.
         {
             _selectedTiles.Remove(pos);
             BaseTileAtPos(pos).SetSelected = false;
@@ -750,9 +752,11 @@ namespace Com.Hypester.DM3
             if (BaseTileAtPos(pos).boosterLevel > 0)
                 RecalculateCollateral();
             RecalculateDamage();
+
+            iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.SelectionChange);
         }
 
-        public void RemoveSelections()
+        public void RemoveSelections() //master-client and guest side, both.
         {
             _selectedTiles.Clear();
             foreach (BaseTile tile in FindObjectsOfType<BaseTile>())
@@ -762,6 +766,7 @@ namespace Com.Hypester.DM3
             }
 
             RecalculateCollateral();
+            iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.SelectionChange);
             //RecalculateDamage();
         }
 
@@ -1197,6 +1202,7 @@ namespace Com.Hypester.DM3
 
                         _gameContext.ShowText("Opponent placed a trap. Be careful!");
                         _gameContext.ShowLargeText("Trap placed, careful!");
+                        iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.Warning);
                     }
                     else if (color == 0 && P2_PowerYellow >= Constants.YellowPowerReq) //yellow
                     {
@@ -1251,6 +1257,8 @@ namespace Com.Hypester.DM3
                     ResetTimer();
                 }
             }
+
+            iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.ImpactHeavy);
 
             Destroy(fireball);
         }
@@ -1407,12 +1415,6 @@ namespace Com.Hypester.DM3
             GameObject effect = Instantiate(Resources.Load("ParticleEffects/HealEffect")) as GameObject;
             Vector2 effectPosition = new Vector2();
 
-            float hitpoints = 0f;
-            if (GetPlayerByID(targetPlayer).localID == 0)
-                hitpoints = healthPlayerOne;
-            else
-                hitpoints = healthPlayerTwo;
-
             if (_myPlayer.localID == targetPlayer)
             {
                 _gameContext.ShowText("You healed for " +  Constants.HealPower +  "!");
@@ -1453,6 +1455,13 @@ namespace Com.Hypester.DM3
             {
                 _gameContext.ShowText("You dealt " + _enemyPlayer.GetName() + " " + comboDamage + " + " + collateralDamage + " damage!");
             }*/
+
+            if (comboDamage > 50)
+                iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.ImpactLight);
+            else if (comboDamage > 150)
+                iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.ImpactMedium);
+            else if (comboDamage > 300)
+                iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.ImpactHeavy);
         }
 
         [PunRPC]
@@ -1481,6 +1490,7 @@ namespace Com.Hypester.DM3
         {
             _gameContext.ShowText("Opponent placed a trap. Be careful!");
             _gameContext.ShowLargeText("Trap placed, careful!");
+            iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.Warning);
         }
         #endregion
 
