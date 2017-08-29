@@ -270,6 +270,26 @@ namespace Com.Hypester.DM3
             }
         }
 
+        private Player GetCurrentPlayer(int number)
+        {
+            foreach (Player player in FindObjectsOfType<Player>())
+            {
+                if (player.localID == number)
+                    return player;
+            }
+            return null;
+        }
+
+        private Player GetNextPlayer(int number)
+        {
+            foreach (Player player in FindObjectsOfType<Player>())
+            {
+                if (player.localID != number)
+                    return player;
+            }
+            return null;
+        }
+
         [PunRPC]
         private void RPC_HealthChanged (int targetPlayer, string difference)
         {
@@ -739,7 +759,7 @@ namespace Com.Hypester.DM3
             }
 
             RecalculateCollateral();
-            RecalculateDamage();
+            //RecalculateDamage();
         }
 
         private void RecalculateCollateral ()
@@ -825,15 +845,11 @@ namespace Com.Hypester.DM3
             //Both host and client execute this command.
             bool trapped = false;
 
-            /*if (MyPlayer.localID == 0) {
-                MyPlayer.FindInterface().SetHitpoints(healthPlayerOne);
-                EnemyPlayer.FindInterface().SetHitpoints(healthPlayerTwo);
-            } else
-            {
-                EnemyPlayer.FindInterface().SetHitpoints(healthPlayerOne);
-                MyPlayer.FindInterface().SetHitpoints(healthPlayerTwo);
-            }
-            RecalculateDamage();*/
+            Player targetPlayer = GetNextPlayer(_curPlayer);
+            if (targetPlayer.localID == 0)
+                targetPlayer.FindInterface().SetHitpoints(healthPlayerOne);
+            else
+                targetPlayer.FindInterface().SetHitpoints(healthPlayerTwo);
 
             //Only master client will update the _grid and then sync it.
             if (PhotonNetwork.isMasterClient)
