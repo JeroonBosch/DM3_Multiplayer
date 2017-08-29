@@ -170,6 +170,9 @@ namespace Com.Hypester.DM3
                 if (turnTimer > Constants.TurnTime)
                 {
                     EndTurn();
+
+                    if (GetPlayerByID(_curPlayer) == MyPlayer)
+                        _gameContext.ShowText("You ran out of time! Turn skipped.");
                 }
                 else
                     turnTimer += Time.fixedDeltaTime;
@@ -270,7 +273,7 @@ namespace Com.Hypester.DM3
             }
         }
 
-        private Player GetCurrentPlayer(int number)
+        private Player GetPlayerByID(int number)
         {
             foreach (Player player in FindObjectsOfType<Player>())
             {
@@ -851,33 +854,6 @@ namespace Com.Hypester.DM3
             else
                 targetPlayer.FindInterface().SetHitpoints(healthPlayerTwo);
 
-            //Only master client will update the _grid and then sync it.
-            if (PhotonNetwork.isMasterClient)
-            {
-                int color = BaseTileAtPos(_selectedTiles[_selectedTiles.Count - 1]).color;
-                foreach (Vector2 pos in _selectedTiles)
-                {
-                    DestroyTileAtPosition(pos);
-                    if (BaseTileAtPos(pos).boosterLevel >= 4)
-                        trapped = true;
-                }
-
-                foreach (BaseTile tile in _baseTiles.FindAll(item => item.collateral == true))
-                {
-                    DestroyTileAtPosition(tile.position);
-                }
-
-                CreateBooster(_selectedTiles[_selectedTiles.Count - 1], _selectedTiles.Count, color);
-
-                if ((_curPlayer == 0 && !trapped) || (_curPlayer == 1 && trapped))
-                {
-                    DamagePlayerWithCombo(1, _selectedTiles.Count, _baseTiles.FindAll(item => item.collateral == true).Count * Constants.BoosterCollateralDamage);
-                    FillPowerBar(0, color, _selectedTiles.Count);
-                } else {
-                    DamagePlayerWithCombo(0, _selectedTiles.Count, _baseTiles.FindAll(item => item.collateral == true).Count * Constants.BoosterCollateralDamage);
-                    FillPowerBar(1, color, _selectedTiles.Count);
-                }
-            }
 
             trapped = false;
             foreach (Vector2 pos in _selectedTiles)
@@ -902,6 +878,36 @@ namespace Com.Hypester.DM3
                 CreateTileAttackPlayerEffect(tile.position, count, true, trapped);
             }
 
+
+            //Only master client will update the _grid and then sync it.
+            if (PhotonNetwork.isMasterClient)
+            {
+                int color = BaseTileAtPos(_selectedTiles[_selectedTiles.Count - 1]).color;
+                foreach (Vector2 pos in _selectedTiles)
+                {
+                    DestroyTileAtPosition(pos);
+                    if (BaseTileAtPos(pos).boosterLevel >= 4)
+                        trapped = true;
+                }
+
+                foreach (BaseTile tile in _baseTiles.FindAll(item => item.collateral == true))
+                {
+                    DestroyTileAtPosition(tile.position);
+                }
+
+                CreateBooster(_selectedTiles[_selectedTiles.Count - 1], _selectedTiles.Count, color);
+
+                if ((_curPlayer == 0 && !trapped) || (_curPlayer == 1 && trapped))
+                {
+                    DamagePlayerWithCombo(1, _selectedTiles.Count, _baseTiles.FindAll(item => item.collateral == true).Count * Constants.BoosterCollateralDamage);
+                    FillPowerBar(0, color, _selectedTiles.Count);
+                }
+                else
+                {
+                    DamagePlayerWithCombo(0, _selectedTiles.Count, _baseTiles.FindAll(item => item.collateral == true).Count * Constants.BoosterCollateralDamage);
+                    FillPowerBar(1, color, _selectedTiles.Count);
+                }
+            }
 
             EndTurn();
             _selectedTiles.Clear();
@@ -1041,6 +1047,10 @@ namespace Com.Hypester.DM3
                     photonView.RPC("RPC_ShieldEffect", PhotonTargets.All, 0);
                     photonView.RPC("RPC_ShieldMessage", PhotonTargets.All, 0, damage);
                 }
+
+                GetPlayerByID(playerNumber).FindInterface().SetHitpoints(healthPlayerOne);
+                GetPlayerByID(playerNumber).FindInterface().UpdateShadowhealth(healthPlayerOne);
+                photonView.RPC("RPC_UpdateHealth", PhotonTargets.Others, playerNumber, healthPlayerOne);
             }
             else
             {
@@ -1056,12 +1066,22 @@ namespace Com.Hypester.DM3
                     photonView.RPC("RPC_ShieldMessage", PhotonTargets.All, 1, damage);
                 }
 
+                GetPlayerByID(playerNumber).FindInterface().SetHitpoints(healthPlayerTwo);
+                GetPlayerByID(playerNumber).FindInterface().UpdateShadowhealth(healthPlayerTwo);
+                photonView.RPC("RPC_UpdateHealth", PhotonTargets.Others, playerNumber, healthPlayerTwo);
             }
 
             if (healthPlayerOne <= 0 || healthPlayerTwo <= 0) { 
                 _gameDone = true;
                 EndTurn(); //Fireball should end the game.
             }
+        }
+
+        [PunRPC]
+        private void RPC_UpdateHealth(int playerNumber, float hitpoints)
+        {
+            GetPlayerByID(playerNumber).FindInterface().SetHitpoints(hitpoints);
+            GetPlayerByID(playerNumber).FindInterface().UpdateShadowhealth(hitpoints);
         }
 
         public bool IsMyTurn()
@@ -1087,14 +1107,14 @@ namespace Com.Hypester.DM3
                 else if (color == 0)
                     P1_PowerYellow = Mathf.Min(P1_PowerYellow + increaseBy, Constants.YellowPowerReq);
 
-                if (P1_PowerBlue == Constants.BluePowerReq)
+                /*if (P1_PowerBlue == Constants.BluePowerReq)
                     _gameContext.ShowText("Shield ability available!");
                 if (P1_PowerGreen == Constants.GreenPowerReq)
                     _gameContext.ShowText("Heal ability available!");
                 if (P1_PowerRed == Constants.RedPowerReq)
                     _gameContext.ShowText("Trap ability available!");
                 if (P1_PowerYellow == Constants.YellowPowerReq)
-                    _gameContext.ShowText("Fireball ability available!");
+                    _gameContext.ShowText("Fireball ability available!");*/
             } else
             {
                 if (color == 1) { 
@@ -1128,6 +1148,10 @@ namespace Com.Hypester.DM3
                         healthPlayerOne += Constants.HealPower;
                         photonView.RPC("RPC_HealEffect", PhotonTargets.All, 0);
                         P1_PowerGreen = 0;
+
+                        GetPlayerByID(_curPlayer).FindInterface().SetHitpoints(healthPlayerOne);
+                        GetPlayerByID(_curPlayer).FindInterface().UpdateShadowhealth(healthPlayerOne);
+                        photonView.RPC("RPC_UpdateHealth", PhotonTargets.Others, _curPlayer, healthPlayerOne);
                     }
                     else if (color == 3 && P1_PowerRed >= Constants.RedPowerReq) //red
                     {
@@ -1160,6 +1184,10 @@ namespace Com.Hypester.DM3
                         photonView.RPC("RPC_HealEffect", PhotonTargets.All, 1);
                         P2_PowerGreen = 0;
                         photonView.RPC("RPC_EmptyPower", PhotonTargets.Others, color);
+
+                        GetPlayerByID(_curPlayer).FindInterface().SetHitpoints(healthPlayerTwo);
+                        GetPlayerByID(_curPlayer).FindInterface().UpdateShadowhealth(healthPlayerTwo);
+                        photonView.RPC("RPC_UpdateHealth", PhotonTargets.Others, _curPlayer, healthPlayerTwo);
                     }
                     else if (color == 3 && P2_PowerRed >= Constants.RedPowerReq) //red
                     {
@@ -1168,6 +1196,7 @@ namespace Com.Hypester.DM3
                         photonView.RPC("RPC_EmptyPower", PhotonTargets.Others, color);
 
                         _gameContext.ShowText("Opponent placed a trap. Be careful!");
+                        _gameContext.ShowLargeText("Trap placed, careful!");
                     }
                     else if (color == 0 && P2_PowerYellow >= Constants.YellowPowerReq) //yellow
                     {
@@ -1198,7 +1227,7 @@ namespace Com.Hypester.DM3
         }
 
         [PunRPC]
-        public void FireballHit ()
+        public void FireballHit () //should be both master-client side and guest-side
         {
             GameObject fireball = GameObject.FindGameObjectWithTag("ActiveFireball");
 
@@ -1312,14 +1341,14 @@ namespace Com.Hypester.DM3
             else if (color == 0)
                 P2_PowerYellow = value;
 
-            if (P2_PowerBlue == Constants.BluePowerReq)
+            /*if (P2_PowerBlue == Constants.BluePowerReq)
                 _gameContext.ShowText("Shield ability available!");
             if (P2_PowerGreen == Constants.GreenPowerReq)
                 _gameContext.ShowText("Heal ability available!");
             if (P2_PowerRed == Constants.RedPowerReq)
                 _gameContext.ShowText("Trap ability available!");
             if (P2_PowerYellow == Constants.YellowPowerReq)
-                _gameContext.ShowText("Fireball ability available!");
+                _gameContext.ShowText("Fireball ability available!");*/
         }
 
         [PunRPC]
@@ -1368,7 +1397,7 @@ namespace Com.Hypester.DM3
                 effectPosition = GameObject.Find("MyAvatar").GetComponent<RectTransform>().position;
                 effect.transform.position = effectPosition;
 
-                _gameContext.ShowText("Shield is now active. The next damage against you is blocked.");
+                _gameContext.ShowText("Shield is now active. Next damage is blocked.");
             }
         }
 
@@ -1377,6 +1406,12 @@ namespace Com.Hypester.DM3
         {
             GameObject effect = Instantiate(Resources.Load("ParticleEffects/HealEffect")) as GameObject;
             Vector2 effectPosition = new Vector2();
+
+            float hitpoints = 0f;
+            if (GetPlayerByID(targetPlayer).localID == 0)
+                hitpoints = healthPlayerOne;
+            else
+                hitpoints = healthPlayerTwo;
 
             if (_myPlayer.localID == targetPlayer)
             {
@@ -1426,11 +1461,11 @@ namespace Com.Hypester.DM3
             if (_myPlayer.localID == targetPlayer)
             {
                 _gameContext.ShowText("You blocked " + damage + " damage with your shield!");
-                _gameContext.ShowMyText("Good block!");
+                _gameContext.ShowMyText("Blocked!");
             } else
             {
                 _gameContext.ShowText(_enemyPlayer.GetName() + " blocked " + damage + " damage with a shield!");
-                _gameContext.ShowEnemyText("Damage blocked...");
+                _gameContext.ShowEnemyText("Blocked!");
             }
         }
 
@@ -1445,6 +1480,7 @@ namespace Com.Hypester.DM3
         private void RPC_MessageTrap()
         {
             _gameContext.ShowText("Opponent placed a trap. Be careful!");
+            _gameContext.ShowLargeText("Trap placed, careful!");
         }
         #endregion
 
