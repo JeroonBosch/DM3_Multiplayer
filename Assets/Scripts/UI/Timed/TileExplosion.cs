@@ -103,6 +103,9 @@ namespace Com.Hypester.DM3
                 float randomY = Random.Range(-.5f, .5f);
                 explosion.transform.position = new Vector2 (_endPosition.x + randomX, _endPosition.y + randomY);
             }
+
+            if ((_targetPlayer.localID == 0 && PhotonNetwork.isMasterClient) || (_targetPlayer.localID == 1 && !PhotonNetwork.isMasterClient))
+                iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.ImpactMedium);
         }
     }
 }

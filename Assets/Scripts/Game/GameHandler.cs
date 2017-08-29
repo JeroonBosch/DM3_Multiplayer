@@ -741,7 +741,7 @@ namespace Com.Hypester.DM3
             RecalculateCollateral();
             RecalculateDamage();
 
-            iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.SelectionChange);
+            //iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.SelectionChange);
         }
 
         public void RemoveFromSelection(Vector2 pos) //master-client and guest side, both.
@@ -753,7 +753,7 @@ namespace Com.Hypester.DM3
                 RecalculateCollateral();
             RecalculateDamage();
 
-            iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.SelectionChange);
+            //iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.SelectionChange);
         }
 
         public void RemoveSelections() //master-client and guest side, both.
@@ -766,7 +766,7 @@ namespace Com.Hypester.DM3
             }
 
             RecalculateCollateral();
-            iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.SelectionChange);
+            //iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.SelectionChange);
             //RecalculateDamage();
         }
 
@@ -867,8 +867,10 @@ namespace Com.Hypester.DM3
                     trapped = true;
             }
 
-            if (trapped)
-                _gameContext.ShowLargeText("Trap was triggered!");
+            if (trapped && EnemyPlayer == targetPlayer)
+                _gameContext.ShowLargeText("Nice trap!");
+            else if (trapped && MyPlayer == targetPlayer)
+                _gameContext.ShowLargeText("Oops! It was trapped!");
 
             int count = 0;
             foreach (Vector2 pos in _selectedTiles)
@@ -1456,12 +1458,12 @@ namespace Com.Hypester.DM3
                 _gameContext.ShowText("You dealt " + _enemyPlayer.GetName() + " " + comboDamage + " + " + collateralDamage + " damage!");
             }*/
 
-            if (comboDamage > 50)
-                iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.ImpactLight);
-            else if (comboDamage > 150)
-                iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.ImpactMedium);
-            else if (comboDamage > 300)
+            if (comboDamage > 300)
                 iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.ImpactHeavy);
+            /*else if (comboDamage > 150)
+                iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.ImpactMedium);
+            else if (comboDamage > 50)
+                iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.ImpactLight);*/
         }
 
         [PunRPC]

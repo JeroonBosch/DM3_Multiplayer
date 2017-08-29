@@ -32,7 +32,7 @@ namespace Com.Hypester.DM3
             if (PhotonNetwork.connected)
                 playerCount = PhotonNetwork.countOfPlayers;
             if (textObject)
-                textObject.GetComponent<Text>().text = playerCount + " players online.";
+                textObject.GetComponent<Text>().text = "Players online: " + playerCount;
 
             if (_findingMatch)
                 timeOut += Time.deltaTime;
