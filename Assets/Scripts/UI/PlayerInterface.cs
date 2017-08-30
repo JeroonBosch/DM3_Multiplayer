@@ -90,24 +90,49 @@ namespace Com.Hypester.DM3
                         _yellowPowerText.text = _game.P1_PowerYellow + "/" + Constants.YellowPowerReq;
 
                         if (_game.P1_PowerBlue >= Constants.BluePowerReq)
+                        {
                             _bluePowerImage.sprite = Resources.Load<Sprite>("UI/ActivePower/IconPowerupBlueActive");
+                            _bluePowerImage.gameObject.GetComponent<Wiggle>().StartWiggle();
+                        }
                         else
+                        {
                             _bluePowerImage.sprite = Resources.Load<Sprite>("UI/ActivePower/IconPowerupBlue");
+                            _bluePowerImage.gameObject.GetComponent<Wiggle>().StopWiggle();
+                        }
 
                         if (_game.P1_PowerGreen >= Constants.GreenPowerReq)
+                        {
                             _greenPowerImage.sprite = Resources.Load<Sprite>("UI/ActivePower/IconPowerupGreenActive");
+                            _greenPowerImage.gameObject.GetComponent<Wiggle>().StartWiggle();
+                        }
                         else
+                        {
                             _greenPowerImage.sprite = Resources.Load<Sprite>("UI/ActivePower/IconPowerupGreen");
+                            _greenPowerImage.gameObject.GetComponent<Wiggle>().StopWiggle();
+                        }
 
                         if (_game.P1_PowerRed >= Constants.RedPowerReq)
+                        {
                             _redPowerImage.sprite = Resources.Load<Sprite>("UI/ActivePower/IconPowerupRedActive");
+                            _redPowerImage.gameObject.GetComponent<Wiggle>().StartWiggle();
+                        }
                         else
+                        {
                             _redPowerImage.sprite = Resources.Load<Sprite>("UI/ActivePower/IconPowerupRed");
+                            _redPowerImage.gameObject.GetComponent<Wiggle>().StopWiggle();
+                        }
 
                         if (_game.P1_PowerYellow >= Constants.YellowPowerReq)
+                        {
                             _yellowPowerImage.sprite = Resources.Load<Sprite>("UI/ActivePower/IconPowerupYellowActive");
+                            _yellowPowerImage.gameObject.GetComponent<Wiggle>().StartWiggle();
+                        }
                         else
+                        {
                             _yellowPowerImage.sprite = Resources.Load<Sprite>("UI/ActivePower/IconPowerupYellow");
+                            _yellowPowerImage.gameObject.GetComponent<Wiggle>().StopWiggle();
+                        }
+
                     } else if (_game.MyPlayer.localID == 1 && playerNumber == 0)
                     {
                         //powers
@@ -117,24 +142,44 @@ namespace Com.Hypester.DM3
                         _yellowPowerText.text = _game.P2_PowerYellow + "/" + Constants.YellowPowerReq;
 
                         if (_game.P2_PowerBlue >= Constants.BluePowerReq)
+                        {
                             _bluePowerImage.sprite = Resources.Load<Sprite>("UI/ActivePower/IconPowerupBlueActive");
+                            _bluePowerImage.gameObject.GetComponent<Wiggle>().StartWiggle();
+                        }
                         else
+                        {
                             _bluePowerImage.sprite = Resources.Load<Sprite>("UI/ActivePower/IconPowerupBlue");
+                            _bluePowerImage.gameObject.GetComponent<Wiggle>().StopWiggle();
+                        }
 
                         if (_game.P2_PowerGreen >= Constants.GreenPowerReq)
+                        {
                             _greenPowerImage.sprite = Resources.Load<Sprite>("UI/ActivePower/IconPowerupGreenActive");
+                            _greenPowerImage.gameObject.GetComponent<Wiggle>().StartWiggle();
+                        }
                         else
+                        {
                             _greenPowerImage.sprite = Resources.Load<Sprite>("UI/ActivePower/IconPowerupGreen");
+                            _greenPowerImage.gameObject.GetComponent<Wiggle>().StopWiggle();
+                        }
 
-                        if (_game.P2_PowerRed >= Constants.RedPowerReq)
+                        if (_game.P2_PowerRed >= Constants.RedPowerReq) { 
                             _redPowerImage.sprite = Resources.Load<Sprite>("UI/ActivePower/IconPowerupRedActive");
-                        else
+                            _redPowerImage.gameObject.GetComponent<Wiggle>().StartWiggle();
+                        }
+                        else { 
                             _redPowerImage.sprite = Resources.Load<Sprite>("UI/ActivePower/IconPowerupRed");
+                            _redPowerImage.gameObject.GetComponent<Wiggle>().StopWiggle();
+                        }
 
-                        if (_game.P2_PowerYellow >= Constants.YellowPowerReq)
+                        if (_game.P2_PowerYellow >= Constants.YellowPowerReq) { 
                             _yellowPowerImage.sprite = Resources.Load<Sprite>("UI/ActivePower/IconPowerupYellowActive");
-                        else
+                            _yellowPowerImage.gameObject.GetComponent<Wiggle>().StartWiggle();
+                        }
+                        else { 
                             _yellowPowerImage.sprite = Resources.Load<Sprite>("UI/ActivePower/IconPowerupYellow");
+                            _yellowPowerImage.gameObject.GetComponent<Wiggle>().StopWiggle();
+                        }
                     }
                 }
             } else
