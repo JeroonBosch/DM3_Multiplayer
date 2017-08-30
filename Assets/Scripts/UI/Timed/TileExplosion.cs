@@ -66,8 +66,8 @@ namespace Com.Hypester.DM3
                 t = Mathf.Min(t, 1f);
 
                 Vector2 p0 = _startPosition;
-                Vector2 p1 = new Vector2(_startPosition.x + 5 * _randomDirection, _startPosition.y);
-                Vector2 p2 = new Vector2(_endPosition.x + 5 * _randomDirection, _endPosition.y);
+                Vector2 p1 = new Vector2(_startPosition.x + 3 * _randomDirection, _startPosition.y);
+                Vector2 p2 = new Vector2(_endPosition.x + 3 * _randomDirection, _endPosition.y);
                 Vector3 p3 = _endPosition;
                 _rt.position = CalculateBezierPoint(t, p0, p1, p2, p3);
             }
@@ -103,6 +103,9 @@ namespace Com.Hypester.DM3
                 float randomY = Random.Range(-.5f, .5f);
                 explosion.transform.position = new Vector2 (_endPosition.x + randomX, _endPosition.y + randomY);
             }
+
+            if ((_targetPlayer.localID == 0 && PhotonNetwork.isMasterClient) || (_targetPlayer.localID == 1 && !PhotonNetwork.isMasterClient))
+                iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.ImpactMedium);
         }
     }
 }

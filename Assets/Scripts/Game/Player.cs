@@ -145,6 +145,8 @@ namespace Com.Hypester.DM3
         #region SelectionRPCs
         public void NewSelection(Vector2 pos)
         {
+            iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.SelectionChange);
+
             photonView.RPC("RPCAddToSelection", PhotonTargets.All, pos);
         }
         [PunRPC]
@@ -178,6 +180,8 @@ namespace Com.Hypester.DM3
 
         public void InitiateCombo()
         {
+            iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.ImpactLight);
+
             photonView.RPC("RPCInitiateCombo", PhotonTargets.All);
         }
         [PunRPC]

@@ -170,6 +170,9 @@ namespace Com.Hypester.DM3
                 if (turnTimer > Constants.TurnTime)
                 {
                     EndTurn();
+
+                    if (GetPlayerByID(_curPlayer) == MyPlayer)
+                        _gameContext.ShowText("You ran out of time! Turn skipped.");
                 }
                 else
                     turnTimer += Time.fixedDeltaTime;
@@ -268,6 +271,26 @@ namespace Com.Hypester.DM3
                     }
                 }
             }
+        }
+
+        private Player GetPlayerByID(int number)
+        {
+            foreach (Player player in FindObjectsOfType<Player>())
+            {
+                if (player.localID == number)
+                    return player;
+            }
+            return null;
+        }
+
+        private Player GetNextPlayer(int number)
+        {
+            foreach (Player player in FindObjectsOfType<Player>())
+            {
+                if (player.localID != number)
+                    return player;
+            }
+            return null;
         }
 
         [PunRPC]
@@ -710,16 +733,18 @@ namespace Com.Hypester.DM3
             turnTimer = 0f;
         }
 
-        public void AddToSelection(Vector2 pos)
+        public void AddToSelection(Vector2 pos) //master-client and guest side, both.
         {
             _selectedTiles.Add(pos);
             BaseTileAtPos(pos).SetSelected = true;
 
             RecalculateCollateral();
             RecalculateDamage();
+
+            //iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.SelectionChange);
         }
 
-        public void RemoveFromSelection(Vector2 pos)
+        public void RemoveFromSelection(Vector2 pos) //master-client and guest side, both.
         {
             _selectedTiles.Remove(pos);
             BaseTileAtPos(pos).SetSelected = false;
@@ -727,9 +752,11 @@ namespace Com.Hypester.DM3
             if (BaseTileAtPos(pos).boosterLevel > 0)
                 RecalculateCollateral();
             RecalculateDamage();
+
+            //iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.SelectionChange);
         }
 
-        public void RemoveSelections()
+        public void RemoveSelections() //master-client and guest side, both.
         {
             _selectedTiles.Clear();
             foreach (BaseTile tile in FindObjectsOfType<BaseTile>())
@@ -739,7 +766,8 @@ namespace Com.Hypester.DM3
             }
 
             RecalculateCollateral();
-            RecalculateDamage();
+            //iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.SelectionChange);
+            //RecalculateDamage();
         }
 
         private void RecalculateCollateral ()
@@ -825,15 +853,38 @@ namespace Com.Hypester.DM3
             //Both host and client execute this command.
             bool trapped = false;
 
-            /*if (MyPlayer.localID == 0) {
-                MyPlayer.FindInterface().SetHitpoints(healthPlayerOne);
-                EnemyPlayer.FindInterface().SetHitpoints(healthPlayerTwo);
-            } else
+            Player targetPlayer = GetNextPlayer(_curPlayer);
+            if (targetPlayer.localID == 0)
+                targetPlayer.FindInterface().SetHitpoints(healthPlayerOne);
+            else
+                targetPlayer.FindInterface().SetHitpoints(healthPlayerTwo);
+
+
+            trapped = false;
+            foreach (Vector2 pos in _selectedTiles)
             {
-                EnemyPlayer.FindInterface().SetHitpoints(healthPlayerOne);
-                MyPlayer.FindInterface().SetHitpoints(healthPlayerTwo);
+                if (BaseTileAtPos(pos).boosterLevel >= 4)
+                    trapped = true;
             }
-            RecalculateDamage();*/
+
+            if (trapped && EnemyPlayer == targetPlayer)
+                _gameContext.ShowLargeText("Nice trap!");
+            else if (trapped && MyPlayer == targetPlayer)
+                _gameContext.ShowLargeText("Oops! It was trapped!");
+
+            int count = 0;
+            foreach (Vector2 pos in _selectedTiles)
+            {
+
+                CreateTileAttackPlayerEffect(pos, count, trapped);
+                count++;
+            }
+
+            foreach (BaseTile tile in _baseTiles.FindAll(item => item.collateral == true))
+            {
+                CreateTileAttackPlayerEffect(tile.position, count, true, trapped);
+            }
+
 
             //Only master client will update the _grid and then sync it.
             if (PhotonNetwork.isMasterClient)
@@ -857,35 +908,13 @@ namespace Com.Hypester.DM3
                 {
                     DamagePlayerWithCombo(1, _selectedTiles.Count, _baseTiles.FindAll(item => item.collateral == true).Count * Constants.BoosterCollateralDamage);
                     FillPowerBar(0, color, _selectedTiles.Count);
-                } else {
+                }
+                else
+                {
                     DamagePlayerWithCombo(0, _selectedTiles.Count, _baseTiles.FindAll(item => item.collateral == true).Count * Constants.BoosterCollateralDamage);
                     FillPowerBar(1, color, _selectedTiles.Count);
                 }
             }
-
-            trapped = false;
-            foreach (Vector2 pos in _selectedTiles)
-            {
-                if (BaseTileAtPos(pos).boosterLevel >= 4)
-                    trapped = true;
-            }
-
-            if (trapped)
-                _gameContext.ShowLargeText("Trap was triggered!");
-
-            int count = 0;
-            foreach (Vector2 pos in _selectedTiles)
-            {
-
-                CreateTileAttackPlayerEffect(pos, count, trapped);
-                count++;
-            }
-
-            foreach (BaseTile tile in _baseTiles.FindAll(item => item.collateral == true))
-            {
-                CreateTileAttackPlayerEffect(tile.position, count, true, trapped);
-            }
-
 
             EndTurn();
             _selectedTiles.Clear();
@@ -1025,6 +1054,10 @@ namespace Com.Hypester.DM3
                     photonView.RPC("RPC_ShieldEffect", PhotonTargets.All, 0);
                     photonView.RPC("RPC_ShieldMessage", PhotonTargets.All, 0, damage);
                 }
+
+                GetPlayerByID(playerNumber).FindInterface().SetHitpoints(healthPlayerOne);
+                GetPlayerByID(playerNumber).FindInterface().UpdateShadowhealth(healthPlayerOne);
+                photonView.RPC("RPC_UpdateHealth", PhotonTargets.Others, playerNumber, healthPlayerOne);
             }
             else
             {
@@ -1040,12 +1073,22 @@ namespace Com.Hypester.DM3
                     photonView.RPC("RPC_ShieldMessage", PhotonTargets.All, 1, damage);
                 }
 
+                GetPlayerByID(playerNumber).FindInterface().SetHitpoints(healthPlayerTwo);
+                GetPlayerByID(playerNumber).FindInterface().UpdateShadowhealth(healthPlayerTwo);
+                photonView.RPC("RPC_UpdateHealth", PhotonTargets.Others, playerNumber, healthPlayerTwo);
             }
 
             if (healthPlayerOne <= 0 || healthPlayerTwo <= 0) { 
                 _gameDone = true;
                 EndTurn(); //Fireball should end the game.
             }
+        }
+
+        [PunRPC]
+        private void RPC_UpdateHealth(int playerNumber, float hitpoints)
+        {
+            GetPlayerByID(playerNumber).FindInterface().SetHitpoints(hitpoints);
+            GetPlayerByID(playerNumber).FindInterface().UpdateShadowhealth(hitpoints);
         }
 
         public bool IsMyTurn()
@@ -1071,14 +1114,14 @@ namespace Com.Hypester.DM3
                 else if (color == 0)
                     P1_PowerYellow = Mathf.Min(P1_PowerYellow + increaseBy, Constants.YellowPowerReq);
 
-                if (P1_PowerBlue == Constants.BluePowerReq)
+                /*if (P1_PowerBlue == Constants.BluePowerReq)
                     _gameContext.ShowText("Shield ability available!");
                 if (P1_PowerGreen == Constants.GreenPowerReq)
                     _gameContext.ShowText("Heal ability available!");
                 if (P1_PowerRed == Constants.RedPowerReq)
                     _gameContext.ShowText("Trap ability available!");
                 if (P1_PowerYellow == Constants.YellowPowerReq)
-                    _gameContext.ShowText("Fireball ability available!");
+                    _gameContext.ShowText("Fireball ability available!");*/
             } else
             {
                 if (color == 1) { 
@@ -1112,6 +1155,10 @@ namespace Com.Hypester.DM3
                         healthPlayerOne += Constants.HealPower;
                         photonView.RPC("RPC_HealEffect", PhotonTargets.All, 0);
                         P1_PowerGreen = 0;
+
+                        GetPlayerByID(_curPlayer).FindInterface().SetHitpoints(healthPlayerOne);
+                        GetPlayerByID(_curPlayer).FindInterface().UpdateShadowhealth(healthPlayerOne);
+                        photonView.RPC("RPC_UpdateHealth", PhotonTargets.Others, _curPlayer, healthPlayerOne);
                     }
                     else if (color == 3 && P1_PowerRed >= Constants.RedPowerReq) //red
                     {
@@ -1144,6 +1191,10 @@ namespace Com.Hypester.DM3
                         photonView.RPC("RPC_HealEffect", PhotonTargets.All, 1);
                         P2_PowerGreen = 0;
                         photonView.RPC("RPC_EmptyPower", PhotonTargets.Others, color);
+
+                        GetPlayerByID(_curPlayer).FindInterface().SetHitpoints(healthPlayerTwo);
+                        GetPlayerByID(_curPlayer).FindInterface().UpdateShadowhealth(healthPlayerTwo);
+                        photonView.RPC("RPC_UpdateHealth", PhotonTargets.Others, _curPlayer, healthPlayerTwo);
                     }
                     else if (color == 3 && P2_PowerRed >= Constants.RedPowerReq) //red
                     {
@@ -1152,6 +1203,8 @@ namespace Com.Hypester.DM3
                         photonView.RPC("RPC_EmptyPower", PhotonTargets.Others, color);
 
                         _gameContext.ShowText("Opponent placed a trap. Be careful!");
+                        _gameContext.ShowLargeText("Trap placed, careful!");
+                        iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.Warning);
                     }
                     else if (color == 0 && P2_PowerYellow >= Constants.YellowPowerReq) //yellow
                     {
@@ -1182,7 +1235,7 @@ namespace Com.Hypester.DM3
         }
 
         [PunRPC]
-        public void FireballHit ()
+        public void FireballHit () //should be both master-client side and guest-side
         {
             GameObject fireball = GameObject.FindGameObjectWithTag("ActiveFireball");
 
@@ -1206,6 +1259,8 @@ namespace Com.Hypester.DM3
                     ResetTimer();
                 }
             }
+
+            iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.ImpactHeavy);
 
             Destroy(fireball);
         }
@@ -1296,14 +1351,14 @@ namespace Com.Hypester.DM3
             else if (color == 0)
                 P2_PowerYellow = value;
 
-            if (P2_PowerBlue == Constants.BluePowerReq)
+            /*if (P2_PowerBlue == Constants.BluePowerReq)
                 _gameContext.ShowText("Shield ability available!");
             if (P2_PowerGreen == Constants.GreenPowerReq)
                 _gameContext.ShowText("Heal ability available!");
             if (P2_PowerRed == Constants.RedPowerReq)
                 _gameContext.ShowText("Trap ability available!");
             if (P2_PowerYellow == Constants.YellowPowerReq)
-                _gameContext.ShowText("Fireball ability available!");
+                _gameContext.ShowText("Fireball ability available!");*/
         }
 
         [PunRPC]
@@ -1352,7 +1407,7 @@ namespace Com.Hypester.DM3
                 effectPosition = GameObject.Find("MyAvatar").GetComponent<RectTransform>().position;
                 effect.transform.position = effectPosition;
 
-                _gameContext.ShowText("Shield is now active. The next damage against you is blocked.");
+                _gameContext.ShowText("Shield is now active. Next damage is blocked.");
             }
         }
 
@@ -1402,6 +1457,13 @@ namespace Com.Hypester.DM3
             {
                 _gameContext.ShowText("You dealt " + _enemyPlayer.GetName() + " " + comboDamage + " + " + collateralDamage + " damage!");
             }*/
+
+            if (comboDamage > 300)
+                iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.ImpactHeavy);
+            /*else if (comboDamage > 150)
+                iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.ImpactMedium);
+            else if (comboDamage > 50)
+                iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.ImpactLight);*/
         }
 
         [PunRPC]
@@ -1410,11 +1472,11 @@ namespace Com.Hypester.DM3
             if (_myPlayer.localID == targetPlayer)
             {
                 _gameContext.ShowText("You blocked " + damage + " damage with your shield!");
-                _gameContext.ShowMyText("Good block!");
+                _gameContext.ShowMyText("Blocked!");
             } else
             {
                 _gameContext.ShowText(_enemyPlayer.GetName() + " blocked " + damage + " damage with a shield!");
-                _gameContext.ShowEnemyText("Damage blocked...");
+                _gameContext.ShowEnemyText("Blocked!");
             }
         }
 
@@ -1429,6 +1491,8 @@ namespace Com.Hypester.DM3
         private void RPC_MessageTrap()
         {
             _gameContext.ShowText("Opponent placed a trap. Be careful!");
+            _gameContext.ShowLargeText("Trap placed, careful!");
+            iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.Warning);
         }
         #endregion
 

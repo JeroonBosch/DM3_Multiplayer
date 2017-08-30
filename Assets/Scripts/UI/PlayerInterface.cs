@@ -13,7 +13,7 @@ namespace Com.Hypester.DM3
         private GameHandler _game;
         private GameObject _health;
         private GameObject _shadowHealth;
-        private GameObject _healthText;
+        //private GameObject _healthText;
         //private Sprite[] _healthSprites;
         private GameObject _timer;
         //private Sprite[] _timerSprites;
@@ -36,7 +36,7 @@ namespace Com.Hypester.DM3
             //_timerSprites = Resources.LoadAll<Sprite>("Spritesheets/AvatarTimer256x256");
             _health = transform.Find("Health").gameObject;
             _shadowHealth = transform.Find("ShadowHealth").gameObject;
-            _healthText = _health.transform.Find("HealthText").gameObject;
+            //_healthText = _health.transform.Find("HealthText").gameObject;
             _timer = transform.Find("Timer").gameObject;
 
             _bluePowerText = GameObject.Find("MyBluePower").gameObject.GetComponent<Text>();
@@ -61,14 +61,14 @@ namespace Com.Hypester.DM3
                         //health
                         if ((_game.MyPlayer.localID == 0 && IsMyInterface()) || (_game.MyPlayer.localID == 1 && !IsMyInterface())) {
                             if (GetShownHitpoints() >= _game.healthPlayerOne)
-                                SetHitpoints(GetShownHitpoints() - Time.deltaTime * Constants.HealthDroppingSpeed);
+                                SetHitpoints(Mathf.Max(GetShownHitpoints() - Time.deltaTime * Constants.HealthDroppingSpeed, _game.healthPlayerOne));
                             else
                                 _animateHealth = false;
                         }
                         else {
                             if (GetShownHitpoints() >= _game.healthPlayerTwo)
-                                SetHitpoints(GetShownHitpoints() - Time.deltaTime * Constants.HealthDroppingSpeed);
-                            //else
+                                SetHitpoints(Mathf.Max(GetShownHitpoints() - Time.deltaTime * Constants.HealthDroppingSpeed, _game.healthPlayerTwo));
+                            else
                                _animateHealth = false;
                         }
                     }
