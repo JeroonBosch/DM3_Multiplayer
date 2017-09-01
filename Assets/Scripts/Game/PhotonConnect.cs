@@ -22,12 +22,10 @@ namespace Com.Hypester.DM3
         private void Update()
         {
             if (PhotonNetwork.inRoom && SceneManager.GetActiveScene().name != "NormalGame")
-                //if (PhotonNetwork.room.PlayerCount == 2) { 
                     PhotonNetwork.LoadLevel("NormalGame");
-                //}
 
             if (_connect && !PhotonNetwork.connecting && !PhotonNetwork.connected)
-                PhotonNetwork.ConnectUsingSettings("v0.1");
+                PhotonNetwork.ConnectUsingSettings("v0.2");
         }
 
         public void EnsureConnection ()
@@ -45,7 +43,7 @@ namespace Com.Hypester.DM3
             }
         }
 
-        public void ConnectNormalGameroom ()
+        public void ConnectNormalLobby ()
         {
             PhotonNetwork.JoinLobby(new TypedLobby() { Name = "NormalGame", Type = LobbyType.Default });
             PhotonNetwork.playerName = profileName;

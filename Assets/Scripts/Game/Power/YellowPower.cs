@@ -91,7 +91,7 @@ namespace Com.Hypester.DM3
         {
             if (collision.gameObject.tag == "Hitbox" && photonView.isMine)
             {
-                _game.photonView.RPC("FireballHit", PhotonTargets.All);
+                _game.photonView.RPC("RPC_FireballHit", PhotonTargets.All);
             }
             else
             {

@@ -11,26 +11,26 @@ namespace Com.Hypester.DM3
         private float _showTime;
         private float _timer;
 
-        private List<BufferedText> bufferedText;
+        private List<BufferedText> _bufferedText;
 
         void Start()
         {
             _text = GetComponent<Text>();
 
-            bufferedText = new List<BufferedText>();
+            _bufferedText = new List<BufferedText>();
         }
 
         void FixedUpdate()
         {
             _timer += Time.fixedDeltaTime;
 
-            if (bufferedText.Count > 1)
+            if (_bufferedText.Count > 1)
             {
-                if (_timer - _showTime > bufferedText[0].showTime)
+                if (_timer - _showTime > _bufferedText[0].showTime)
                 {
                     _showTime = _timer;
-                    _text.text = bufferedText[0].text;
-                    bufferedText.RemoveAt(0);
+                    _text.text = _bufferedText[0].text;
+                    _bufferedText.RemoveAt(0);
                 }
             } else
             {
@@ -49,7 +49,7 @@ namespace Com.Hypester.DM3
             }
             else {
                 BufferedText newBuffer = new BufferedText(text, Constants.MinimumTextTime);
-                bufferedText.Add(newBuffer);
+                _bufferedText.Add(newBuffer);
             }
         }
 

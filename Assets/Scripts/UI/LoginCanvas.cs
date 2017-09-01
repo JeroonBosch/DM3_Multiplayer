@@ -6,9 +6,9 @@ namespace Com.Hypester.DM3
 {
     public class LoginCanvas : BaseMenuCanvas
     {
-        InputField _text;
+        //This class passes on the 'nickname' to Photon.
+        private InputField _text;
 
-        // Use this for initialization
         protected override void Start()
         {
             base.Start();
@@ -19,7 +19,6 @@ namespace Com.Hypester.DM3
             GameObject.Find("LoggingIn").GetComponent<Text>().enabled = false;
         }
 
-        // Update is called once per frame
         protected override void Update()
         {
             base.Update();

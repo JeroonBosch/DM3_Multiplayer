@@ -8,12 +8,13 @@ namespace Com.Hypester.DM3
 {
     public class PlayGameCanvas : BaseMenuCanvas
     {
+        //This class is attached to the Canvas that also contains the grid.
+        //The canvas has a 'Graphic Raycaster' required for selecting tiles.
+        //Therefor this class also implements all the touch controls.
 
-        #region private variables
         List<Vector2> _selectedTiles;
         LeanFinger _finger;
         GameHandler _game;
-        #endregion
 
         protected override void Start()
         {
@@ -88,11 +89,7 @@ namespace Com.Hypester.DM3
         public override void Show()
         {
             base.Show();
-
-            //foreach (Player player in FindObjectsOfType<Player>())
-            //    player.transform.SetParent(transform, false);
-
-            _game.Show();
+            _game.Show(); //Activates the game.
         }
 
         private void OnEnable()

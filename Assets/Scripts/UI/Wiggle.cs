@@ -6,13 +6,11 @@ namespace Com.Hypester.DM3
     public class Wiggle : MonoBehaviour
     {
         private GameHandler _game;
-        private bool _wiggling;
-        private float _direction = 1f;
 
-        private float _wiggleLockoutPause = 4f;
-        private float _wiggleDuration = 1f;
+        private bool _wiggling;
+        private float _direction = 1f; //Either 1f or -1f
         private float _wiggleCounter;
-        private bool _lockedOut;
+        private bool _lockedOut; //Paused?
 
         private void Start()
         {
@@ -34,7 +32,7 @@ namespace Com.Hypester.DM3
                     if (_direction == -1f && transform.rotation.z < -.1f)
                         _direction = 1f;
 
-                    if (_wiggleCounter > _wiggleDuration)
+                    if (_wiggleCounter > Constants.WiggleDuration)
                     {
                         _wiggleCounter = 0f;
                         _lockedOut = true;
@@ -47,7 +45,7 @@ namespace Com.Hypester.DM3
                 {
                     _wiggleCounter += Time.deltaTime;
 
-                    if (_wiggleCounter > _wiggleLockoutPause)
+                    if (_wiggleCounter > Constants.WigglePause)
                     {
                         _wiggleCounter = 0f;
                         _lockedOut = false;

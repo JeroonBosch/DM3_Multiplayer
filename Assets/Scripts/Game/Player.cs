@@ -89,7 +89,7 @@ namespace Com.Hypester.DM3
         public void Reset()
         {
             Start();
-            photonView.RPC("SendName", PhotonTargets.All, profileName);
+            photonView.RPC("RPC_SendName", PhotonTargets.All, profileName);
         }
 
         private void Update()
@@ -147,10 +147,10 @@ namespace Com.Hypester.DM3
         {
             iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.SelectionChange);
 
-            photonView.RPC("RPCAddToSelection", PhotonTargets.All, pos);
+            photonView.RPC("RPC_AddToSelection", PhotonTargets.All, pos);
         }
         [PunRPC]
-        void RPCAddToSelection(Vector2 pos)
+        void RPC_AddToSelection(Vector2 pos)
         {
             _game.GetComponent<GameHandler>().AddToSelection(pos);
         }
@@ -158,10 +158,10 @@ namespace Com.Hypester.DM3
 
         public void RemoveSelection(Vector2 pos)
         {
-            photonView.RPC("RPCRemoveFromSelection", PhotonTargets.All, pos);
+            photonView.RPC("RPC_RemoveFromSelection", PhotonTargets.All, pos);
         }
         [PunRPC]
-        void RPCRemoveFromSelection(Vector2 pos)
+        void RPC_RemoveFromSelection(Vector2 pos)
         {
             _game.GetComponent<GameHandler>().RemoveFromSelection(pos);
         }
@@ -169,10 +169,10 @@ namespace Com.Hypester.DM3
 
         public void RemoveAllSelections()
         {
-            photonView.RPC("RPCRemoveAllSelections", PhotonTargets.All);
+            photonView.RPC("RPC_RemoveAllSelections", PhotonTargets.All);
         }
         [PunRPC]
-        void RPCRemoveAllSelections()
+        void RPC_RemoveAllSelections()
         {
             _game.GetComponent<GameHandler>().RemoveSelections();
         }
@@ -182,22 +182,22 @@ namespace Com.Hypester.DM3
         {
             iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.ImpactLight);
 
-            photonView.RPC("RPCInitiateCombo", PhotonTargets.All);
+            photonView.RPC("RPC_InitiateCombo", PhotonTargets.All);
         }
         [PunRPC]
-        void RPCInitiateCombo()
+        void RPC_InitiateCombo()
         {
             _game.GetComponent<GameHandler>().InitiateCombo();
         }
 
         [PunRPC]
-        public void RequestRematch ()
+        public void RPC_RequestRematch()
         {
             wantsRematch = true;
         }
 
         [PunRPC]
-        public void SendName(string profName)
+        public void RPC_SendName(string profName)
         {
             profileName = profName;
 

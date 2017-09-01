@@ -4,6 +4,9 @@ using System.Linq;
 
 namespace Com.Hypester.DM3
 {
+    //Not currently used.
+    //Meant to contain general info (see Player Data) later, when login systems are in place.
+
     public class MainController : MonoBehaviour
     {
         public BaseMenuCanvas currentScreen;
@@ -38,7 +41,7 @@ namespace Com.Hypester.DM3
 
         public void GetPlayerData ()
         {
-
+            //Retrieve data from DB.
         }
     }
 

@@ -203,7 +203,7 @@ namespace Com.Hypester.DM3
                 PhotonView photonView = PhotonView.Get(this);
                 if (PhotonNetwork.isMasterClient)
                 {
-                    photonView.RPC("RPCSendGridData", PhotonTargets.All, _grid);
+                    photonView.RPC("RPC_SendGridData", PhotonTargets.All, _grid);
                 }
 
 
@@ -452,7 +452,7 @@ namespace Com.Hypester.DM3
 
             ApplyGrid(dupli);
 
-            photonView.RPC("RPCSendGridData", PhotonTargets.All, _grid);
+            photonView.RPC("RPC_SendGridData", PhotonTargets.All, _grid);
         }
 
         private Grid DuplicateGrid()
@@ -513,7 +513,7 @@ namespace Com.Hypester.DM3
                             }
 
                             AnimateTile anim = new AnimateTile(colorToAssume, dropDistance, (int)dropIntoPos.x, (int)dropIntoPos.y);
-                            photonView.RPC("RPCAnimateTile", PhotonTargets.All, anim);
+                            photonView.RPC("RPC_AnimateTile", PhotonTargets.All, anim);
                         }
                     }
                 }
@@ -538,7 +538,7 @@ namespace Com.Hypester.DM3
                         dupli.data[x, y].color = color;
                         dupli.data[x, y].boosterLevel = 0;
                         AnimateTile anim = new AnimateTile(color, dropDistance, x, y);
-                        photonView.RPC("RPCAnimateTile", PhotonTargets.All, anim);
+                        photonView.RPC("RPC_AnimateTile", PhotonTargets.All, anim);
                     }
                 }
             }
@@ -586,7 +586,7 @@ namespace Com.Hypester.DM3
                             }
 
                             AnimateTile anim = new AnimateTile(colorToAssume, dropDistance, (int)dropIntoPos.x, (int)dropIntoPos.y);
-                            photonView.RPC("RPCAnimateTile", PhotonTargets.All, anim);
+                            photonView.RPC("RPC_AnimateTile", PhotonTargets.All, anim);
                         }
                     }
                 }
@@ -611,7 +611,7 @@ namespace Com.Hypester.DM3
                         dupli.data[x, y].color = color;
                         dupli.data[x, y].boosterLevel = 0;
                         AnimateTile anim = new AnimateTile(color, dropDistance, x, y);
-                        photonView.RPC("RPCAnimateTile", PhotonTargets.All, anim);
+                        photonView.RPC("RPC_AnimateTile", PhotonTargets.All, anim);
                     }
                 }
             }
@@ -675,23 +675,22 @@ namespace Com.Hypester.DM3
         }
 
         [PunRPC]
-        public void RPCSendTile(Tile tile)
+        public void RPC_SendTile(Tile tile)
         {
             _grid.data[tile.x, tile.y].color = tile.color;
             _grid.data[tile.x, tile.y].boosterLevel = tile.boosterLevel;
             BaseTileAtPos(new Vector2(tile.x, tile.y)).boosterLevel = tile.boosterLevel;
-            //GridUpdate();
         }
 
         [PunRPC]
         public void RPC_RequestGridData()
         {
             Debug.Log("Grid did not render properly, requesting update.");
-            photonView.RPC("RPCSendGridData", PhotonTargets.Others, _grid);
+            photonView.RPC("RPC_SendGridData", PhotonTargets.Others, _grid);
         }
 
         [PunRPC]
-        public void RPCSendGridData(Grid grid)
+        public void RPC_SendGridData(Grid grid)
         {
             _gridReceived = true;
             _grid.data = grid.data;
@@ -992,7 +991,7 @@ namespace Com.Hypester.DM3
                 _grid.data[(int)pos.x, (int)pos.y].color = color;
 
             Tile tile = _grid.data[(int)pos.x, (int)pos.y];
-            photonView.RPC("RPCSendTile", PhotonTargets.All, tile);
+            photonView.RPC("RPC_SendTile", PhotonTargets.All, tile);
         }
 
         public void DamagePlayerWithCombo(int playerNumber, float comboSize, float collateralDamage) //only master-client side
@@ -1126,16 +1125,16 @@ namespace Com.Hypester.DM3
             {
                 if (color == 1) { 
                     P2_PowerBlue = Mathf.Min(P2_PowerBlue + increaseBy, Constants.BluePowerReq);
-                    photonView.RPC("RPCFillPower", PhotonTargets.Others, color, P2_PowerBlue);
+                    photonView.RPC("RPC_FillPower", PhotonTargets.Others, color, P2_PowerBlue);
                 } else if (color == 2) { 
                     P2_PowerGreen = Mathf.Min(P2_PowerGreen + increaseBy, Constants.GreenPowerReq);
-                    photonView.RPC("RPCFillPower", PhotonTargets.Others, color, P2_PowerGreen);
+                    photonView.RPC("RPC_FillPower", PhotonTargets.Others, color, P2_PowerGreen);
                 } else if (color == 3) { 
                     P2_PowerRed = Mathf.Min(P2_PowerRed + increaseBy, Constants.RedPowerReq);
-                    photonView.RPC("RPCFillPower", PhotonTargets.Others, color, P2_PowerRed);
+                    photonView.RPC("RPC_FillPower", PhotonTargets.Others, color, P2_PowerRed);
                 } else if (color == 0) { 
                     P2_PowerYellow = Mathf.Min(P2_PowerYellow + increaseBy, Constants.YellowPowerReq);
-                    photonView.RPC("RPCFillPower", PhotonTargets.Others, color, P2_PowerYellow);
+                    photonView.RPC("RPC_FillPower", PhotonTargets.Others, color, P2_PowerYellow);
                 }
             }
         }
@@ -1235,7 +1234,7 @@ namespace Com.Hypester.DM3
         }
 
         [PunRPC]
-        public void FireballHit () //should be both master-client side and guest-side
+        public void RPC_FireballHit () //should be both master-client side and guest-side
         {
             GameObject fireball = GameObject.FindGameObjectWithTag("ActiveFireball");
 
@@ -1288,7 +1287,7 @@ namespace Com.Hypester.DM3
             {
                 _grid.data[(int)pos.x, (int)pos.y].boosterLevel = 4 + creatorPlayer;
                 Tile tile = _grid.data[(int)pos.x, (int)pos.y];
-                photonView.RPC("RPCSendTile", PhotonTargets.All, tile);
+                photonView.RPC("RPC_SendTile", PhotonTargets.All, tile);
             }
         }
 
@@ -1321,7 +1320,7 @@ namespace Com.Hypester.DM3
         }
 
         [PunRPC]
-        private void RPCAnimateTile(AnimateTile tile)
+        private void RPC_AnimateTile(AnimateTile tile)
         {
             BaseTile dropIntoTile = BaseTileAtPos(new Vector2 (tile.x, tile.y));
 
@@ -1340,7 +1339,7 @@ namespace Com.Hypester.DM3
         }
 
         [PunRPC]
-        private void RPCFillPower(int color, int value)
+        private void RPC_FillPower(int color, int value)
         {
             if (color == 1)
                 P2_PowerBlue = value;
@@ -1376,7 +1375,7 @@ namespace Com.Hypester.DM3
 
 
         [PunRPC]
-        public void SendRematchRequest()
+        public void RPC_SendRematchRequest()
         {
             Debug.Log("Rematch order gotten, reloading Scene.");
             _rematchRequested = true;

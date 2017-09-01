@@ -13,8 +13,8 @@ namespace Com.Hypester.DM3
         private GameObject _searchObject;
         private GameObject _opponentAvatar;
 
-        float timer = 0f;
-        float timeUntilStart = 3f;
+        private float _timer = 0f;
+        private float _timeUntilStart = 3f;
 
         protected override void Start ()
         {
@@ -59,9 +59,9 @@ namespace Com.Hypester.DM3
                 if (!_matchFound) //Do once.
                     MatchFound();
 
-                timer += Time.deltaTime;
+                _timer += Time.deltaTime;
 
-                if (timer > timeUntilStart) { 
+                if (_timer > _timeUntilStart) { 
                     GoToScreen(GameObject.Find("PlayScreen").GetComponent<BaseMenuCanvas>());
                     enabled = false;
                 }

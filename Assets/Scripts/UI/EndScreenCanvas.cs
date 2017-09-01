@@ -93,7 +93,6 @@ namespace Com.Hypester.DM3
                     Destroy(_myPlayer.Find("AvatarWinnerBorder").gameObject);
                 else
                     Destroy(_enemyPlayer.Find("AvatarWinnerBorder").gameObject);
-                //_enemyPlayer.Find("AvatarWinnerBorder").GetComponent<Image>().enabled = false;
             }
         }
 
@@ -139,7 +138,7 @@ namespace Com.Hypester.DM3
 
         public void RequestRematch()
         {
-            _game.MyPlayer.photonView.RPC("RequestRematch", PhotonTargets.Others);
+            _game.MyPlayer.photonView.RPC("RPC_RequestRematch", PhotonTargets.Others);
             _game.MyPlayer.wantsRematch = true;
         }
     }

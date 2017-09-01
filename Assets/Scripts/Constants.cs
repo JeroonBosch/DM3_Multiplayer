@@ -35,6 +35,9 @@
 
         public const float MinimumTextTime = 3f; //3 seconds
 
-        
+        public const float WigglePause = 4f;
+        public const float WiggleDuration = 1f;
+
+        public const float SearchMatchTimeout = 30f;
     }
 }

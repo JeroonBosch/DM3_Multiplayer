@@ -7,12 +7,9 @@ namespace Com.Hypester.DM3
 {
     public class NormalGameCanvas : BaseMenuCanvas
     {
-        bool _findingMatch;
-        float timeOut = 0f;
 
         GameObject findOpponent;
 
-        // Use this for initialization
         protected override void Start()
         {
             base.Start();
@@ -23,7 +20,6 @@ namespace Com.Hypester.DM3
             findOpponent.SetActive(false);
         }
 
-        // Update is called once per frame
         protected override void Update()
         {
             base.Update();
@@ -33,20 +29,6 @@ namespace Com.Hypester.DM3
                 playerCount = PhotonNetwork.countOfPlayers;
             if (textObject)
                 textObject.GetComponent<Text>().text = "Players online: " + playerCount;
-
-            if (_findingMatch)
-                timeOut += Time.deltaTime;
-
-            if (timeOut > 30f)
-            {
-                timeOut = 0f;
-                _findingMatch = false;
-                if (PhotonNetwork.inRoom)
-                    PhotonNetwork.LeaveRoom();
-                else
-                    PhotonNetwork.Reconnect();
-                ResetReadyButton();
-            }
         }
 
         public override void Show()
@@ -56,19 +38,10 @@ namespace Com.Hypester.DM3
 
         public void SetReady ()
         {
-            PhotonConnect.Instance.MatchPlayers();
-            _findingMatch = true;
+            PhotonConnect.Instance.MatchPlayers(); //This should load the next scene.
             Button readyButton = transform.Find("ReadyButton").GetComponent<Button>();
             readyButton.interactable = false;
             findOpponent.SetActive(true);
-        }
-
-        private void ResetReadyButton ()
-        {
-            Button readyButton = transform.Find("ReadyButton").GetComponent<Button>();
-            readyButton.interactable = true;
-            PhotonConnect.Instance.ConnectNormalGameroom();
-            findOpponent.SetActive(false);
         }
     }
 }
