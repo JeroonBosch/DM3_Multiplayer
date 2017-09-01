@@ -13,12 +13,14 @@ namespace Com.Hypester.DM3
 
         void Update()
         {
-            if (_timer > createAfterTime) { 
+            if (_timer > createAfterTime) {
                 GameObject go = Instantiate(prefabToCreate) as GameObject;
                 go.transform.position = gameObject.transform.position;
 
-                if (basetileToHide != null)
+                if (basetileToHide != null) { 
                     basetileToHide.color = Constants.AmountOfColors;
+                    basetileToHide.isBeingDestroyed = false;
+                }
                 Destroy(gameObject);
             }
             else

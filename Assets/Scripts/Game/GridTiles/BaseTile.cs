@@ -28,8 +28,8 @@ namespace Com.Hypester.DM3
         private bool _collateral;
         public bool collateral { get { return _collateral; } set { _collateral = value; CollateralChange(); } }
 
-        /*private bool _isBeingDestroyed;
-        public bool isBeingDestroyed { get { return _isBeingDestroyed; }}*/
+        private bool _isBeingDestroyed;
+        public bool isBeingDestroyed { get { return _isBeingDestroyed; } set { _isBeingDestroyed = value;} }
 
         protected virtual void Start()
         {
