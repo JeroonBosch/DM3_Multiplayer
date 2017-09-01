@@ -110,7 +110,7 @@ namespace Com.Hypester.DM3
         public void Rematch ()
         {
             Debug.Log("Trying to get a rematch.");
-            GameObject.Find("Grid").GetComponent<GameHandler>().photonView.RPC("SendRematchRequest", PhotonTargets.All);
+            GameObject.Find("Grid").GetComponent<GameHandler>().photonView.RPC("RPC_SendRematchRequest", PhotonTargets.All);
         }
     }
 }
