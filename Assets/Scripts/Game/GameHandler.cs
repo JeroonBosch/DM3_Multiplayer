@@ -104,11 +104,6 @@ namespace Com.Hypester.DM3
                     if (_MC_endTurnDelay)
                         _MC_endTurnDelayTimer += Time.deltaTime;
 
-                    //bool healthDoneDropping = false;
-                    //if (MyPlayer.FindInterface().GetShownHitpoints() <= MyPlayer.GetHealth() && EnemyPlayer.FindInterface().GetShownHitpoints() <= EnemyPlayer.GetHealth())
-                    //    healthDoneDropping = true;
-
-
                     if (_MC_endTurnDelayTimer > Constants.TimeBetweenTurns)
                     {
                         if (!_gameDone)
