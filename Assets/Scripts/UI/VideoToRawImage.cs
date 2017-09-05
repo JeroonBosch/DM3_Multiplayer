@@ -77,7 +77,7 @@ namespace Com.Hypester.DM3
                 yield return null;
             }
 
-            Debug.Log("Done Preparing Video");
+            //Debug.Log("Done Preparing Video");
 
             //Assign the Texture from Video to RawImage to be displayed
             image.texture = videoPlayer.texture;
@@ -89,14 +89,14 @@ namespace Com.Hypester.DM3
             //Play Sound
             audioSource.Play();
 
-            Debug.Log("Playing Video");
+            //Debug.Log("Playing Video");
             while (videoPlayer.isPlaying)
             {
-                Debug.LogWarning("Video Time: " + Mathf.FloorToInt((float)videoPlayer.time));
+                //Debug.LogWarning("Video Time: " + Mathf.FloorToInt((float)videoPlayer.time));
                 yield return null;
             }
 
-            Debug.Log("Done Playing Video");
+            //Debug.Log("Done Playing Video");
         }
 
         // Update is called once per frame

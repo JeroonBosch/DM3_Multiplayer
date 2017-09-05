@@ -878,9 +878,9 @@ namespace Com.Hypester.DM3
             }
 
             if (trapped && EnemyPlayer == targetPlayer)
-                _gameContext.ShowLargeText("Nice trap!");
-            else if (trapped && MyPlayer == targetPlayer)
                 _gameContext.ShowLargeText("Oops! It was trapped!");
+            else if (trapped && MyPlayer == targetPlayer)
+                _gameContext.ShowLargeText("Nice trap!");
 
             int count = 0;
             int highestCount = 0;
