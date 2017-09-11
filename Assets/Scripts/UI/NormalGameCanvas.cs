@@ -23,12 +23,17 @@ namespace Com.Hypester.DM3
         protected override void Update()
         {
             base.Update();
-            Transform textObject = GameObject.Find("AmountOfPlayersText").transform;
+            GameObject[] stages = GameObject.FindGameObjectsWithTag("CarouselStage");
+
             int playerCount = 0;
             if (PhotonNetwork.connected)
                 playerCount = PhotonNetwork.countOfPlayers;
-            if (textObject)
-                textObject.GetComponent<Text>().text = "Players online: " + playerCount;
+            foreach (GameObject stage in stages)
+            {
+                Transform textObject = stage.transform.Find("AmountOfPlayersText").transform;
+                if (textObject)
+                    textObject.GetComponent<Text>().text = "Players online: " + playerCount;
+            }
         }
 
         public override void Show()
@@ -39,8 +44,8 @@ namespace Com.Hypester.DM3
         public void SetReady ()
         {
             PhotonConnect.Instance.MatchPlayers(); //This should load the next scene.
-            Button readyButton = transform.Find("ReadyButton").GetComponent<Button>();
-            readyButton.interactable = false;
+            //Button readyButton = transform.Find("ReadyButton").GetComponent<Button>();
+            //readyButton.interactable = false;
             findOpponent.SetActive(true);
         }
     }
