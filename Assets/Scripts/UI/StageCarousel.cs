@@ -8,7 +8,7 @@ namespace Com.Hypester.DM3
 {
     public class StageCarousel : MonoBehaviour
     {
-        private GameObject[] _carouselObjects;
+        private List<GameObject> _carouselObjects;
         private int _selectedIndex = 0;
         private int _highestIndex;
         private Coroutine _moveCoroutine;
@@ -18,11 +18,18 @@ namespace Com.Hypester.DM3
 
         private void Start()
         {
-            _carouselObjects = GameObject.FindGameObjectsWithTag("CarouselStage");
-            _highestIndex = _carouselObjects.Length - 1;
+            _carouselObjects = new List<GameObject>();
+            foreach (Transform child in transform)
+            {
+                if (child.tag == "CarouselStage")
+                    _carouselObjects.Add(child.gameObject);
+            }
 
-            _buttonLeft = GameObject.Find("ArrowLeft");
-            _buttonRight = GameObject.Find("ArrowRight");
+
+            _highestIndex = _carouselObjects.Count - 1;
+
+            _buttonLeft = transform.parent.Find("ButtonLeft").Find("ArrowLeft").gameObject;
+            _buttonRight = transform.parent.Find("ButtonRight").Find("ArrowRight").gameObject;
         }
 
         private void Update()

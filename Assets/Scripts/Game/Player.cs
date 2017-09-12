@@ -7,6 +7,7 @@ namespace Com.Hypester.DM3
     public class Player : Photon.MonoBehaviour
     {
         public int localID;
+        public int joinNumber;
         public string profileName;
         public bool wantsRematch;
 
@@ -35,18 +36,32 @@ namespace Com.Hypester.DM3
 
         public void UpdateLabels ()
         {
-            if (localID == 0)
+            if (joinNumber == 1)
             {
                 foreach (GameObject player1name in GameObject.FindGameObjectsWithTag("Player_1_Name"))
                 {
                     player1name.GetComponent<Text>().text = profileName;
                 }
             }
-            else
+            else if (joinNumber == 2)
             {
                 foreach (GameObject player2name in GameObject.FindGameObjectsWithTag("Player_2_Name"))
                 {
                     player2name.GetComponent<Text>().text = profileName;
+                }
+            }
+            else if (joinNumber == 3)
+            {
+                foreach (GameObject player3name in GameObject.FindGameObjectsWithTag("Player_3_Name"))
+                {
+                    player3name.GetComponent<Text>().text = profileName;
+                }
+            }
+            else
+            {
+                foreach (GameObject player4name in GameObject.FindGameObjectsWithTag("Player_4_Name"))
+                {
+                    player4name.GetComponent<Text>().text = profileName;
                 }
             }
 
@@ -114,27 +129,16 @@ namespace Com.Hypester.DM3
             {
                 stream.SendNext(profileName);
                 stream.SendNext(localID);
+                stream.SendNext(joinNumber);
             }
             else
             {
                 profileName = (string)stream.ReceiveNext();
                 localID = (int)stream.ReceiveNext();
+                joinNumber = (int)stream.ReceiveNext();
             }
 
-            if (localID == 0)
-            {
-                foreach (GameObject player1name in GameObject.FindGameObjectsWithTag("Player_1_Name"))
-                {
-                    player1name.GetComponent<Text>().text = profileName;
-                }
-            }
-            else
-            {
-                foreach (GameObject player2name in GameObject.FindGameObjectsWithTag("Player_2_Name"))
-                {
-                    player2name.GetComponent<Text>().text = profileName;
-                }
-            }
+            UpdateLabels();
         }
 
         public string GetName ()

@@ -2989,7 +2989,7 @@ internal class NetworkingPeer : LoadBalancingPeer, IPhotonPeerListener
         return true;
     }
 
-    internal Hashtable SendInstantiate(string prefabName, Vector3 position, Quaternion rotation, int group, int[] viewIDs, object[] data, bool isGlobalObject)
+    internal Hashtable SendInstantiate(string prefabName, Vector3 position, Quaternion rotation, byte group, int[] viewIDs, object[] data, bool isGlobalObject)
     {
         // first viewID is now also the gameobject's instantiateId
         int instantiateId = viewIDs[0];   // LIMITS PHOTONVIEWS&PLAYERS

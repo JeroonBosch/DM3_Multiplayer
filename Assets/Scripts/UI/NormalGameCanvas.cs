@@ -16,14 +16,21 @@ namespace Com.Hypester.DM3
             PhotonNetwork.autoJoinLobby = false;
             PhotonNetwork.automaticallySyncScene = true;
 
-            findOpponent = GameObject.Find("FindOpponent");
+            findOpponent = transform.Find("FindOpponent").gameObject;
             findOpponent.SetActive(false);
         }
 
         protected override void Update()
         {
             base.Update();
-            GameObject[] stages = GameObject.FindGameObjectsWithTag("CarouselStage");
+
+            Transform carousel = transform.Find("StageCarousel");
+            List<GameObject> stages = new List<GameObject>();
+            foreach (Transform child in carousel)
+            {
+                if (child.tag == "CarouselStage")
+                    stages.Add(child.gameObject);
+            }
 
             int playerCount = 0;
             if (PhotonNetwork.connected)

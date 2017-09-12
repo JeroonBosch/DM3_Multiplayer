@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using Photon;
+using ExitGames.Client.Photon;
 using UnityEngine.SceneManagement;
+using System.Collections.Generic;
 
 namespace Com.Hypester.DM3
 {
@@ -8,6 +10,11 @@ namespace Com.Hypester.DM3
     {
         public string profileName; //TODO 
         private bool _connect;
+
+        private TypedLobby _normalLobby;
+        private TypedLobby _tournamentLobby;
+
+        private List<byte> inactiveGroups, activeGroups;
 
         private static PhotonConnect instance;
         public static PhotonConnect Instance
@@ -17,12 +24,24 @@ namespace Com.Hypester.DM3
         private void Awake()
         {
             DontDestroyOnLoad(gameObject);
+
+            _normalLobby = new TypedLobby() { Name = "NormalGame", Type = LobbyType.Default };
+            _tournamentLobby = new TypedLobby() { Name = "Tournament", Type = LobbyType.Default };
+
+            inactiveGroups = new List<byte>(0);
+            activeGroups = new List<byte>(0);
         }
 
         private void Update()
         {
-            if (PhotonNetwork.inRoom && SceneManager.GetActiveScene().name != "NormalGame")
+            if (PhotonNetwork.inRoom && SceneManager.GetActiveScene().name == "Menu")
+            {
+                if (PhotonNetwork.room.MaxPlayers == 2)
                     PhotonNetwork.LoadLevel("NormalGame");
+                else
+                    PhotonNetwork.LoadLevel("TournamentGame");
+            }
+                    
 
             if (_connect && !PhotonNetwork.connecting && !PhotonNetwork.connected)
                 PhotonNetwork.ConnectUsingSettings("v0.2");
@@ -39,13 +58,27 @@ namespace Com.Hypester.DM3
             if (PhotonNetwork.connected)
             {
                 // #Critical we need at this point to attempt joining a Random Room. If it fails, we'll get notified in OnPhotonRandomJoinFailed() and we'll create one.
-                PhotonNetwork.JoinRandomRoom();
+
+                if (PhotonNetwork.insideLobby)
+                {
+                    if (PhotonNetwork.lobby == _normalLobby)
+                        PhotonNetwork.JoinRandomRoom(null, 2);
+                    else
+                        PhotonNetwork.JoinRandomRoom(null, 4);
+                }
+                
             }
         }
 
         public void ConnectNormalLobby ()
         {
-            PhotonNetwork.JoinLobby(new TypedLobby() { Name = "NormalGame", Type = LobbyType.Default });
+            PhotonNetwork.JoinLobby(_normalLobby);
+            PhotonNetwork.playerName = profileName;
+        }
+
+        public void ConnectTournamentLobby()
+        {
+            PhotonNetwork.JoinLobby(_tournamentLobby);
             PhotonNetwork.playerName = profileName;
         }
 
@@ -54,7 +87,14 @@ namespace Com.Hypester.DM3
             Debug.Log("OnPhotonRandomJoinFailed() was called by PUN. No random room available, so we create one.\nCalling: PhotonNetwork.CreateRoom(null, new RoomOptions() {maxPlayers = 2}, null);");
 
             // #Critical: we failed to join a random room, maybe none exists or they are all full. No worries, we create a new room.
-            PhotonNetwork.CreateRoom(null, new RoomOptions() { MaxPlayers = 2 }, null);
+            if (PhotonNetwork.insideLobby)
+            {
+                if (PhotonNetwork.lobby == _normalLobby)
+                    PhotonNetwork.CreateRoom(null, new RoomOptions() { MaxPlayers = 2 }, _normalLobby);
+                else
+                    PhotonNetwork.CreateRoom(null, new RoomOptions() { MaxPlayers = 4 }, _tournamentLobby);
+            }
+            
         }
 
         public override void OnPhotonJoinRoomFailed(object[] codeAndMsg)
@@ -85,7 +125,7 @@ namespace Com.Hypester.DM3
         public override void OnPhotonPlayerDisconnected(PhotonPlayer otherPlayer)
         {
             base.OnPhotonPlayerDisconnected(otherPlayer);
-            if (PhotonNetwork.inRoom && SceneManager.GetActiveScene().name == "NormalGame")
+            if (PhotonNetwork.inRoom && SceneManager.GetActiveScene().name != "Menu")
             {
                 PhotonNetwork.LoadLevel("Menu");
                 PhotonNetwork.LeaveRoom();
@@ -97,7 +137,26 @@ namespace Com.Hypester.DM3
 
         public void CreatePlayer ()
         {
-            GameObject playerGO = PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity, 0);
+            Debug.Log("Creating player at " + PhotonNetwork.room.PlayerCount + " PlayerCount");
+
+            GameObject playerGO;
+            if (PhotonNetwork.room.MaxPlayers > 3) //Tournament mode.
+            {
+                activeGroups.Add(1);
+                activeGroups.Add(2);
+                //activeGroups.Add(3); //Once we go from 4 to 8 player tournaments.
+                //activeGroups.Add(4); //Once we go from 4 to 8 player tournaments.
+
+                SetTournamentScreen();
+
+                if (PhotonNetwork.room.PlayerCount >= 3)
+                    playerGO = PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity, activeGroups[1]);
+                else
+                    playerGO = PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity, activeGroups[0]);
+            } else //1v1 match
+                playerGO = PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity, 0);
+
+            playerGO.GetComponent<Player>().joinNumber = PhotonNetwork.room.PlayerCount;
 
             if (PhotonNetwork.isMasterClient)
                 playerGO.GetComponent<Player>().localID = 0;
@@ -111,6 +170,18 @@ namespace Com.Hypester.DM3
         {
             Debug.Log("Trying to get a rematch.");
             GameObject.Find("Grid").GetComponent<GameHandler>().photonView.RPC("RPC_SendRematchRequest", PhotonTargets.All);
+        }
+
+        public void SetTournamentScreen()
+        {
+            PhotonNetwork.SetInterestGroups(null, activeGroups.ToArray());
+            PhotonNetwork.SetSendingEnabled(null, activeGroups.ToArray());
+        }
+
+        public void SetTournamentOpponent (int opponentNumber)
+        {
+            PhotonNetwork.SetInterestGroups(inactiveGroups.ToArray(), activeGroups.ToArray());
+            PhotonNetwork.SetSendingEnabled(inactiveGroups.ToArray(), activeGroups.ToArray());
         }
     }
 }
