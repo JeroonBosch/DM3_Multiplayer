@@ -1,6 +1,7 @@
 ﻿using Photon;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 
 namespace Com.Hypester.DM3
 {
@@ -9,6 +10,8 @@ namespace Com.Hypester.DM3
         public int localID;
         public int joinNumber;
         public string profileName;
+        public string profilePicURL;
+        //public Texture2D profilePic;
         public bool wantsRematch;
 
         #region private variables
@@ -25,7 +28,8 @@ namespace Com.Hypester.DM3
             GetComponent<Canvas>().worldCamera = Camera.main;
 
             if (gameObject.GetComponent<PhotonView>().isMine) {
-                profileName = PhotonNetwork.playerName;
+                profileName = MainController.Instance.playerData.profileName;
+                profilePicURL = MainController.Instance.playerData.pictureURL;
                 transform.Find("FingerTracker").GetComponent<Image>().enabled = false;
             }
 
@@ -34,51 +38,98 @@ namespace Com.Hypester.DM3
             UpdateLabels();
         }
 
-        public void UpdateLabels ()
+        private void Update()
         {
-            if (joinNumber == 1)
+            if (_game == null)
+                _game = GameObject.Find("Grid");
+
+            if (_game && _game.GetComponent<GameHandler>().MyPlayer != null)
             {
-                foreach (GameObject player1name in GameObject.FindGameObjectsWithTag("Player_1_Name"))
-                {
-                    player1name.GetComponent<Text>().text = profileName;
-                }
-            }
-            else if (joinNumber == 2)
-            {
-                foreach (GameObject player2name in GameObject.FindGameObjectsWithTag("Player_2_Name"))
-                {
-                    player2name.GetComponent<Text>().text = profileName;
-                }
-            }
-            else if (joinNumber == 3)
-            {
-                foreach (GameObject player3name in GameObject.FindGameObjectsWithTag("Player_3_Name"))
-                {
-                    player3name.GetComponent<Text>().text = profileName;
-                }
-            }
-            else
-            {
-                foreach (GameObject player4name in GameObject.FindGameObjectsWithTag("Player_4_Name"))
-                {
-                    player4name.GetComponent<Text>().text = profileName;
-                }
+                if (_game.GetComponent<GameHandler>().IsMyTurn())
+                    transform.Find("FingerTracker").GetComponent<Image>().enabled = false;
+                else if (!gameObject.GetComponent<PhotonView>().isMine && _game.GetComponent<GameHandler>().Active)
+                    transform.Find("FingerTracker").GetComponent<Image>().enabled = true;
             }
 
-            if (photonView.isMine)
+            GetComponent<Canvas>().worldCamera = Camera.main;
+        }
+
+        void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
+        {
+            if (stream.isWriting)
             {
-                foreach (GameObject myName in GameObject.FindGameObjectsWithTag("MyPlayer_Name"))
-                {
-                    myName.GetComponent<Text>().text = profileName;
-                }
+                stream.SendNext(profileName);
+                stream.SendNext(profilePicURL);
+                stream.SendNext(localID);
+                stream.SendNext(joinNumber);
             }
             else
             {
-                foreach (GameObject myName in GameObject.FindGameObjectsWithTag("OpponentPlayer_Name"))
-                {
-                    myName.GetComponent<Text>().text = profileName;
-                }
+                profileName = (string)stream.ReceiveNext();
+                profilePicURL = (string)stream.ReceiveNext();
+                localID = (int)stream.ReceiveNext();
+                joinNumber = (int)stream.ReceiveNext();
             }
+
+            UpdateLabels();
+        }
+
+        public void UpdateLabels()
+        {
+            if (joinNumber == 1)
+                SetTextToProfileName("Player_1_Name");
+            else if (joinNumber == 2)
+                SetTextToProfileName("Player_2_Name");
+            else if (joinNumber == 3)
+                SetTextToProfileName("Player_3_Name");
+            else
+                SetTextToProfileName("Player_4_Name");
+
+            if (photonView.isMine)
+                SetTextToProfileName("MyPlayer_Name");
+            else
+                SetTextToProfileName("OpponentPlayer_Name");
+
+
+            if (profilePicURL != "") { 
+                //Avatars
+                if (joinNumber == 1)
+                    SetImageToProfilePic("Player_1_Avatar");
+                else if (joinNumber == 2)
+                    SetImageToProfilePic("Player_2_Avatar");
+                else if (joinNumber == 3)
+                    SetImageToProfilePic("Player_3_Avatar");
+                else
+                    SetImageToProfilePic("Player_4_Avatar");
+
+                if (photonView.isMine)
+                    SetImageToProfilePic("MyPlayer_Avatar");
+                else
+                    SetImageToProfilePic("OpponentPlayer_Avatar");
+            }
+        }
+
+        private void SetTextToProfileName(string tag)
+        {
+            foreach (GameObject name in GameObject.FindGameObjectsWithTag(tag))
+            {
+                name.GetComponent<Text>().text = profileName;
+            }
+        }
+
+        private void SetImageToProfilePic(string tag)
+        {
+            foreach (GameObject avatar in GameObject.FindGameObjectsWithTag(tag))
+            {
+                StartCoroutine(ImageFromURL(avatar.GetComponent<Image>()));
+            }
+        }
+
+        private IEnumerator ImageFromURL (Image img)
+        {
+            WWW www = new WWW(profilePicURL);
+            yield return www;
+            img.sprite = Sprite.Create(www.texture, new Rect(0, 0, www.texture.width, www.texture.height), new Vector2(0, 0));
         }
 
         public PlayerInterface FindInterface ()
@@ -105,40 +156,6 @@ namespace Com.Hypester.DM3
         {
             Start();
             photonView.RPC("RPC_SendName", PhotonTargets.All, profileName);
-        }
-
-        private void Update()
-        {
-            if (_game == null)
-                _game = GameObject.Find("Grid");
-
-            if (_game && _game.GetComponent<GameHandler>().MyPlayer != null)
-            {
-                if (_game.GetComponent<GameHandler>().IsMyTurn())
-                    transform.Find("FingerTracker").GetComponent<Image>().enabled = false;
-                else if (!gameObject.GetComponent<PhotonView>().isMine && _game.GetComponent<GameHandler>().Active)
-                    transform.Find("FingerTracker").GetComponent<Image>().enabled = true;
-            }
-
-            GetComponent<Canvas>().worldCamera = Camera.main;
-        }
-
-        void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
-        {
-            if (stream.isWriting)
-            {
-                stream.SendNext(profileName);
-                stream.SendNext(localID);
-                stream.SendNext(joinNumber);
-            }
-            else
-            {
-                profileName = (string)stream.ReceiveNext();
-                localID = (int)stream.ReceiveNext();
-                joinNumber = (int)stream.ReceiveNext();
-            }
-
-            UpdateLabels();
         }
 
         public string GetName ()

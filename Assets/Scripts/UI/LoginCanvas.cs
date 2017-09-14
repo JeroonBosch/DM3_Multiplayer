@@ -9,12 +9,17 @@ namespace Com.Hypester.DM3
         //This class passes on the 'nickname' to Photon.
         private InputField _text;
 
+        private void Awake()
+        {
+            MainController.Instance.FacebookInit();
+        }
+
         protected override void Start()
         {
             base.Start();
 
             _text = GameObject.Find("NameField").GetComponent<InputField>();
-            _text.text = "Player" + Random.Range(1000, 9999).ToString();
+            _text.text = "Guest" + Random.Range(1000, 9999).ToString();
 
             GameObject.Find("LoggingIn").GetComponent<Text>().enabled = false;
         }
@@ -39,9 +44,9 @@ namespace Com.Hypester.DM3
             PhotonConnect.Instance.EnsureConnection();
 
             if (_text.text != "")
-                PhotonConnect.Instance.profileName = _text.text;
+                MainController.Instance.playerData.profileName = _text.text;
             else
-                PhotonConnect.Instance.profileName = "Player" + Random.Range(1000, 9999).ToString();
+                MainController.Instance.playerData.profileName = "Guest" + Random.Range(1000, 9999).ToString();
         }
 
         public void LoginFB()

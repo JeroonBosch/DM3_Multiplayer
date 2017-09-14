@@ -1,8 +1,10 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections.Generic;
 using System.Linq;
 using Facebook.Unity;
 using Facebook.MiniJSON;
+using System.Collections;
 
 namespace Com.Hypester.DM3
 {
@@ -22,6 +24,8 @@ namespace Com.Hypester.DM3
             get { return instance ?? (instance = new GameObject("MainController").AddComponent<MainController>()); }
         }
 
+        public void FacebookInit() { FB.Init(); }
+
 
         private void OnEnable()
         {
@@ -32,16 +36,17 @@ namespace Com.Hypester.DM3
             playerData = new PlayerData();
 
             _gotFacebookData = false;
-
-            FB.Init();
         }
 
         private void Update()
         {
             if (FB.IsLoggedIn && !_gotFacebookData)
             {
+                _gotFacebookData = true;
                 FB.API("me?fields=name", HttpMethod.GET, GetFacebookName);
-                //FB.API("/me/picture?redirect=false", HttpMethod.GET, ProfilePhotoCallback);
+                //FB.API("me?fields=picture", HttpMethod.GET, GetFacebookPicture); 
+                FB.API("me/picture?type=square&height=128&width=128", HttpMethod.GET, GetFacebookPicture);
+                FB.API("me?fields=picture.type(large)", HttpMethod.GET, GetFacebookPictureURL);
             }
         }
 
@@ -58,8 +63,6 @@ namespace Com.Hypester.DM3
         public void CallFBLogin()
         {
             FB.LogInWithReadPermissions(new List<string>() { "public_profile", "email", "user_friends" });
-
-            
         }
 
         public void CallFBLogout()
@@ -67,35 +70,32 @@ namespace Com.Hypester.DM3
             FB.LogOut();
         }
 
-        void GetFacebookName(IGraphResult result)
+        private void GetFacebookName(IGraphResult result)
         {
-            _gotFacebookData = true;
-
             string fbName = result.ResultDictionary["name"].ToString();
 
             Debug.Log("fbName: " + fbName);
 
             playerData.profileName = fbName;
-            PhotonConnect.Instance.profileName = fbName;
         }
 
-        /*private void ProfilePhotoCallback(IGraphResult result)
+        private void GetFacebookPicture(IGraphResult result)
         {
-            if (string.IsNullOrEmpty(result.Error) && !result.Cancelled)
+            if (result.Texture != null)
             {
-                IDictionary data = result.ResultDictionary["data"] as IDictionary;
-                string photoURL = data["url"] as String;
-
-                StartCoroutine(fetchProfilePic(photoURL));
+                GameObject.Find("ProfileAvatar").GetComponent<Image>().sprite = Sprite.Create(result.Texture, new Rect(0, 0, 128, 128), new Vector2());
+                playerData.profilePicture = result.Texture;
             }
         }
 
-        private IEnumerator fetchProfilePic(string url)
+        private void GetFacebookPictureURL(IGraphResult result)
         {
-            WWW www = new WWW(url);
-            yield return www;
-            this.profilePic = www.texture;
-        }*/
+            IDictionary<string, object> innerDict = (Dictionary<string, object>)result.ResultDictionary["picture"];
+            IDictionary<string, object> dataDict = (Dictionary<string, object>)innerDict["data"];
+
+            playerData.pictureURL = dataDict["url"].ToString();
+            Debug.Log("pic : " + dataDict["url"].ToString());
+        }
     }
 
 
@@ -103,7 +103,8 @@ namespace Com.Hypester.DM3
     {
         public int profileID;
         public string profileName;
-        public string pictureURL;
+        public string pictureURL = "";
+        public Texture2D profilePicture;
 
         public int coins;
         public int trophies;

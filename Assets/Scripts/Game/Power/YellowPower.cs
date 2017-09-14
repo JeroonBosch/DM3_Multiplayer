@@ -89,7 +89,7 @@ namespace Com.Hypester.DM3
 
         private void OnTriggerEnter2D(Collider2D collision)
         {
-            if (collision.gameObject.tag == "Hitbox" && photonView.isMine)
+            if (collision.gameObject.tag == "OpponentPlayer_Avatar" && photonView.isMine)
             {
                 _game.photonView.RPC("RPC_FireballHit", PhotonTargets.All);
             }

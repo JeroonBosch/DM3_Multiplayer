@@ -8,7 +8,7 @@ namespace Com.Hypester.DM3
 {
     public class PhotonConnect : PunBehaviour
     {
-        public string profileName; //TODO 
+        //public string profileName; //TODO 
         private bool _connect;
 
         private TypedLobby _normalLobby;
@@ -73,13 +73,13 @@ namespace Com.Hypester.DM3
         public void ConnectNormalLobby ()
         {
             PhotonNetwork.JoinLobby(_normalLobby);
-            PhotonNetwork.playerName = profileName;
+            PhotonNetwork.playerName = MainController.Instance.playerData.profileName;
         }
 
         public void ConnectTournamentLobby()
         {
             PhotonNetwork.JoinLobby(_tournamentLobby);
-            PhotonNetwork.playerName = profileName;
+            PhotonNetwork.playerName = MainController.Instance.playerData.profileName;
         }
 
         public override void OnPhotonRandomJoinFailed(object[] codeAndMsg)
