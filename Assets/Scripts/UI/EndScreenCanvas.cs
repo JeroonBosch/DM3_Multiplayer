@@ -21,7 +21,7 @@ namespace Com.Hypester.DM3
         {
             base.Start();
             Hide();
-            _game = GameObject.Find("Grid").GetComponent<GameHandler>();
+            _game = GameObject.FindWithTag("GameController").GetComponent<GameHandler>();
 
             if (PhotonNetwork.isMasterClient)
             {

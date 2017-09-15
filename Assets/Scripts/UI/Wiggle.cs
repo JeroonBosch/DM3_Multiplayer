@@ -14,7 +14,7 @@ namespace Com.Hypester.DM3
 
         private void Start()
         {
-            _game = GameObject.Find("Grid").GetComponent<GameHandler>();
+            _game = GameObject.FindWithTag("GameController").GetComponent<GameHandler>();
         }
 
         private void Update()

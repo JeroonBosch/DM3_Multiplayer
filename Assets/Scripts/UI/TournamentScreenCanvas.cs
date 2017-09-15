@@ -88,7 +88,7 @@ namespace Com.Hypester.DM3
                     //AssignOpponent();
                     
                     PhotonConnect.Instance.SetTournamentOpponent(GetMyJoinNumber()); //set correct interest groups
-                    PhotonConnect.Instance.CreatePlayers();
+                    //PhotonConnect.Instance.CreatePlayers();
                     PhotonNetwork.LoadLevel("Match");
                     Debug.Log("Match loaded from Tournament.");
                     enabled = false;
@@ -108,7 +108,7 @@ namespace Com.Hypester.DM3
             _opponentAvatar4.SetActive(true);
             _searchObject4.SetActive(false);
 
-            if (!PhotonNetwork.isMasterClient)
+            if (!PhotonNetwork.isMasterClient) //okay
             {
                 GameObject.Find("player1").GetComponent<Image>().sprite = Resources.Load<Sprite>("UI/AvatarB");
                 GameObject.Find("player2").GetComponent<Image>().sprite = Resources.Load<Sprite>("UI/AvatarA");

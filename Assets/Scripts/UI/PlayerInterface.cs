@@ -28,7 +28,7 @@ namespace Com.Hypester.DM3
 
         private void Start()
         {
-            _game = GameObject.Find("Grid").GetComponent<GameHandler>();
+            _game = GameObject.FindWithTag("GameController").GetComponent<GameHandler>();
             _health = transform.Find("Health").gameObject;
             _shadowHealth = transform.Find("ShadowHealth").gameObject;
             _timer = transform.Find("Timer").gameObject;
@@ -178,7 +178,7 @@ namespace Com.Hypester.DM3
                 }
             } else
             {
-                _game = GameObject.Find("Grid").GetComponent<GameHandler>();
+                _game = GameObject.FindWithTag("GameController").GetComponent<GameHandler>();
             }
         }
 

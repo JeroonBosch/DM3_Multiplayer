@@ -1,12 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
-using System;
-using Photon;
 using ExitGames.Client.Photon;
-using Lean.Touch;
 using System.Collections.Generic;
-using UnityEngine.EventSystems;
 
 namespace Com.Hypester.DM3
 {
@@ -35,6 +31,8 @@ namespace Com.Hypester.DM3
         #endregion
 
         #region public game logic
+        public int gameID = 0; //Used for tournaments.
+
         public Player MyPlayer { get { return _myPlayer; } }
         public Player EnemyPlayer { get { return _enemyPlayer; } }
 
@@ -73,6 +71,7 @@ namespace Com.Hypester.DM3
             _isActive = false;
             _gameDone = false;
             _selectedTiles = new List<Vector2>();
+            _baseTiles = new List<BaseTile>();
             _curPlayer = 0;
 
             turnTimer = 0;
@@ -86,7 +85,7 @@ namespace Com.Hypester.DM3
 
             _gameContext = GameObject.Find("GameContext").GetComponent<GameContext>();
 
-            if (PhotonNetwork.isMasterClient)
+            if (IsGameMaster()) //okay
             {
                 GenerateGrid();
             }
@@ -99,7 +98,7 @@ namespace Com.Hypester.DM3
                 if (_gridReceived && !_gridVisualized)
                     VisualizeGrid();
 
-                if (PhotonNetwork.isMasterClient)
+                if (IsGameMaster())
                 {
                     if (_MC_endTurnDelay)
                         _MC_endTurnDelayTimer += Time.deltaTime;
@@ -197,18 +196,17 @@ namespace Com.Hypester.DM3
                         _enemyPlayer = player;
                 }
 
-
                 if (_gridReceived)
                     VisualizeGrid();
 
                 PhotonView photonView = PhotonView.Get(this);
-                if (PhotonNetwork.isMasterClient)
+                if (IsGameMaster())
                 {
                     photonView.RPC("RPC_SendGridData", PhotonTargets.All, _grid);
                 }
 
 
-                if (_myPlayer.localID == 1 && !PhotonNetwork.isMasterClient)
+                if (!IsGameMaster())
                 {
                     transform.rotation = new Quaternion(0f, 0f, 180f, transform.rotation.w);
                 }
@@ -316,7 +314,7 @@ namespace Com.Hypester.DM3
 
         private void SetGameState(GameStates.EGameState state)
         {
-            if (PhotonNetwork.isMasterClient)
+            if (IsGameMaster())
             {
                 gameState.State = state;
                 photonView.RPC("RPC_SyncState", PhotonTargets.Others, (int)state);
@@ -717,7 +715,7 @@ namespace Com.Hypester.DM3
             }
 
             //Master client will sync this.
-            if (PhotonNetwork.isMasterClient)
+            if (IsGameMaster())
             {
                 _MC_endTurnDelay = true;
                 _MC_endTurnDelayTimer = 0f;
@@ -911,7 +909,7 @@ namespace Com.Hypester.DM3
 
 
             //Only master client will update the _grid and then sync it.
-            if (PhotonNetwork.isMasterClient)
+            if (IsGameMaster())
             {
                 int color = BaseTileAtPos(_selectedTiles[_selectedTiles.Count - 1]).color;
                 foreach (Vector2 pos in _selectedTiles)
@@ -1177,7 +1175,7 @@ namespace Com.Hypester.DM3
 
         public void PowerClicked(int color)
         {
-            if (PhotonNetwork.isMasterClient)
+            if (IsGameMaster())
             {
                 if (_curPlayer == 0)
                 {
@@ -1282,7 +1280,7 @@ namespace Com.Hypester.DM3
                 GameObject explosion = Instantiate(Resources.Load("ParticleEffects/FireballHit")) as GameObject;
                 explosion.transform.position = GameObject.Find("OpponentAvatar").transform.position;
 
-                if (PhotonNetwork.isMasterClient)
+                if (IsGameMaster())
                 {
                     DamagePlayer(EnemyPlayer.localID, Constants.FireballPower);
                     ResetTimer();
@@ -1293,7 +1291,7 @@ namespace Com.Hypester.DM3
                 GameObject explosion = Instantiate(Resources.Load("ParticleEffects/FireballHit")) as GameObject;
                 explosion.transform.position = GameObject.Find("MyAvatar").transform.position;
 
-                if (PhotonNetwork.isMasterClient)
+                if (IsGameMaster())
                 {
                     DamagePlayer(MyPlayer.localID, Constants.FireballPower);
                     ResetTimer();
@@ -1324,7 +1322,7 @@ namespace Com.Hypester.DM3
         [PunRPC]
         public void RPC_CreateTrapBooster(Vector2 pos, int creatorPlayer)
         {
-            if (PhotonNetwork.isMasterClient)
+            if (IsGameMaster())
             {
                 _grid.data[(int)pos.x, (int)pos.y].boosterLevel = 4 + creatorPlayer;
                 Tile tile = _grid.data[(int)pos.x, (int)pos.y];
@@ -1472,6 +1470,24 @@ namespace Com.Hypester.DM3
                 effectPosition = GameObject.Find("OpponentAvatar").GetComponent<RectTransform>().position;
             }
             effect.transform.position = effectPosition;
+        }
+
+        private bool IsGameMaster ()
+        {
+            if (_myPlayer != null) { 
+                if (PhotonNetwork.isMasterClient || _myPlayer.joinNumber == 3) //okay
+                    return true;
+                else
+                    return false;
+            } else
+            {
+                if (PhotonNetwork.isMasterClient) //okay
+                    return true;
+                else
+                    return false;
+            }
+
+            //photonView.isMine eventually, if player 3 creates his own Grid. This is the way to go I think.
         }
 
         #region RPC Messages

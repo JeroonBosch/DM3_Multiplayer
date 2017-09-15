@@ -26,7 +26,7 @@ namespace Com.Hypester.DM3
         private void Start()
         {
             _curPos = transform.position;
-            _game = GameObject.Find("Grid").GetComponent<GameHandler>();
+            _game = GameObject.FindWithTag("GameController").GetComponent<GameHandler>();
 
             if (!photonView.isMine)
                 ownerPlayer = _game.EnemyPlayer;

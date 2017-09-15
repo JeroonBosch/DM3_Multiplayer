@@ -34,7 +34,7 @@ namespace Com.Hypester.DM3
             _startPosition = _rt.position;
 
             _endPosition = new Vector2();
-            if (_targetPlayer.localID == GameObject.Find("Grid").GetComponent<GameHandler>().MyPlayer.localID)
+            if (_targetPlayer.localID == GameObject.FindWithTag("GameController").GetComponent<GameHandler>().MyPlayer.localID)
                 _endPosition = GameObject.Find("MyAvatar").transform.position;
             else
                 _endPosition = GameObject.Find("OpponentAvatar").transform.position;

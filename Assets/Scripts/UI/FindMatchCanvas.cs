@@ -66,7 +66,7 @@ namespace Com.Hypester.DM3
                 _searchObject.SetActive(false);
             }
 
-            if (!PhotonNetwork.isMasterClient)
+            if (!PhotonNetwork.isMasterClient) //okay
             {
                 GameObject.Find("player1").GetComponent<Image>().sprite = Resources.Load<Sprite>("UI/AvatarB");
                 GameObject.Find("player2").GetComponent<Image>().sprite = Resources.Load<Sprite>("UI/AvatarA");

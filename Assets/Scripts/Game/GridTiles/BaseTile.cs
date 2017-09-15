@@ -139,7 +139,7 @@ namespace Com.Hypester.DM3
 
         public List<BaseTile> ListCollateralDamage (GameHandler grid, float radius)
         {
-            //GameHandler grid = GameObject.Find("Grid").GetComponent<GameHandler>();
+            //GameHandler grid = GameObject.FindWithTag("GameController").GetComponent<GameHandler>();
             List<BaseTile> toDestroy = new List<BaseTile>();
 
             if (_boosterLevel == 1) { 

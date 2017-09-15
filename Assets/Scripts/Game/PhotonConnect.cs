@@ -8,15 +8,14 @@ namespace Com.Hypester.DM3
 {
     public class PhotonConnect : PunBehaviour
     {
-        //public string profileName; //TODO 
         private bool _connect;
 
         private TypedLobby _normalLobby;
         private TypedLobby _tournamentLobby;
 
-        private bool _tournamentMode;
+        public bool tournamentMode;
 
-        private List<byte> inactiveGroups, activeGroups;
+        public List<byte> allGroups, inactiveGroups, activeGroups;
 
         private static PhotonConnect instance;
         public static PhotonConnect Instance
@@ -30,10 +29,11 @@ namespace Com.Hypester.DM3
             _normalLobby = new TypedLobby() { Name = "NormalGame", Type = LobbyType.Default };
             _tournamentLobby = new TypedLobby() { Name = "Tournament", Type = LobbyType.Default };
 
+            allGroups = new List<byte>(0);
             inactiveGroups = new List<byte>(0);
             activeGroups = new List<byte>(0);
 
-            _tournamentMode = false;
+            tournamentMode = false;
         }
 
         private void Update()
@@ -117,10 +117,10 @@ namespace Com.Hypester.DM3
         {
             Debug.Log("Room joined. Name: " + PhotonNetwork.room.Name);
 
-            activeGroups.Clear();
+            allGroups.Clear();
             //activeGroups.Add(0);
-            activeGroups.Add(1);
-            activeGroups.Add(2);
+            allGroups.Add(1);
+            allGroups.Add(2);
 
             SetAllGroupsActive();
 
@@ -132,6 +132,7 @@ namespace Com.Hypester.DM3
 
         public void CreatePlayers ()
         {
+            Debug.Log("Destroying previous players...");
             foreach (Player player in FindObjectsOfType<Player>())
                 Destroy(player.gameObject);
             CreatePlayer();
@@ -171,21 +172,15 @@ namespace Com.Hypester.DM3
             Debug.Log("Creating player at " + PhotonNetwork.room.PlayerCount + " PlayerCount");
 
             GameObject playerGO;
-            if (_tournamentMode) //Tournament mode.
+            if (tournamentMode) //Tournament mode.
             {
                 playerGO = PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity, activeGroups[0]);
-                //SetTournamentScreen();
-
-                //if (PhotonNetwork.room.PlayerCount >= 3)
-                //    playerGO = PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity, activeGroups[1]);
-                //else
-                //    playerGO = PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity, activeGroups[0]);
             } else //1v1 match
                 playerGO = PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity, 0);
 
             playerGO.GetComponent<Player>().joinNumber = PhotonNetwork.room.PlayerCount;
 
-            if (PhotonNetwork.isMasterClient)
+            if (PhotonNetwork.isMasterClient || playerGO.GetComponent<Player>().joinNumber == 3) //okay
                 playerGO.GetComponent<Player>().localID = 0;
             else
                 playerGO.GetComponent<Player>().localID = 1;
@@ -196,17 +191,24 @@ namespace Com.Hypester.DM3
         public void Rematch ()
         {
             Debug.Log("Trying to get a rematch.");
-            GameObject.Find("Grid").GetComponent<GameHandler>().photonView.RPC("RPC_SendRematchRequest", PhotonTargets.All);
+            GameObject.FindWithTag("GameController").GetComponent<GameHandler>().photonView.RPC("RPC_SendRematchRequest", PhotonTargets.All);
         }
 
         public void SetAllGroupsActive()
         {
+            activeGroups.Clear();
+            activeGroups.AddRange(allGroups);
+
             PhotonNetwork.SetInterestGroups(null, activeGroups.ToArray());
             PhotonNetwork.SetSendingEnabled(null, activeGroups.ToArray());
         }
 
         public void SetTournamentOpponent (int myJoinNumber)
         {
+            inactiveGroups.Clear();
+            activeGroups.Clear();
+            activeGroups.AddRange(allGroups);
+
             if (myJoinNumber == 1 || myJoinNumber == 2)
             {
                 inactiveGroups.Add(activeGroups[1]);
@@ -217,9 +219,16 @@ namespace Com.Hypester.DM3
                 inactiveGroups.Add(activeGroups[0]);
                 activeGroups.RemoveAt(0);
             }
+
+            foreach (Player player in FindObjectsOfType<Player>())
+            {
+                player.photonView.group = activeGroups[0];
+            }
+
             PhotonNetwork.SetInterestGroups(inactiveGroups.ToArray(), activeGroups.ToArray());
             PhotonNetwork.SetSendingEnabled(inactiveGroups.ToArray(), activeGroups.ToArray());
-            _tournamentMode = true;
+
+            tournamentMode = true;
         }
     }
 }

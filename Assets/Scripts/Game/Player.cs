@@ -40,8 +40,8 @@ namespace Com.Hypester.DM3
 
         private void Update()
         {
-            if (_game == null)
-                _game = GameObject.Find("Grid");
+            if (_game == null || !_game.GetActive())
+                _game = GameObject.FindWithTag("GameController");
 
             if (_game && _game.GetComponent<GameHandler>().MyPlayer != null)
             {
@@ -227,10 +227,7 @@ namespace Com.Hypester.DM3
 
         public void PowerClicked (int color)
         {
-            if (PhotonNetwork.isMasterClient)
-                _game.GetComponent<GameHandler>().PowerClicked(color);
-            else
-                photonView.RPC("RPC_PowerClick", PhotonTargets.Others, color);
+            photonView.RPC("RPC_PowerClick", PhotonTargets.All, color);
         }
         [PunRPC]
         void RPC_PowerClick(int color)

@@ -32,7 +32,7 @@ namespace Com.Hypester.DM3
             GameObject powerObject = null;
 
             _targetPlayer = targetPlayer;
-            if (_targetPlayer.localID == GameObject.Find("Grid").GetComponent<GameHandler>().MyPlayer.localID)
+            if (_targetPlayer.localID == GameObject.FindWithTag("GameController").GetComponent<GameHandler>().MyPlayer.localID)
                 myBooster = false;
 
             switch (color)

@@ -12,7 +12,7 @@ namespace Com.Hypester.DM3
         private void SetOwner(int owner)
         {
             _ownerPlayer = owner;
-            if (GameObject.Find("Grid").GetComponent<GameHandler>().MyPlayer.localID != _ownerPlayer)
+            if (GameObject.FindWithTag("GameController").GetComponent<GameHandler>().MyPlayer.localID != _ownerPlayer)
             {
                 GetComponent<Animator>().enabled = false;
                 GetComponent<Image>().enabled = false;
