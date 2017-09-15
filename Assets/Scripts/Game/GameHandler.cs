@@ -157,6 +157,7 @@ namespace Com.Hypester.DM3
                     _rematchRequested = false;
                     _timer = 0f;
                     PhotonNetwork.LoadLevel("NormalGame");
+                    Debug.Log("Normal Game rematch. Needs work probably.");
                 }
             }
         }

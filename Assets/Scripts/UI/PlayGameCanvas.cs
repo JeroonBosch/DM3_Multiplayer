@@ -19,6 +19,7 @@ namespace Com.Hypester.DM3
         protected override void Start()
         {
             base.Start();
+
             _selectedTiles = new List<Vector2>();
             _game = GameObject.Find("Grid").GetComponent<GameHandler>();
         }

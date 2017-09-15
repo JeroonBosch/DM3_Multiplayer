@@ -8,7 +8,7 @@ namespace Com.Hypester.DM3
     public class Player : Photon.MonoBehaviour
     {
         public int localID;
-        public int joinNumber;
+        public int joinNumber; //only for tournaments?
         public string profileName;
         public string profilePicURL;
         //public Texture2D profilePic;

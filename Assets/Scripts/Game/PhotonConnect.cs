@@ -14,6 +14,8 @@ namespace Com.Hypester.DM3
         private TypedLobby _normalLobby;
         private TypedLobby _tournamentLobby;
 
+        private bool _tournamentMode;
+
         private List<byte> inactiveGroups, activeGroups;
 
         private static PhotonConnect instance;
@@ -30,6 +32,8 @@ namespace Com.Hypester.DM3
 
             inactiveGroups = new List<byte>(0);
             activeGroups = new List<byte>(0);
+
+            _tournamentMode = false;
         }
 
         private void Update()
@@ -40,7 +44,14 @@ namespace Com.Hypester.DM3
                     PhotonNetwork.LoadLevel("NormalGame");
                 else
                     PhotonNetwork.LoadLevel("TournamentGame");
+
+                Debug.Log("Loading match-making. " + PhotonNetwork.room.MaxPlayers);
             }
+            /*if (PhotonNetwork.inRoom && SceneManager.GetActiveScene().name == "TournamentGame")
+            {
+                if (PhotonNetwork.room.MaxPlayers == 2)
+                    PhotonNetwork.LoadLevel("Match");
+            }*/
                     
 
             if (_connect && !PhotonNetwork.connecting && !PhotonNetwork.connected)
@@ -104,7 +115,23 @@ namespace Com.Hypester.DM3
 
         public override void OnJoinedRoom()
         {
-            Debug.Log("OnJoinedRoom() called by PUN. Now this client is in a room.");
+            Debug.Log("Room joined. Name: " + PhotonNetwork.room.Name);
+
+            activeGroups.Clear();
+            //activeGroups.Add(0);
+            activeGroups.Add(1);
+            activeGroups.Add(2);
+
+            SetAllGroupsActive();
+
+            CreatePlayers();
+            //activeGroups.Add(3); //Once we go from 4 to 8 player tournaments.
+            //activeGroups.Add(4); //Once we go from 4 to 8 player tournaments.
+
+        }
+
+        public void CreatePlayers ()
+        {
             foreach (Player player in FindObjectsOfType<Player>())
                 Destroy(player.gameObject);
             CreatePlayer();
@@ -115,6 +142,7 @@ namespace Com.Hypester.DM3
             base.OnLeftRoom();
             Debug.Log("Left room.");
             PhotonNetwork.LoadLevel("Menu");
+            Debug.Log("Menu loaded because room was left.");
         }
 
         public override void OnJoinedLobby()
@@ -125,13 +153,16 @@ namespace Com.Hypester.DM3
         public override void OnPhotonPlayerDisconnected(PhotonPlayer otherPlayer)
         {
             base.OnPhotonPlayerDisconnected(otherPlayer);
-            if (PhotonNetwork.inRoom && SceneManager.GetActiveScene().name != "Menu")
+            if (PhotonNetwork.inRoom && PhotonNetwork.room.MaxPlayers == 2 && SceneManager.GetActiveScene().name != "Menu")
             {
+                //instead, should set health to 0?
                 PhotonNetwork.LoadLevel("Menu");
                 PhotonNetwork.LeaveRoom();
+                Debug.Log("Menu loaded because a player left the match.");
             } else
             {
                 PhotonNetwork.LoadLevel("Menu");
+                Debug.Log("Menu loaded because reasons.");
             }
         }
 
@@ -140,19 +171,15 @@ namespace Com.Hypester.DM3
             Debug.Log("Creating player at " + PhotonNetwork.room.PlayerCount + " PlayerCount");
 
             GameObject playerGO;
-            if (PhotonNetwork.room.MaxPlayers > 3) //Tournament mode.
+            if (_tournamentMode) //Tournament mode.
             {
-                activeGroups.Add(1);
-                activeGroups.Add(2);
-                //activeGroups.Add(3); //Once we go from 4 to 8 player tournaments.
-                //activeGroups.Add(4); //Once we go from 4 to 8 player tournaments.
+                playerGO = PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity, activeGroups[0]);
+                //SetTournamentScreen();
 
-                SetTournamentScreen();
-
-                if (PhotonNetwork.room.PlayerCount >= 3)
-                    playerGO = PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity, activeGroups[1]);
-                else
-                    playerGO = PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity, activeGroups[0]);
+                //if (PhotonNetwork.room.PlayerCount >= 3)
+                //    playerGO = PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity, activeGroups[1]);
+                //else
+                //    playerGO = PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity, activeGroups[0]);
             } else //1v1 match
                 playerGO = PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity, 0);
 
@@ -172,16 +199,27 @@ namespace Com.Hypester.DM3
             GameObject.Find("Grid").GetComponent<GameHandler>().photonView.RPC("RPC_SendRematchRequest", PhotonTargets.All);
         }
 
-        public void SetTournamentScreen()
+        public void SetAllGroupsActive()
         {
             PhotonNetwork.SetInterestGroups(null, activeGroups.ToArray());
             PhotonNetwork.SetSendingEnabled(null, activeGroups.ToArray());
         }
 
-        public void SetTournamentOpponent (int opponentNumber)
+        public void SetTournamentOpponent (int myJoinNumber)
         {
+            if (myJoinNumber == 1 || myJoinNumber == 2)
+            {
+                inactiveGroups.Add(activeGroups[1]);
+                activeGroups.RemoveAt(1);
+            }
+            else if (myJoinNumber == 3 || myJoinNumber == 4)
+            {
+                inactiveGroups.Add(activeGroups[0]);
+                activeGroups.RemoveAt(0);
+            }
             PhotonNetwork.SetInterestGroups(inactiveGroups.ToArray(), activeGroups.ToArray());
             PhotonNetwork.SetSendingEnabled(inactiveGroups.ToArray(), activeGroups.ToArray());
+            _tournamentMode = true;
         }
     }
 }

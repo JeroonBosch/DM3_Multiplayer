@@ -1,8 +1,5 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-using Lean.Touch;
-using System.Collections.Generic;
-using UnityEngine.EventSystems;
 
 namespace Com.Hypester.DM3
 {
