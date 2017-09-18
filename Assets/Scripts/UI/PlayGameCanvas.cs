@@ -14,14 +14,12 @@ namespace Com.Hypester.DM3
 
         List<Vector2> _selectedTiles;
         LeanFinger _finger;
-        GameHandler _game;
 
         protected override void Start()
         {
             base.Start();
 
             _selectedTiles = new List<Vector2>();
-            _game = GameObject.FindWithTag("GameController").GetComponent<GameHandler>();
         }
 
         protected override void Update()
@@ -36,7 +34,7 @@ namespace Com.Hypester.DM3
                     {
                         Vector2 vec = FindNearestTileToFinger();
                         //Select new tile.
-                        if (!_selectedTiles.Contains(vec) && _game.TileAtPos(new Vector2(vec.x, vec.y)).color == _game.TileAtPos(new Vector2(_selectedTiles[0].x, _selectedTiles[0].y)).color && IsAdjacentPosition(vec, _selectedTiles[_selectedTiles.Count - 1]))
+                        if (!_selectedTiles.Contains(vec) && PhotonConnect.Instance.GameController.TileAtPos(new Vector2(vec.x, vec.y)).color == PhotonConnect.Instance.GameController.TileAtPos(new Vector2(_selectedTiles[0].x, _selectedTiles[0].y)).color && IsAdjacentPosition(vec, _selectedTiles[_selectedTiles.Count - 1]))
                         {
                             _selectedTiles.Add(vec);
                             NewSelectedTile(vec);
@@ -75,7 +73,7 @@ namespace Com.Hypester.DM3
                         if (trap.GetComponent<TrapPower>().isPickedUp)
                         {
                             Vector2 vec = FindNearestTileToFinger();
-                            BaseTile trapTile = _game.BaseTileAtPos(vec);
+                            BaseTile trapTile = PhotonConnect.Instance.GameController.BaseTileAtPos(vec);
                             if (trapTile != null)
                             {
                                 trap.GetComponent<TrapPower>().overBasetile = trapTile;
@@ -90,7 +88,15 @@ namespace Com.Hypester.DM3
         public override void Show()
         {
             base.Show();
-            _game.Show(); //Activates the game.
+            //if (PhotonNetwork.isMasterClient) {
+            foreach (GameHandler gh in FindObjectsOfType<GameHandler>()) { 
+                gh.Show();
+                if (gh.GameID != PhotonConnect.Instance.gameID_requested)
+                    gh.Hide();
+            }
+            //}
+            //else
+            //PhotonConnect.Instance.GameController.Show(); //Activates the game.
         }
 
         private void OnEnable()
@@ -107,7 +113,7 @@ namespace Com.Hypester.DM3
 
         void OnFingerDown(LeanFinger finger)
         {
-            if (finger.Index == 0 && _game.IsMyTurn())
+            if (finger.Index == 0 && PhotonConnect.Instance.GameController.IsMyTurn())
             {
                 if (!GameObject.FindGameObjectWithTag("ActiveFireball") && !GameObject.FindGameObjectWithTag("ActiveTrap"))
                 {
@@ -139,18 +145,18 @@ namespace Com.Hypester.DM3
                         {
                             _selectedTiles.Add(interactionObject.GetComponent<BaseTile>().position);
                             _finger = finger;
-                            _game.MyPlayer.NewSelection(_selectedTiles[0]);
+                            PhotonConnect.Instance.GameController.MyPlayer.NewSelection(_selectedTiles[0]);
                         }
                         else if (interactionObject.tag == "Power")
                         {
                             if (interactionObject.name == "MyBlue")
-                                _game.MyPlayer.PowerClicked(1);
+                                PhotonConnect.Instance.GameController.MyPlayer.PowerClicked(1);
                             if (interactionObject.name == "MyGreen")
-                                _game.MyPlayer.PowerClicked(2);
+                                PhotonConnect.Instance.GameController.MyPlayer.PowerClicked(2);
                             if (interactionObject.name == "MyRed")
-                                _game.MyPlayer.PowerClicked(3);
+                                PhotonConnect.Instance.GameController.MyPlayer.PowerClicked(3);
                             if (interactionObject.name == "MyYellow")
-                                _game.MyPlayer.PowerClicked(0);
+                                PhotonConnect.Instance.GameController.MyPlayer.PowerClicked(0);
                         }
                     }
                 } else
@@ -175,14 +181,14 @@ namespace Com.Hypester.DM3
 
         void OnFingerUp(LeanFinger finger)
         {
-            if (finger.Index == 0 && _game.IsMyTurn())
+            if (finger.Index == 0 && PhotonConnect.Instance.GameController.IsMyTurn())
             {
                 if (!GameObject.FindGameObjectWithTag("ActiveFireball") && !GameObject.FindGameObjectWithTag("ActiveTrap")) { 
                     if (_selectedTiles.Count > 2) {
-                        _game.MyPlayer.InitiateCombo();
+                        PhotonConnect.Instance.GameController.MyPlayer.InitiateCombo();
                     } else
                     {
-                        _game.MyPlayer.RemoveAllSelections();
+                        PhotonConnect.Instance.GameController.MyPlayer.RemoveAllSelections();
                     }
                     _selectedTiles.Clear();
                 } else
@@ -225,28 +231,28 @@ namespace Com.Hypester.DM3
 
         private float DistanceBetweenPos(Vector2 position, Vector2 position2)
         {
-            BaseTile newTile = _game.BaseTileAtPos(position);
-            BaseTile prevTile = _game.BaseTileAtPos(position2);
+            BaseTile newTile = PhotonConnect.Instance.GameController.BaseTileAtPos(position);
+            BaseTile prevTile = PhotonConnect.Instance.GameController.BaseTileAtPos(position2);
 
             return newTile.DistanceToTile(prevTile);
         }
 
         private bool IsAdjacentPosition(Vector2 position, Vector2 position2)
         {
-            BaseTile newTile = _game.BaseTileAtPos(position);
-            BaseTile prevTile = _game.BaseTileAtPos(position2);
+            BaseTile newTile = PhotonConnect.Instance.GameController.BaseTileAtPos(position);
+            BaseTile prevTile = PhotonConnect.Instance.GameController.BaseTileAtPos(position2);
 
             return newTile.IsAdjacentTo(prevTile);
         }
 
         void NewSelectedTile (Vector2 position)
         {
-            _game.MyPlayer.NewSelection(position);
+            PhotonConnect.Instance.GameController.MyPlayer.NewSelection(position);
         }
 
         void RemoveSelectedTile (Vector2 position)
         {
-            _game.MyPlayer.RemoveSelection(position);
+            PhotonConnect.Instance.GameController.MyPlayer.RemoveSelection(position);
         }
 
         public void EndGame (int winnerPlayer)

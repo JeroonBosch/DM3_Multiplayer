@@ -12,7 +12,6 @@ namespace Com.Hypester.DM3
         private Image _enemyRematchBubble;
         private Image _myRematchButton;
         private Image _enemyRematchButton;
-        private GameHandler _game;
 
         private int _winnerPlayer;
         public int winnerPlayer { set { SetWinnerPlayer(value); } }
@@ -21,7 +20,6 @@ namespace Com.Hypester.DM3
         {
             base.Start();
             Hide();
-            _game = GameObject.FindWithTag("GameController").GetComponent<GameHandler>();
 
             if (PhotonNetwork.isMasterClient)
             {
@@ -60,17 +58,17 @@ namespace Com.Hypester.DM3
             {
                 Text nameText = nameObject.GetComponent<Text>();
                 if (PhotonNetwork.isMasterClient)
-                    nameText.text = _game.MyPlayer.profileName;
+                    nameText.text = PhotonConnect.Instance.GameController.MyPlayer.profileName;
                 else
-                    nameText.text = _game.EnemyPlayer.profileName;
+                    nameText.text = PhotonConnect.Instance.GameController.EnemyPlayer.profileName;
             }
             foreach (GameObject nameObject in GameObject.FindGameObjectsWithTag("Player_2_Name"))
             {
                 Text nameText = nameObject.GetComponent<Text>();
                 if (!PhotonNetwork.isMasterClient)
-                    nameText.text = _game.MyPlayer.profileName;
+                    nameText.text = PhotonConnect.Instance.GameController.MyPlayer.profileName;
                 else
-                    nameText.text = _game.EnemyPlayer.profileName;
+                    nameText.text = PhotonConnect.Instance.GameController.EnemyPlayer.profileName;
             }
         }
 
@@ -97,24 +95,24 @@ namespace Com.Hypester.DM3
         {
             base.Update();
 
-            if (_game != null && _game.EnemyPlayer != null)
+            if (PhotonConnect.Instance.GameController != null && PhotonConnect.Instance.GameController.EnemyPlayer != null)
             {
-                if (_game.EnemyPlayer.wantsRematch && _enemyRematchBubble.enabled == false)
+                if (PhotonConnect.Instance.GameController.EnemyPlayer.wantsRematch && _enemyRematchBubble.enabled == false)
                 {
                     _enemyRematchBubble.enabled = true;
                 }
 
-                if (_game.MyPlayer.wantsRematch && _myRematchBubble.enabled == false)
+                if (PhotonConnect.Instance.GameController.MyPlayer.wantsRematch && _myRematchBubble.enabled == false)
                 {
                     _myRematchBubble.enabled = true;
                     _myRematchButton.enabled = false;
                 }
 
-                if (_game.MyPlayer.wantsRematch && _game.EnemyPlayer.wantsRematch && PhotonNetwork.isMasterClient)
+                if (PhotonConnect.Instance.GameController.MyPlayer.wantsRematch && PhotonConnect.Instance.GameController.EnemyPlayer.wantsRematch && PhotonNetwork.isMasterClient)
                 {
                     PhotonConnect.Instance.Rematch();
-                    _game.MyPlayer.wantsRematch = false;
-                    _game.EnemyPlayer.wantsRematch = false;
+                    PhotonConnect.Instance.GameController.MyPlayer.wantsRematch = false;
+                    PhotonConnect.Instance.GameController.EnemyPlayer.wantsRematch = false;
                 }
 
 
@@ -135,8 +133,8 @@ namespace Com.Hypester.DM3
 
         public void RequestRematch()
         {
-            _game.MyPlayer.photonView.RPC("RPC_RequestRematch", PhotonTargets.Others);
-            _game.MyPlayer.wantsRematch = true;
+            PhotonConnect.Instance.GameController.MyPlayer.photonView.RPC("RPC_RequestRematch", PhotonTargets.Others);
+            PhotonConnect.Instance.GameController.MyPlayer.wantsRematch = true;
         }
     }
 }

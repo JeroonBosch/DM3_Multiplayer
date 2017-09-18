@@ -15,23 +15,23 @@ namespace Com.Hypester.DM3
 
         public bool tournamentMode;
 
-        public List<byte> allGroups, inactiveGroups, activeGroups;
+        private GameHandler _game;
+        public int gameID_requested;
+        public GameHandler GameController { get { return GetGameController(); } set { _game = value; } }
+
 
         private static PhotonConnect instance;
         public static PhotonConnect Instance
         {
             get { return instance ?? (instance = new GameObject("PhotonConnect").AddComponent<PhotonConnect>()); }
         }
+
         private void Awake()
         {
             DontDestroyOnLoad(gameObject);
 
             _normalLobby = new TypedLobby() { Name = "NormalGame", Type = LobbyType.Default };
             _tournamentLobby = new TypedLobby() { Name = "Tournament", Type = LobbyType.Default };
-
-            allGroups = new List<byte>(0);
-            inactiveGroups = new List<byte>(0);
-            activeGroups = new List<byte>(0);
 
             tournamentMode = false;
         }
@@ -56,6 +56,23 @@ namespace Com.Hypester.DM3
 
             if (_connect && !PhotonNetwork.connecting && !PhotonNetwork.connected)
                 PhotonNetwork.ConnectUsingSettings("v0.2");
+        }
+
+        private GameHandler GetGameController ()
+        {
+            if (_game == null)
+            {
+                foreach (GameHandler gh in FindObjectsOfType<GameHandler>())
+                {
+                    //Debug.Log("GameHandler with " + gh.GameID + " as ID was found. " + gameID_requested + " is requested.");
+                    if (gh.GameID == gameID_requested)
+                        return gh;
+                }
+            } else
+            {
+                return _game;
+            }
+            return null;
         }
 
         public void EnsureConnection ()
@@ -117,16 +134,7 @@ namespace Com.Hypester.DM3
         {
             Debug.Log("Room joined. Name: " + PhotonNetwork.room.Name);
 
-            allGroups.Clear();
-            //activeGroups.Add(0);
-            allGroups.Add(1);
-            allGroups.Add(2);
-
-            SetAllGroupsActive();
-
             CreatePlayers();
-            //activeGroups.Add(3); //Once we go from 4 to 8 player tournaments.
-            //activeGroups.Add(4); //Once we go from 4 to 8 player tournaments.
 
         }
 
@@ -172,11 +180,7 @@ namespace Com.Hypester.DM3
             Debug.Log("Creating player at " + PhotonNetwork.room.PlayerCount + " PlayerCount");
 
             GameObject playerGO;
-            if (tournamentMode) //Tournament mode.
-            {
-                playerGO = PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity, activeGroups[0]);
-            } else //1v1 match
-                playerGO = PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity, 0);
+            playerGO = PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity, 0);
 
             playerGO.GetComponent<Player>().joinNumber = PhotonNetwork.room.PlayerCount;
 
@@ -191,42 +195,28 @@ namespace Com.Hypester.DM3
         public void Rematch ()
         {
             Debug.Log("Trying to get a rematch.");
-            GameObject.FindWithTag("GameController").GetComponent<GameHandler>().photonView.RPC("RPC_SendRematchRequest", PhotonTargets.All);
-        }
-
-        public void SetAllGroupsActive()
-        {
-            activeGroups.Clear();
-            activeGroups.AddRange(allGroups);
-
-            PhotonNetwork.SetInterestGroups(null, activeGroups.ToArray());
-            PhotonNetwork.SetSendingEnabled(null, activeGroups.ToArray());
+            GameController.photonView.RPC("RPC_SendRematchRequest", PhotonTargets.All);
         }
 
         public void SetTournamentOpponent (int myJoinNumber)
         {
-            inactiveGroups.Clear();
-            activeGroups.Clear();
-            activeGroups.AddRange(allGroups);
 
             if (myJoinNumber == 1 || myJoinNumber == 2)
             {
-                inactiveGroups.Add(activeGroups[1]);
-                activeGroups.RemoveAt(1);
+                gameID_requested = 0;
             }
             else if (myJoinNumber == 3 || myJoinNumber == 4)
             {
-                inactiveGroups.Add(activeGroups[0]);
-                activeGroups.RemoveAt(0);
+                gameID_requested = 1;
             }
-
-            foreach (Player player in FindObjectsOfType<Player>())
+            else if (myJoinNumber == 5 || myJoinNumber == 6) //TODO tournament 8 player
             {
-                player.photonView.group = activeGroups[0];
+                gameID_requested = 2;
             }
-
-            PhotonNetwork.SetInterestGroups(inactiveGroups.ToArray(), activeGroups.ToArray());
-            PhotonNetwork.SetSendingEnabled(inactiveGroups.ToArray(), activeGroups.ToArray());
+            else if (myJoinNumber == 7 || myJoinNumber == 8)
+            {
+                gameID_requested = 3;
+            }
 
             tournamentMode = true;
         }

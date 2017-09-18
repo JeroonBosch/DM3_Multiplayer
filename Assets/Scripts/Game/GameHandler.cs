@@ -31,7 +31,8 @@ namespace Com.Hypester.DM3
         #endregion
 
         #region public game logic
-        public int gameID = 0; //Used for tournaments.
+        private int _gameID = 0; //Used for tournaments.
+        public int GameID { get { return _gameID; } set { _gameID = value; GameIDSet(); } }
 
         public Player MyPlayer { get { return _myPlayer; } }
         public Player EnemyPlayer { get { return _enemyPlayer; } }
@@ -62,6 +63,24 @@ namespace Com.Hypester.DM3
         public delegate byte[] SerializeMethod(object customObject);
         public delegate object DeserializeMethod(byte[] serializedCustomObject);
 
+        private void GameIDSet ()
+        {
+            Debug.Log("Game ID Set to " + _gameID + " while " + PhotonConnect.Instance.gameID_requested + " is requested.");
+            if (_gameID == PhotonConnect.Instance.gameID_requested)
+            {
+                PhotonConnect.Instance.GameController = this;
+            }
+        }
+
+        [PunRPC] void RPC_InitGameHandler (int id)
+        {
+            GameID = id;
+            gameObject.name = "Grid" + id;
+            gameObject.transform.SetParent(GameObject.Find("PlayScreen").transform);
+            gameObject.transform.localScale = new Vector3(1f, 1f, 1f);
+            gameObject.transform.localPosition = new Vector3(0, 0, 0);
+        }
+
         private void Start()
         {
             PhotonPeer.RegisterType(typeof(Tile), (byte)'L', SerializeTile, DeserializeTile);
@@ -79,16 +98,66 @@ namespace Com.Hypester.DM3
             healthPlayerTwo = Constants.PlayerStartHP;
 
             _grid = new Grid();
-
             gameState = new GameStates();
-            SetGameState(GameStates.EGameState.search);
+            gameState.State = GameStates.EGameState.search;
 
             _gameContext = GameObject.Find("GameContext").GetComponent<GameContext>();
 
-            if (IsGameMaster()) //okay
+            if (IsGameMaster())
             {
                 GenerateGrid();
             }
+        }
+
+        public void Show()
+        {
+            if (!_isActive)
+            {
+                _isActive = true;
+                SetGameState(GameStates.EGameState.matchFound);
+
+                Player[] players = FindObjectsOfType<Player>();
+                foreach (Player player in players)
+                {
+                    if (player.GetComponent<PhotonView>().isMine)
+                        _myPlayer = player;
+                }
+
+                _enemyPlayer = _myPlayer.opponent;
+                Debug.Log("Match started, " + _myPlayer.joinNumber + " vs " + EnemyPlayer.joinNumber);
+
+                if (_gridReceived)
+                    VisualizeGrid();
+
+                PhotonView photonView = PhotonView.Get(this);
+                if (IsGameMaster())
+                {
+                    photonView.RPC("RPC_SendGridData", PhotonTargets.All, _grid);
+                }
+
+
+                if (!(PhotonNetwork.isMasterClient || _myPlayer.joinNumber == 3))
+                {
+                    transform.rotation = new Quaternion(0f, 0f, 180f, transform.rotation.w);
+                }
+                else
+                {
+                    transform.rotation = new Quaternion(0f, 0f, 0f, transform.rotation.w);
+                }
+                PlayerInterface[] interfaces = FindObjectsOfType<PlayerInterface>();
+                foreach (PlayerInterface playerInterface in interfaces)
+                {
+                    playerInterface.SetAvatars();
+                }
+
+                _myPlayer.Reset();
+                _enemyPlayer.Reset();
+            }
+        }
+
+        public void Hide ()
+        {
+            transform.localScale = new Vector3(0, 0, 0);
         }
 
         private void Update()
@@ -145,6 +214,7 @@ namespace Com.Hypester.DM3
             RematchUpdate();
         }
 
+
         private void RematchUpdate()
         {
             if (_rematchRequested)
@@ -180,51 +250,6 @@ namespace Com.Hypester.DM3
                 turnTimer = 0f;
         }
 
-        public void Show()
-        {
-            if (!_isActive)
-            {
-                _isActive = true;
-                SetGameState(GameStates.EGameState.matchFound);
-
-                Player[] players = FindObjectsOfType<Player>();
-                foreach (Player player in players)
-                {
-                    if (player.GetComponent<PhotonView>().isMine)
-                        _myPlayer = player;
-                    else
-                        _enemyPlayer = player;
-                }
-
-                if (_gridReceived)
-                    VisualizeGrid();
-
-                PhotonView photonView = PhotonView.Get(this);
-                if (IsGameMaster())
-                {
-                    photonView.RPC("RPC_SendGridData", PhotonTargets.All, _grid);
-                }
-
-
-                if (!IsGameMaster())
-                {
-                    transform.rotation = new Quaternion(0f, 0f, 180f, transform.rotation.w);
-                }
-                else
-                {
-                    transform.rotation = new Quaternion(0f, 0f, 0f, transform.rotation.w);
-                }
-                PlayerInterface[] interfaces = FindObjectsOfType<PlayerInterface>();
-                foreach (PlayerInterface playerInterface in interfaces)
-                {
-                    playerInterface.SetAvatars();
-                }
-
-                _myPlayer.Reset();
-                _enemyPlayer.Reset();
-            }
-        }
-
         void IPunObservable.OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
         {
             if (_isActive)
@@ -243,31 +268,33 @@ namespace Com.Hypester.DM3
                     float prevHealthTwo = healthPlayerTwo;
                     healthPlayerTwo = (float)stream.ReceiveNext();
 
-                    if (prevHealthOne != healthPlayerOne)
-                    {
-                        float difference = healthPlayerOne - prevHealthOne;
-                        string diffString = difference.ToString();
-                        if (difference > 0)
-                            diffString = "+" + difference.ToString();
+                    if (IsGameRelevant()) {  //Only visualize relevant game data.
+                        if (prevHealthOne != healthPlayerOne)
+                        {
+                            float difference = healthPlayerOne - prevHealthOne;
+                            string diffString = difference.ToString();
+                            if (difference > 0)
+                                diffString = "+" + difference.ToString();
 
-                        photonView.RPC("RPC_HealthChanged", PhotonTargets.MasterClient, 0, diffString);
-                        if (MyPlayer.localID == 0)
-                            _gameContext.ShowMyText(difference.ToString());
-                        else
-                            _gameContext.ShowEnemyText(difference.ToString());
-                    }
-                    if (prevHealthTwo != healthPlayerTwo)
-                    {
-                        float difference = healthPlayerTwo - prevHealthTwo;
-                        string diffString = difference.ToString();
-                        if (difference > 0)
-                            diffString = "+" + difference.ToString();
+                            photonView.RPC("RPC_HealthChanged", PhotonTargets.MasterClient, 0, diffString);
+                            if (MyPlayer.localID == 0)
+                                _gameContext.ShowMyText(difference.ToString());
+                            else
+                                _gameContext.ShowEnemyText(difference.ToString());
+                        }
+                        if (prevHealthTwo != healthPlayerTwo)
+                        {
+                            float difference = healthPlayerTwo - prevHealthTwo;
+                            string diffString = difference.ToString();
+                            if (difference > 0)
+                                diffString = "+" + difference.ToString();
 
-                        photonView.RPC("RPC_HealthChanged", PhotonTargets.MasterClient, 1, diffString);
-                        if (MyPlayer.localID == 1)
-                            _gameContext.ShowMyText(difference.ToString());
-                        else
-                            _gameContext.ShowEnemyText(difference.ToString());
+                            photonView.RPC("RPC_HealthChanged", PhotonTargets.MasterClient, 1, diffString);
+                            if (MyPlayer.localID == 1)
+                                _gameContext.ShowMyText(difference.ToString());
+                            else
+                                _gameContext.ShowEnemyText(difference.ToString());
+                        }
                     }
                 }
             }
@@ -277,8 +304,16 @@ namespace Com.Hypester.DM3
         {
             foreach (Player player in FindObjectsOfType<Player>())
             {
-                if (player.localID == number)
-                    return player;
+                if (GameID == 0)
+                {
+                    if (player.localID == number && (player.joinNumber == 1 || player.joinNumber == 2))
+                        return player;
+                }
+                else if (GameID == 1)
+                {
+                    if (player.localID == number && (player.joinNumber == 3 || player.joinNumber == 4))
+                        return player;
+                }
             }
             return null;
         }
@@ -289,6 +324,17 @@ namespace Com.Hypester.DM3
             {
                 if (player.localID != number)
                     return player;
+
+                if (GameID == 0)
+                {
+                    if (player.localID != number && (player.joinNumber == 1 || player.joinNumber == 2))
+                        return player;
+                }
+                else if (GameID == 1)
+                {
+                    if (player.localID != number && (player.joinNumber == 3 || player.joinNumber == 4))
+                        return player;
+                }
             }
             return null;
         }
@@ -296,19 +342,22 @@ namespace Com.Hypester.DM3
         [PunRPC]
         private void RPC_HealthChanged(int targetPlayer, string difference)
         {
-            if (targetPlayer == 0)
+            if (IsGameRelevant()) //Visuals only
             {
-                if (MyPlayer.localID == 0)
-                    _gameContext.ShowMyText(difference);
+                if (targetPlayer == 0)
+                {
+                    if (MyPlayer.localID == 0)
+                        _gameContext.ShowMyText(difference);
+                    else
+                        _gameContext.ShowEnemyText(difference);
+                }
                 else
-                    _gameContext.ShowEnemyText(difference);
-            }
-            else
-            {
-                if (MyPlayer.localID == 1)
-                    _gameContext.ShowMyText(difference);
-                else
-                    _gameContext.ShowEnemyText(difference);
+                {
+                    if (MyPlayer.localID == 1)
+                        _gameContext.ShowMyText(difference);
+                    else
+                        _gameContext.ShowEnemyText(difference);
+                }
             }
         }
 
@@ -428,8 +477,13 @@ namespace Com.Hypester.DM3
                 for (int y = 0; y < Constants.gridYsize; y++)
                 {
                     BaseTile baseTile = BaseTileAtPos(new Vector2(x, y));
-                    if (baseTile.color >= Constants.AmountOfColors)
-                        hasEmptyTiles = true;
+                    if (baseTile != null)
+                    {
+                        if (baseTile.color >= Constants.AmountOfColors)
+                            hasEmptyTiles = true;
+                    }
+                    else
+                        return false;
                 }
             }
             return hasEmptyTiles;
@@ -679,31 +733,31 @@ namespace Com.Hypester.DM3
         [PunRPC]
         public void RPC_SendTile(Tile tile)
         {
-            _grid.data[tile.x, tile.y].color = tile.color;
-            _grid.data[tile.x, tile.y].boosterLevel = tile.boosterLevel;
-            BaseTileAtPos(new Vector2(tile.x, tile.y)).boosterLevel = tile.boosterLevel;
+                _grid.data[tile.x, tile.y].color = tile.color;
+                _grid.data[tile.x, tile.y].boosterLevel = tile.boosterLevel;
+                BaseTileAtPos(new Vector2(tile.x, tile.y)).boosterLevel = tile.boosterLevel;
         }
 
         [PunRPC]
         public void RPC_RequestGridData()
         {
-            Debug.Log("Grid did not render properly, requesting update.");
-            photonView.RPC("RPC_SendGridData", PhotonTargets.Others, _grid);
+                Debug.Log("Grid did not render properly, requesting update.");
+                photonView.RPC("RPC_SendGridData", PhotonTargets.Others, _grid);
         }
 
         [PunRPC]
         public void RPC_SendGridData(Grid grid)
         {
-            _gridReceived = true;
-            _grid.data = grid.data;
-            GridUpdate();
+                _gridReceived = true;
+                _grid.data = grid.data;
+                GridUpdate();
         }
         #endregion
 
         private void EndTurn() //both master-client and guest-client execute this.
         {
             turnTimer = 0f;
-            gameState.State = GameStates.EGameState.interim;
+            SetGameState(GameStates.EGameState.interim);
 
             if (GameObject.FindGameObjectWithTag("ActiveFireball"))
             {
@@ -731,11 +785,12 @@ namespace Com.Hypester.DM3
         [PunRPC]
         private void RPC_ResetTimer()
         {
-            turnTimer = 0f;
+                turnTimer = 0f;
         }
 
         public void AddToSelection(Vector2 pos) //master-client and guest side, both.
         {
+            Debug.Log("Tile added to selection. My player subscribed to Game#" + MyPlayer.GetRequestedGameID() + " and this is " + GameID);
             _selectedTiles.Add(pos);
             BaseTileAtPos(pos).SetSelected = true;
 
@@ -854,92 +909,97 @@ namespace Com.Hypester.DM3
 
         public void InitiateCombo()
         {
-            //Both host and client execute this command.
             bool trapped = false;
-
-            Player targetPlayer = GetNextPlayer(_curPlayer);
-            if (targetPlayer.localID == 0)
-                targetPlayer.FindInterface().SetHitpoints(healthPlayerOne);
-            else
-                targetPlayer.FindInterface().SetHitpoints(healthPlayerTwo);
-
-
-            trapped = false;
-            foreach (Vector2 pos in _selectedTiles)
-            {
-                if (BaseTileAtPos(pos).boosterLevel >= 4)
-                    trapped = true;
-            }
-
-            if (trapped && EnemyPlayer == targetPlayer)
-                _gameContext.ShowLargeText("Oops! It was trapped!");
-            else if (trapped && MyPlayer == targetPlayer)
-                _gameContext.ShowLargeText("Nice trap!");
-
-            int count = 0;
-            int highestCount = 0;
-            foreach (Vector2 pos in _selectedTiles)
-            {
-                CreateTileAttackPlayerEffect(pos, count, trapped);
-                BaseTile baseTile = BaseTileAtPos(pos);
-
-                if (baseTile.boosterLevel > 0)
-                {
-                    List<BaseTile> indivCollateral = baseTile.ListCollateralDamage(this, 1f);
-                    foreach (BaseTile colTile in indivCollateral)
-                    {
-                        CreateTileAttackPlayerEffect(colTile.position, count + Mathf.RoundToInt(colTile.DistanceToTile(baseTile) / Constants.DistanceBetweenTiles), true, trapped);
-
-                        if (count + Mathf.RoundToInt(colTile.DistanceToTile(baseTile) / Constants.DistanceBetweenTiles) > highestCount)
-                            highestCount = count + Mathf.RoundToInt(colTile.DistanceToTile(baseTile) / Constants.DistanceBetweenTiles);
-                    }
-                }
-
-                count++;
-
-                if (count > highestCount)
-                    highestCount = count;
-            }
-
-            foreach (BaseTile tile in _baseTiles.FindAll(item => item.collateral == true))
-            {
-                if (!tile.isBeingDestroyed)
-                    CreateTileAttackPlayerEffect(tile.position, highestCount, true, trapped);
-            }
+            //Both host and client execute this command.
+            if (IsGameRelevant())
+            { 
+                Player targetPlayer = GetNextPlayer(_curPlayer);
+                if (targetPlayer.localID == 0)
+                    targetPlayer.FindInterface().SetHitpoints(healthPlayerOne);
+                else
+                    targetPlayer.FindInterface().SetHitpoints(healthPlayerTwo);
 
 
-            //Only master client will update the _grid and then sync it.
-            if (IsGameMaster())
-            {
-                int color = BaseTileAtPos(_selectedTiles[_selectedTiles.Count - 1]).color;
+                trapped = false;
                 foreach (Vector2 pos in _selectedTiles)
                 {
-                    DestroyTileAtPosition(pos);
                     if (BaseTileAtPos(pos).boosterLevel >= 4)
                         trapped = true;
                 }
 
+                if (trapped && EnemyPlayer == targetPlayer)
+                    _gameContext.ShowLargeText("Oops! It was trapped!");
+                else if (trapped && MyPlayer == targetPlayer)
+                    _gameContext.ShowLargeText("Nice trap!");
+
+                int count = 0;
+                int highestCount = 0;
+                foreach (Vector2 pos in _selectedTiles)
+                {
+                    CreateTileAttackPlayerEffect(pos, count, trapped);
+                    BaseTile baseTile = BaseTileAtPos(pos);
+
+                    if (baseTile.boosterLevel > 0)
+                    {
+                        List<BaseTile> indivCollateral = baseTile.ListCollateralDamage(this, 1f);
+                        foreach (BaseTile colTile in indivCollateral)
+                        {
+                            CreateTileAttackPlayerEffect(colTile.position, count + Mathf.RoundToInt(colTile.DistanceToTile(baseTile) / Constants.DistanceBetweenTiles), true, trapped);
+
+                            if (count + Mathf.RoundToInt(colTile.DistanceToTile(baseTile) / Constants.DistanceBetweenTiles) > highestCount)
+                                highestCount = count + Mathf.RoundToInt(colTile.DistanceToTile(baseTile) / Constants.DistanceBetweenTiles);
+                        }
+                    }
+
+                    count++;
+
+                    if (count > highestCount)
+                        highestCount = count;
+                }
+
                 foreach (BaseTile tile in _baseTiles.FindAll(item => item.collateral == true))
                 {
-                    DestroyTileAtPosition(tile.position);
-                }
-
-                CreateBooster(_selectedTiles[_selectedTiles.Count - 1], _selectedTiles.Count, color);
-
-                if ((_curPlayer == 0 && !trapped) || (_curPlayer == 1 && trapped))
-                {
-                    DamagePlayerWithCombo(1, _selectedTiles.Count, _baseTiles.FindAll(item => item.collateral == true).Count * Constants.BoosterCollateralDamage);
-                    FillPowerBar(0, color, _selectedTiles.Count);
-                }
-                else
-                {
-                    DamagePlayerWithCombo(0, _selectedTiles.Count, _baseTiles.FindAll(item => item.collateral == true).Count * Constants.BoosterCollateralDamage);
-                    FillPowerBar(1, color, _selectedTiles.Count);
+                    if (!tile.isBeingDestroyed)
+                        CreateTileAttackPlayerEffect(tile.position, highestCount, true, trapped);
                 }
             }
 
+            photonView.RPC("RPC_InitiateComboServer", PhotonTargets.MasterClient);
+
             EndTurn();
             _selectedTiles.Clear();
+        }
+
+        [PunRPC]
+        private void RPC_InitiateComboServer ()
+        {
+            bool trapped = false;
+            //Only master client will update the _grid and then sync it.
+            int color = BaseTileAtPos(_selectedTiles[_selectedTiles.Count - 1]).color;
+            foreach (Vector2 pos in _selectedTiles)
+            {
+                DestroyTileAtPosition(pos);
+                if (BaseTileAtPos(pos).boosterLevel >= 4)
+                    trapped = true;
+            }
+
+            foreach (BaseTile tile in _baseTiles.FindAll(item => item.collateral == true))
+            {
+                DestroyTileAtPosition(tile.position);
+            }
+
+            CreateBooster(_selectedTiles[_selectedTiles.Count - 1], _selectedTiles.Count, color);
+
+            if ((_curPlayer == 0 && !trapped) || (_curPlayer == 1 && trapped))
+            {
+                DamagePlayerWithCombo(1, _selectedTiles.Count, _baseTiles.FindAll(item => item.collateral == true).Count * Constants.BoosterCollateralDamage);
+                FillPowerBar(0, color, _selectedTiles.Count);
+            }
+            else
+            {
+                DamagePlayerWithCombo(0, _selectedTiles.Count, _baseTiles.FindAll(item => item.collateral == true).Count * Constants.BoosterCollateralDamage);
+                FillPowerBar(1, color, _selectedTiles.Count);
+            }
         }
 
         private void CreateTileAttackPlayerEffect(Vector2 pos, int count, bool trapped)
@@ -1112,8 +1172,11 @@ namespace Com.Hypester.DM3
         [PunRPC]
         private void RPC_UpdateHealth(int playerNumber, float hitpoints)
         {
-            GetPlayerByID(playerNumber).FindInterface().SetHitpoints(hitpoints);
-            GetPlayerByID(playerNumber).FindInterface().UpdateShadowhealth(hitpoints);
+            if (IsGameRelevant())
+            {
+                GetPlayerByID(playerNumber).FindInterface().SetHitpoints(hitpoints);
+                GetPlayerByID(playerNumber).FindInterface().UpdateShadowhealth(hitpoints);
+            }
         }
 
         public bool IsMyTurn()
@@ -1128,49 +1191,49 @@ namespace Com.Hypester.DM3
 
         private void FillPowerBar(int playerNumber, int color, int increaseBy)
         {
-            if (playerNumber == 0)
-            {
-                if (color == 1) // yellow, blue, green, red
-                    P1_PowerBlue = Mathf.Min(P1_PowerBlue + increaseBy, Constants.BluePowerReq);
-                else if (color == 2)
-                    P1_PowerGreen = Mathf.Min(P1_PowerGreen + increaseBy, Constants.GreenPowerReq);
-                else if (color == 3)
-                    P1_PowerRed = Mathf.Min(P1_PowerRed + increaseBy, Constants.RedPowerReq);
-                else if (color == 0)
-                    P1_PowerYellow = Mathf.Min(P1_PowerYellow + increaseBy, Constants.YellowPowerReq);
+                if (playerNumber == 0)
+                {
+                    if (color == 1) // yellow, blue, green, red
+                        P1_PowerBlue = Mathf.Min(P1_PowerBlue + increaseBy, Constants.BluePowerReq);
+                    else if (color == 2)
+                        P1_PowerGreen = Mathf.Min(P1_PowerGreen + increaseBy, Constants.GreenPowerReq);
+                    else if (color == 3)
+                        P1_PowerRed = Mathf.Min(P1_PowerRed + increaseBy, Constants.RedPowerReq);
+                    else if (color == 0)
+                        P1_PowerYellow = Mathf.Min(P1_PowerYellow + increaseBy, Constants.YellowPowerReq);
 
-                /*if (P1_PowerBlue == Constants.BluePowerReq)
-                    _gameContext.ShowText("Shield ability available!");
-                if (P1_PowerGreen == Constants.GreenPowerReq)
-                    _gameContext.ShowText("Heal ability available!");
-                if (P1_PowerRed == Constants.RedPowerReq)
-                    _gameContext.ShowText("Trap ability available!");
-                if (P1_PowerYellow == Constants.YellowPowerReq)
-                    _gameContext.ShowText("Fireball ability available!");*/
-            }
-            else
-            {
-                if (color == 1)
-                {
-                    P2_PowerBlue = Mathf.Min(P2_PowerBlue + increaseBy, Constants.BluePowerReq);
-                    photonView.RPC("RPC_FillPower", PhotonTargets.Others, color, P2_PowerBlue);
+                    /*if (P1_PowerBlue == Constants.BluePowerReq)
+                        _gameContext.ShowText("Shield ability available!");
+                    if (P1_PowerGreen == Constants.GreenPowerReq)
+                        _gameContext.ShowText("Heal ability available!");
+                    if (P1_PowerRed == Constants.RedPowerReq)
+                        _gameContext.ShowText("Trap ability available!");
+                    if (P1_PowerYellow == Constants.YellowPowerReq)
+                        _gameContext.ShowText("Fireball ability available!");*/
                 }
-                else if (color == 2)
+                else
                 {
-                    P2_PowerGreen = Mathf.Min(P2_PowerGreen + increaseBy, Constants.GreenPowerReq);
-                    photonView.RPC("RPC_FillPower", PhotonTargets.Others, color, P2_PowerGreen);
+                    if (color == 1)
+                    {
+                        P2_PowerBlue = Mathf.Min(P2_PowerBlue + increaseBy, Constants.BluePowerReq);
+                        photonView.RPC("RPC_FillPower", PhotonTargets.Others, color, P2_PowerBlue);
+                    }
+                    else if (color == 2)
+                    {
+                        P2_PowerGreen = Mathf.Min(P2_PowerGreen + increaseBy, Constants.GreenPowerReq);
+                        photonView.RPC("RPC_FillPower", PhotonTargets.Others, color, P2_PowerGreen);
+                    }
+                    else if (color == 3)
+                    {
+                        P2_PowerRed = Mathf.Min(P2_PowerRed + increaseBy, Constants.RedPowerReq);
+                        photonView.RPC("RPC_FillPower", PhotonTargets.Others, color, P2_PowerRed);
+                    }
+                    else if (color == 0)
+                    {
+                        P2_PowerYellow = Mathf.Min(P2_PowerYellow + increaseBy, Constants.YellowPowerReq);
+                        photonView.RPC("RPC_FillPower", PhotonTargets.Others, color, P2_PowerYellow);
+                    }
                 }
-                else if (color == 3)
-                {
-                    P2_PowerRed = Mathf.Min(P2_PowerRed + increaseBy, Constants.RedPowerReq);
-                    photonView.RPC("RPC_FillPower", PhotonTargets.Others, color, P2_PowerRed);
-                }
-                else if (color == 0)
-                {
-                    P2_PowerYellow = Mathf.Min(P2_PowerYellow + increaseBy, Constants.YellowPowerReq);
-                    photonView.RPC("RPC_FillPower", PhotonTargets.Others, color, P2_PowerYellow);
-                }
-            }
         }
 
         public void PowerClicked(int color)
@@ -1191,25 +1254,34 @@ namespace Com.Hypester.DM3
                         photonView.RPC("RPC_HealEffect", PhotonTargets.All, 0);
                         P1_PowerGreen = 0;
 
-                        GetPlayerByID(_curPlayer).FindInterface().SetHitpoints(healthPlayerOne);
-                        GetPlayerByID(_curPlayer).FindInterface().UpdateShadowhealth(healthPlayerOne);
-                        photonView.RPC("RPC_UpdateHealth", PhotonTargets.Others, _curPlayer, healthPlayerOne);
+                        if (IsGameRelevant())
+                        {
+                            GetPlayerByID(_curPlayer).FindInterface().SetHitpoints(healthPlayerOne);
+                            GetPlayerByID(_curPlayer).FindInterface().UpdateShadowhealth(healthPlayerOne);
+                            photonView.RPC("RPC_UpdateHealth", PhotonTargets.Others, _curPlayer, healthPlayerOne);
+                        }
                     }
                     else if (color == 3 && P1_PowerRed >= Constants.RedPowerReq) //red
                     {
                         CreateTrap();
                         P1_PowerRed = 0;
 
-                        _gameContext.ShowText("You placed a trap. Don't trigger it yourself!");
-                        photonView.RPC("RPC_MessageTrap", PhotonTargets.Others);
+                        if (IsGameRelevant())
+                        {
+                            _gameContext.ShowText("You placed a trap. Don't trigger it yourself!");
+                            photonView.RPC("RPC_MessageTrap", PhotonTargets.Others);
+                        }
                     }
                     else if (color == 0 && P1_PowerYellow >= Constants.YellowPowerReq) //yellow
                     {
                         CreateFireball();
                         P1_PowerYellow = 0;
 
-                        _gameContext.ShowText("Touch the fireball and throw it!");
-                        photonView.RPC("RPC_MessageFireball", PhotonTargets.Others);
+                        if (IsGameRelevant())
+                        {
+                            _gameContext.ShowText("Touch the fireball and throw it!");
+                            photonView.RPC("RPC_MessageFireball", PhotonTargets.Others);
+                        }
                     }
                 }
                 else
@@ -1228,9 +1300,12 @@ namespace Com.Hypester.DM3
                         P2_PowerGreen = 0;
                         photonView.RPC("RPC_EmptyPower", PhotonTargets.Others, color);
 
-                        GetPlayerByID(_curPlayer).FindInterface().SetHitpoints(healthPlayerTwo);
-                        GetPlayerByID(_curPlayer).FindInterface().UpdateShadowhealth(healthPlayerTwo);
-                        photonView.RPC("RPC_UpdateHealth", PhotonTargets.Others, _curPlayer, healthPlayerTwo);
+                        if (IsGameRelevant())
+                        {
+                            GetPlayerByID(_curPlayer).FindInterface().SetHitpoints(healthPlayerTwo);
+                            GetPlayerByID(_curPlayer).FindInterface().UpdateShadowhealth(healthPlayerTwo);
+                            photonView.RPC("RPC_UpdateHealth", PhotonTargets.Others, _curPlayer, healthPlayerTwo);
+                        }
                     }
                     else if (color == 3 && P2_PowerRed >= Constants.RedPowerReq) //red
                     {
@@ -1238,9 +1313,11 @@ namespace Com.Hypester.DM3
                         P2_PowerRed = 0;
                         photonView.RPC("RPC_EmptyPower", PhotonTargets.Others, color);
 
-                        _gameContext.ShowText("Opponent placed a trap. Be careful!");
-                        _gameContext.ShowLargeText("Trap placed, careful!");
-                        iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.Warning);
+                        if (IsGameRelevant()) { 
+                            _gameContext.ShowText("Opponent placed a trap. Be careful!");
+                            _gameContext.ShowLargeText("Trap placed, careful!");
+                            iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.Warning);
+                        }
                     }
                     else if (color == 0 && P2_PowerYellow >= Constants.YellowPowerReq) //yellow
                     {
@@ -1248,7 +1325,8 @@ namespace Com.Hypester.DM3
                         P2_PowerYellow = 0;
                         photonView.RPC("RPC_EmptyPower", PhotonTargets.Others, color);
 
-                        _gameContext.ShowText("Opponent summoned a fireball!");
+                        if (IsGameRelevant())
+                            _gameContext.ShowText("Opponent summoned a fireball!");
                     }
                 }
             }
@@ -1261,46 +1339,52 @@ namespace Com.Hypester.DM3
             fireballGO.GetComponent<YellowPower>().ownerPlayer = MyPlayer;
             fireballGO.name = "Fireball" + MyPlayer.localID;
             fireballGO.transform.position = GameObject.Find("MyYellow").transform.position;
+
+            if (!IsGameRelevant())
+                fireballGO.GetComponent<YellowPower>().Hide();
         }
 
         [PunRPC]
         private void RPC_P2_Create_Fireball()
         {
-            CreateFireball();
-            _gameContext.ShowText("Touch the fireball and throw it!");
+            if (IsGameRelevant())
+            {
+                CreateFireball();
+                _gameContext.ShowText("Touch the fireball and throw it!");
+            }
         }
 
         [PunRPC]
         public void RPC_FireballHit() //should be both master-client side and guest-side
         {
-            GameObject fireball = GameObject.FindGameObjectWithTag("ActiveFireball");
+                GameObject fireball = GameObject.FindGameObjectWithTag("ActiveFireball");
 
-            if (fireball.GetComponent<YellowPower>().ownerPlayer == MyPlayer)
-            {
-                GameObject explosion = Instantiate(Resources.Load("ParticleEffects/FireballHit")) as GameObject;
-                explosion.transform.position = GameObject.Find("OpponentAvatar").transform.position;
-
-                if (IsGameMaster())
+                if (fireball.GetComponent<YellowPower>().ownerPlayer == MyPlayer)
                 {
-                    DamagePlayer(EnemyPlayer.localID, Constants.FireballPower);
-                    ResetTimer();
-                }
-            }
-            else
-            {
-                GameObject explosion = Instantiate(Resources.Load("ParticleEffects/FireballHit")) as GameObject;
-                explosion.transform.position = GameObject.Find("MyAvatar").transform.position;
+                    GameObject explosion = Instantiate(Resources.Load("ParticleEffects/FireballHit")) as GameObject;
+                    explosion.transform.position = GameObject.Find("OpponentAvatar").transform.position;
 
-                if (IsGameMaster())
+                    if (IsGameMaster())
+                    {
+                        DamagePlayer(EnemyPlayer.localID, Constants.FireballPower);
+                        ResetTimer();
+                    }
+                }
+                else
                 {
-                    DamagePlayer(MyPlayer.localID, Constants.FireballPower);
-                    ResetTimer();
+                    GameObject explosion = Instantiate(Resources.Load("ParticleEffects/FireballHit")) as GameObject;
+                    explosion.transform.position = GameObject.Find("MyAvatar").transform.position;
+
+                    if (IsGameMaster())
+                    {
+                        DamagePlayer(MyPlayer.localID, Constants.FireballPower);
+                        ResetTimer();
+                    }
                 }
-            }
 
-            iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.ImpactHeavy);
+                iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.ImpactHeavy);
 
-            Destroy(fireball);
+                Destroy(fireball);
         }
 
         private void CreateTrap()
@@ -1316,166 +1400,180 @@ namespace Com.Hypester.DM3
         private void RPC_P2_CreateTrap()
         {
             CreateTrap();
-            _gameContext.ShowText("You placed a trap. Don't trigger it yourself!");
+            if (IsGameRelevant())
+                _gameContext.ShowText("You placed a trap. Don't trigger it yourself!");
         }
 
         [PunRPC]
         public void RPC_CreateTrapBooster(Vector2 pos, int creatorPlayer)
         {
-            if (IsGameMaster())
-            {
-                _grid.data[(int)pos.x, (int)pos.y].boosterLevel = 4 + creatorPlayer;
-                Tile tile = _grid.data[(int)pos.x, (int)pos.y];
-                photonView.RPC("RPC_SendTile", PhotonTargets.All, tile);
-            }
+                if (IsGameMaster())
+                {
+                    _grid.data[(int)pos.x, (int)pos.y].boosterLevel = 4 + creatorPlayer;
+                    Tile tile = _grid.data[(int)pos.x, (int)pos.y];
+                    photonView.RPC("RPC_SendTile", PhotonTargets.All, tile);
+                }
         }
 
         [PunRPC]
         private void RPC_TurnEnded(int curPlayer)
         {
-            if (_myPlayer != null)
+            if (IsGameRelevant())
             {
-                if (curPlayer == _myPlayer.localID) //Reversed
+                if (_myPlayer != null)
                 {
-                    // _gameContext.ShowText("It is now your turn!");
-                    _gameContext.ShowLargeText("Your turn!");
+                    if (curPlayer == _myPlayer.localID) //Reversed
+                    {
+                        // _gameContext.ShowText("It is now your turn!");
+                        _gameContext.ShowLargeText("Your turn!");
+                    }
+                    else
+                    {
+                        // _gameContext.ShowText("Waiting for " + _enemyPlayer.GetName() + "'s turn...");
+                        _gameContext.ShowLargeText(_enemyPlayer.GetName() + "'s turn!");
+                    }
+                }
+
+                if (MyPlayer.localID == 0)
+                {
+                    MyPlayer.FindInterface().UpdateShadowhealth(healthPlayerOne);
+                    EnemyPlayer.FindInterface().UpdateShadowhealth(healthPlayerTwo);
                 }
                 else
                 {
-                    // _gameContext.ShowText("Waiting for " + _enemyPlayer.GetName() + "'s turn...");
-                    _gameContext.ShowLargeText(_enemyPlayer.GetName() + "'s turn!");
+                    MyPlayer.FindInterface().UpdateShadowhealth(healthPlayerTwo);
+                    EnemyPlayer.FindInterface().UpdateShadowhealth(healthPlayerOne);
                 }
-            }
-
-            if (MyPlayer.localID == 0)
-            {
-                MyPlayer.FindInterface().UpdateShadowhealth(healthPlayerOne);
-                EnemyPlayer.FindInterface().UpdateShadowhealth(healthPlayerTwo);
-            }
-            else
-            {
-                MyPlayer.FindInterface().UpdateShadowhealth(healthPlayerTwo);
-                EnemyPlayer.FindInterface().UpdateShadowhealth(healthPlayerOne);
             }
         }
 
         [PunRPC]
         private void RPC_AnimateTile(AnimateTile tile)
         {
-            BaseTile dropIntoTile = BaseTileAtPos(new Vector2(tile.x, tile.y));
+            if (IsGameRelevant())
+            {
+                BaseTile dropIntoTile = BaseTileAtPos(new Vector2(tile.x, tile.y));
 
-            //Debug.Log("Anim request: " + tile + " | " + tile.x + ", " + tile.y + " > " + tile.color);
+                //Debug.Log("Anim request: " + tile + " | " + tile.x + ", " + tile.y + " > " + tile.color);
 
-            dropIntoTile.color = tile.color;
-            dropIntoTile.Animate(tile.fallDistance);
+                dropIntoTile.color = tile.color;
+                dropIntoTile.Animate(tile.fallDistance);
+            }
         }
 
         [PunRPC]
         private void RPC_EndGame(int winnerPlayer)
         {
-            GameObject.Find("PlayScreen").GetComponent<PlayGameCanvas>().EndGame(winnerPlayer);
-            _gameDone = false;
-            _isActive = false;
+            if (IsGameRelevant())
+            {
+                GameObject.Find("PlayScreen").GetComponent<PlayGameCanvas>().EndGame(winnerPlayer);
+                _gameDone = false;
+                _isActive = false;
+            }
         }
 
         [PunRPC]
         private void RPC_FillPower(int color, int value)
         {
-            if (color == 1)
-                P2_PowerBlue = value;
-            else if (color == 2)
-                P2_PowerGreen = value;
-            else if (color == 3)
-                P2_PowerRed = value;
-            else if (color == 0)
-                P2_PowerYellow = value;
-
-            /*if (P2_PowerBlue == Constants.BluePowerReq)
-                _gameContext.ShowText("Shield ability available!");
-            if (P2_PowerGreen == Constants.GreenPowerReq)
-                _gameContext.ShowText("Heal ability available!");
-            if (P2_PowerRed == Constants.RedPowerReq)
-                _gameContext.ShowText("Trap ability available!");
-            if (P2_PowerYellow == Constants.YellowPowerReq)
-                _gameContext.ShowText("Fireball ability available!");*/
+                if (color == 1)
+                    P2_PowerBlue = value;
+                else if (color == 2)
+                    P2_PowerGreen = value;
+                else if (color == 3)
+                    P2_PowerRed = value;
+                else if (color == 0)
+                    P2_PowerYellow = value;
         }
 
         [PunRPC]
         private void RPC_EmptyPower(int color)
         {
-            if (color == 1)
-                P2_PowerBlue = 0;
-            else if (color == 2)
-                P2_PowerGreen = 0;
-            else if (color == 3)
-                P2_PowerRed = 0;
-            else if (color == 0)
-                P2_PowerYellow = 0;
+                if (color == 1)
+                    P2_PowerBlue = 0;
+                else if (color == 2)
+                    P2_PowerGreen = 0;
+                else if (color == 3)
+                    P2_PowerRed = 0;
+                else if (color == 0)
+                    P2_PowerYellow = 0;
         }
 
 
         [PunRPC]
         public void RPC_SendRematchRequest()
         {
-            Debug.Log("Rematch order gotten, reloading Scene.");
-            _rematchRequested = true;
+            if (IsGameRelevant())
+            {
+                Debug.Log("Rematch order gotten, reloading Scene.");
+                _rematchRequested = true;
+            }
         }
 
         [PunRPC]
         private void RPC_ShieldEffect(int targetPlayer)
         {
-            if (targetPlayer == MyPlayer.localID)
-                foreach (GameObject activeShield in GameObject.FindGameObjectsWithTag("ActiveShield"))
-                    Destroy(activeShield);
+            if (IsGameRelevant())
+            {
+                if (targetPlayer == MyPlayer.localID)
+                    foreach (GameObject activeShield in GameObject.FindGameObjectsWithTag("ActiveShield"))
+                        Destroy(activeShield);
 
-            GameObject effect = Instantiate(Resources.Load("ParticleEffects/ShieldEffect")) as GameObject;
-            Vector2 effectPosition = new Vector2();
-            if (_myPlayer.localID == targetPlayer)
-                effectPosition = GameObject.Find("MyAvatar").GetComponent<RectTransform>().position;
-            else
-                effectPosition = GameObject.Find("OpponentAvatar").GetComponent<RectTransform>().position;
-            effect.transform.position = effectPosition;
+                GameObject effect = Instantiate(Resources.Load("ParticleEffects/ShieldEffect")) as GameObject;
+                Vector2 effectPosition = new Vector2();
+                if (_myPlayer.localID == targetPlayer)
+                    effectPosition = GameObject.Find("MyAvatar").GetComponent<RectTransform>().position;
+                else
+                    effectPosition = GameObject.Find("OpponentAvatar").GetComponent<RectTransform>().position;
+                effect.transform.position = effectPosition;
+            }
         }
 
         [PunRPC]
         private void RPC_ShieldActivated(int targetPlayer)
         {
-            if (_myPlayer.localID == targetPlayer)
+            if (IsGameRelevant())
             {
-                GameObject effect = Instantiate(Resources.Load("ParticleEffects/ShieldActivated")) as GameObject;
-                Vector2 effectPosition = new Vector2();
-                effectPosition = GameObject.Find("MyAvatar").GetComponent<RectTransform>().position;
-                effect.transform.position = effectPosition;
+                if (_myPlayer.localID == targetPlayer)
+                {
+                    GameObject effect = Instantiate(Resources.Load("ParticleEffects/ShieldActivated")) as GameObject;
+                    Vector2 effectPosition = new Vector2();
+                    effectPosition = GameObject.Find("MyAvatar").GetComponent<RectTransform>().position;
+                    effect.transform.position = effectPosition;
 
-                _gameContext.ShowText("Shield is now active. Next damage is blocked.");
+                    _gameContext.ShowText("Shield is now active. Next damage is blocked.");
+                }
             }
         }
 
         [PunRPC]
         private void RPC_HealEffect(int targetPlayer)
         {
-            GameObject effect = Instantiate(Resources.Load("ParticleEffects/HealEffect")) as GameObject;
-            Vector2 effectPosition = new Vector2();
-
-            if (_myPlayer.localID == targetPlayer)
+            if (IsGameRelevant())
             {
-                _gameContext.ShowText("You healed for " + Constants.HealPower + "!");
+                GameObject effect = Instantiate(Resources.Load("ParticleEffects/HealEffect")) as GameObject;
+                Vector2 effectPosition = new Vector2();
 
-                effectPosition = GameObject.Find("MyAvatar").GetComponent<RectTransform>().position;
-            }
-            else
-            {
-                _gameContext.ShowText("Opponent healed for " + Constants.HealPower + "!");
+                if (_myPlayer.localID == targetPlayer)
+                {
+                    _gameContext.ShowText("You healed for " + Constants.HealPower + "!");
 
-                effectPosition = GameObject.Find("OpponentAvatar").GetComponent<RectTransform>().position;
+                    effectPosition = GameObject.Find("MyAvatar").GetComponent<RectTransform>().position;
+                }
+                else
+                {
+                    _gameContext.ShowText("Opponent healed for " + Constants.HealPower + "!");
+
+                    effectPosition = GameObject.Find("OpponentAvatar").GetComponent<RectTransform>().position;
+                }
+                effect.transform.position = effectPosition;
             }
-            effect.transform.position = effectPosition;
         }
 
         private bool IsGameMaster ()
         {
-            if (_myPlayer != null) { 
-                if (PhotonNetwork.isMasterClient || _myPlayer.joinNumber == 3) //okay
+            if (_myPlayer != null) {
+                //if (PhotonNetwork.isMasterClient || _myPlayer.joinNumber == 3) //okay
+                if (PhotonNetwork.isMasterClient) //okay
                     return true;
                 else
                     return false;
@@ -1488,6 +1586,15 @@ namespace Com.Hypester.DM3
             }
 
             //photonView.isMine eventually, if player 3 creates his own Grid. This is the way to go I think.
+        }
+
+        private bool IsGameRelevant ()
+        {
+            if (_myPlayer != null)
+            {
+                return _myPlayer.IsRelevantGame(_gameID);
+            }
+            return false;
         }
 
         #region RPC Messages
@@ -1507,51 +1614,48 @@ namespace Com.Hypester.DM3
         [PunRPC]
         private void RPC_DamageComboMessage(int targetPlayer, float comboDamage, float collateralDamage)
         {
-            /*if (_myPlayer.localID == targetPlayer)
+            if (IsGameRelevant())
             {
-                _gameContext.ShowText("You received " + comboDamage + " + " + collateralDamage + " damage!");
+                if (comboDamage > 300)
+                    iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.ImpactHeavy);
             }
-            else
-            {
-                _gameContext.ShowText("You dealt " + _enemyPlayer.GetName() + " " + comboDamage + " + " + collateralDamage + " damage!");
-            }*/
-
-            if (comboDamage > 300)
-                iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.ImpactHeavy);
-            /*else if (comboDamage > 150)
-                iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.ImpactMedium);
-            else if (comboDamage > 50)
-                iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.ImpactLight);*/
         }
 
         [PunRPC]
         private void RPC_ShieldMessage(int targetPlayer, float damage)
         {
-            if (_myPlayer.localID == targetPlayer)
-            {
-                _gameContext.ShowText("You blocked " + damage + " damage with your shield!");
-                _gameContext.ShowMyText("Blocked!");
-            }
-            else
-            {
-                _gameContext.ShowText(_enemyPlayer.GetName() + " blocked " + damage + " damage with a shield!");
-                _gameContext.ShowEnemyText("Blocked!");
+            if (IsGameRelevant()) {
+                if (_myPlayer.localID == targetPlayer)
+                {
+                    _gameContext.ShowText("You blocked " + damage + " damage with your shield!");
+                    _gameContext.ShowMyText("Blocked!");
+                }
+                else
+                {
+                    _gameContext.ShowText(_enemyPlayer.GetName() + " blocked " + damage + " damage with a shield!");
+                    _gameContext.ShowEnemyText("Blocked!");
+                }
             }
         }
 
         [PunRPC]
         private void RPC_MessageFireball()
         {
-
-            _gameContext.ShowText("Opponent summoned a fireball!");
+            if (IsGameRelevant())
+            {
+                _gameContext.ShowText("Opponent summoned a fireball!");
+            }
         }
 
         [PunRPC]
         private void RPC_MessageTrap()
         {
-            _gameContext.ShowText("Opponent placed a trap. Be careful!");
-            _gameContext.ShowLargeText("Trap placed, careful!");
-            iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.Warning);
+            if (IsGameRelevant())
+            {
+                _gameContext.ShowText("Opponent placed a trap. Be careful!");
+                _gameContext.ShowLargeText("Trap placed, careful!");
+                iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.Warning);
+            }
         }
         #endregion
 

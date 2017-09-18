@@ -53,9 +53,11 @@ namespace Com.Hypester.DM3
 
         public virtual void GoToScreen(BaseMenuCanvas screen)
         {
-            foreach (BaseMenuCanvas menu in GetAllScreens())
-                menu.Hide();
-            screen.Show();
+            if (!screen.isShown) { 
+                foreach (BaseMenuCanvas menu in GetAllScreens())
+                    menu.Hide();
+                screen.Show();
+            }
         }
 
         public virtual void Hide()

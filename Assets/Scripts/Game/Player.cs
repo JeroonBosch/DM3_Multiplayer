@@ -1,5 +1,4 @@
-﻿using Photon;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 
@@ -11,15 +10,9 @@ namespace Com.Hypester.DM3
         public int joinNumber; //only for tournaments?
         public string profileName;
         public string profilePicURL;
-        //public Texture2D profilePic;
         public bool wantsRematch;
 
-        #region private variables
-        int profileID;
-        string portraitURL;
-
-        private GameObject _game;
-        #endregion
+        public Player opponent;
 
         // Use this for initialization
         void Start()
@@ -40,17 +33,15 @@ namespace Com.Hypester.DM3
 
         private void Update()
         {
-            if (_game == null || !_game.GetActive())
-                _game = GameObject.FindWithTag("GameController");
-
-            if (_game && _game.GetComponent<GameHandler>().MyPlayer != null)
+            if (PhotonConnect.Instance.GameController == null || !PhotonConnect.Instance.GameController.gameObject.GetActive())
+                return;
+            else if (PhotonConnect.Instance.GameController && PhotonConnect.Instance.GameController.MyPlayer != null)
             {
-                if (_game.GetComponent<GameHandler>().IsMyTurn())
+                if (PhotonConnect.Instance.GameController.IsMyTurn())
                     transform.Find("FingerTracker").GetComponent<Image>().enabled = false;
-                else if (!gameObject.GetComponent<PhotonView>().isMine && _game.GetComponent<GameHandler>().Active)
+                else if (!gameObject.GetComponent<PhotonView>().isMine && PhotonConnect.Instance.GameController.Active)
                     transform.Find("FingerTracker").GetComponent<Image>().enabled = true;
             }
-
             GetComponent<Canvas>().worldCamera = Camera.main;
         }
 
@@ -74,6 +65,46 @@ namespace Com.Hypester.DM3
             UpdateLabels();
         }
 
+        public int GetRequestedGameID ()
+        {
+            if (joinNumber == 1 || joinNumber == 2)
+                return 0;
+            else if (joinNumber == 3 || joinNumber == 4)
+                return 1;
+            return 0;
+        }
+
+        public bool IsRelevantGame(int id)
+        {
+            if (GetRequestedGameID() == id)
+                return true;
+            else
+                return false;
+        }
+
+        public bool IsRelevantPlayer ()
+        {
+            if (!photonView.isMine) {
+                Player myPlayer = null;
+                foreach (Player player in FindObjectsOfType<Player>())
+                {
+                    if (player.photonView.isMine)
+                    {
+                        myPlayer = player;
+                    }
+                }
+                if (myPlayer != null)
+                {
+                    if (myPlayer.opponent = this)
+                        return true;
+                }
+            } else
+            {
+                return true;
+            }
+            return false;
+        }
+
         public void UpdateLabels()
         {
             if (joinNumber == 1)
@@ -88,7 +119,8 @@ namespace Com.Hypester.DM3
             if (photonView.isMine)
                 SetTextToProfileName("MyPlayer_Name");
             else
-                SetTextToProfileName("OpponentPlayer_Name");
+                if (IsRelevantPlayer())
+                    SetTextToProfileName("OpponentPlayer_Name");
 
 
             if (profilePicURL != "") { 
@@ -105,7 +137,8 @@ namespace Com.Hypester.DM3
                 if (photonView.isMine)
                     SetImageToProfilePic("MyPlayer_Avatar");
                 else
-                    SetImageToProfilePic("OpponentPlayer_Avatar");
+                    if (IsRelevantPlayer())
+                        SetImageToProfilePic("OpponentPlayer_Avatar");
             }
         }
 
@@ -148,8 +181,8 @@ namespace Com.Hypester.DM3
         public float GetHealth ()
         {
             if (localID == 0)
-                return _game.GetComponent<GameHandler>().healthPlayerOne;
-            return _game.GetComponent<GameHandler>().healthPlayerTwo;
+                return PhotonConnect.Instance.GameController.healthPlayerOne;
+            return PhotonConnect.Instance.GameController.healthPlayerTwo;
         }
 
         public void Reset()
@@ -166,36 +199,40 @@ namespace Com.Hypester.DM3
         #region SelectionRPCs
         public void NewSelection(Vector2 pos)
         {
+            //This is only done by the selecting player, on his local device.
             iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.SelectionChange);
 
-            photonView.RPC("RPC_AddToSelection", PhotonTargets.All, pos);
+            photonView.RPC("RPC_AddToSelection", PhotonTargets.All, PhotonConnect.Instance.GameController.GameID, pos);
         }
         [PunRPC]
-        void RPC_AddToSelection(Vector2 pos)
+        void RPC_AddToSelection(int gameID, Vector2 pos)
         {
-            _game.GetComponent<GameHandler>().AddToSelection(pos);
+            if (IsRelevantGame(PhotonConnect.Instance.GameController.GameID))
+                PhotonConnect.Instance.GameController.AddToSelection(pos);
         }
 
 
         public void RemoveSelection(Vector2 pos)
         {
-            photonView.RPC("RPC_RemoveFromSelection", PhotonTargets.All, pos);
+            photonView.RPC("RPC_RemoveFromSelection", PhotonTargets.All, PhotonConnect.Instance.GameController.GameID, pos);
         }
         [PunRPC]
-        void RPC_RemoveFromSelection(Vector2 pos)
+        void RPC_RemoveFromSelection(int gameID, Vector2 pos)
         {
-            _game.GetComponent<GameHandler>().RemoveFromSelection(pos);
+            if (IsRelevantGame(PhotonConnect.Instance.GameController.GameID))
+                PhotonConnect.Instance.GameController.RemoveFromSelection(pos);
         }
 
 
         public void RemoveAllSelections()
         {
-            photonView.RPC("RPC_RemoveAllSelections", PhotonTargets.All);
+            photonView.RPC("RPC_RemoveAllSelections", PhotonTargets.All, PhotonConnect.Instance.GameController.GameID);
         }
         [PunRPC]
-        void RPC_RemoveAllSelections()
+        void RPC_RemoveAllSelections(int gameID)
         {
-            _game.GetComponent<GameHandler>().RemoveSelections();
+            if (IsRelevantGame(PhotonConnect.Instance.GameController.GameID))
+                PhotonConnect.Instance.GameController.RemoveSelections();
         }
         #endregion
 
@@ -203,12 +240,13 @@ namespace Com.Hypester.DM3
         {
             iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.ImpactLight);
 
-            photonView.RPC("RPC_InitiateCombo", PhotonTargets.All);
+            photonView.RPC("RPC_InitiateCombo", PhotonTargets.All, PhotonConnect.Instance.GameController.GameID);
         }
         [PunRPC]
-        void RPC_InitiateCombo()
+        void RPC_InitiateCombo(int gameID)
         {
-            _game.GetComponent<GameHandler>().InitiateCombo();
+            if (IsRelevantGame(PhotonConnect.Instance.GameController.GameID))
+                PhotonConnect.Instance.GameController.InitiateCombo();
         }
 
         [PunRPC]
@@ -221,18 +259,18 @@ namespace Com.Hypester.DM3
         public void RPC_SendName(string profName)
         {
             profileName = profName;
-
             UpdateLabels();
         }
 
         public void PowerClicked (int color)
         {
-            photonView.RPC("RPC_PowerClick", PhotonTargets.All, color);
+            photonView.RPC("RPC_PowerClick", PhotonTargets.All, PhotonConnect.Instance.GameController.GameID, color);
         }
         [PunRPC]
-        void RPC_PowerClick(int color)
+        void RPC_PowerClick(int gameID, int color)
         {
-            _game.GetComponent<GameHandler>().PowerClicked(color);
+            if (IsRelevantGame(PhotonConnect.Instance.GameController.GameID))
+                PhotonConnect.Instance.GameController.PowerClicked(color);
         }
     }
 }

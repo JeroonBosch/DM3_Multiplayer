@@ -5,22 +5,15 @@ namespace Com.Hypester.DM3
 {
     public class Wiggle : MonoBehaviour
     {
-        private GameHandler _game;
-
         private bool _wiggling;
         private float _direction = 1f; //Either 1f or -1f
         private float _wiggleCounter;
         private bool _lockedOut; //Paused?
 
-        private void Start()
-        {
-            _game = GameObject.FindWithTag("GameController").GetComponent<GameHandler>();
-        }
-
         private void Update()
         {
-            if (_game != null) {
-                if (_wiggling && !_lockedOut && _game.IsMyTurn())
+            if (PhotonConnect.Instance.GameController != null) {
+                if (_wiggling && !_lockedOut && PhotonConnect.Instance.GameController.IsMyTurn())
                 {
                     _wiggleCounter += Time.deltaTime;
 
@@ -41,7 +34,7 @@ namespace Com.Hypester.DM3
                     }
 
                 }
-                else if (_wiggling && _lockedOut && _game.IsMyTurn())
+                else if (_wiggling && _lockedOut && PhotonConnect.Instance.GameController.IsMyTurn())
                 {
                     _wiggleCounter += Time.deltaTime;
 
@@ -52,7 +45,7 @@ namespace Com.Hypester.DM3
                     }
 
                 }
-                else if (_wiggling && !_game.IsMyTurn()) { 
+                else if (_wiggling && !PhotonConnect.Instance.GameController.IsMyTurn()) { 
                     _wiggleCounter = 0f;
                     _lockedOut = false;
                     Quaternion r = transform.rotation;

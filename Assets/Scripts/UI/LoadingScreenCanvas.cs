@@ -8,11 +8,12 @@ namespace Com.Hypester.DM3
         private bool _playersReady;
 
         private float _timer = 0f;
-        private float _timeUntilStart = 2f;
+        private float _timeUntilStart = 4f;
 
         protected override void Start ()
         {
             base.Start();
+            GoToScreen(this); //start screen.
 
             _playersReady = false;
 
@@ -22,12 +23,9 @@ namespace Com.Hypester.DM3
             }
 
             if (PhotonNetwork.isMasterClient && PhotonConnect.Instance.tournamentMode)
-            { // PhotonConnect.Instance.allGroups[1]
+            { // PhotonConnect.Instance.allGroups[1] //TODO for 8 player tournaments, create even more 'grid's
                 GameObject newGrid = PhotonNetwork.Instantiate("Grid", Vector3.zero, Quaternion.identity, 0);
-                newGrid.name = "Grid2";
-                newGrid.transform.SetParent(GameObject.Find("PlayScreen").transform);
-                newGrid.transform.localScale = new Vector3(0, 0, 0);
-                newGrid.transform.localPosition = new Vector3(0, 0, 0);
+                newGrid.GetPhotonView().RPC("RPC_InitGameHandler", PhotonTargets.All, 1);
             }
         }
 

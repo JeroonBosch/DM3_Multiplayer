@@ -1,8 +1,5 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-using Lean.Touch;
-using System.Collections.Generic;
-using UnityEngine.EventSystems;
 
 namespace Com.Hypester.DM3
 {
@@ -85,7 +82,7 @@ namespace Com.Hypester.DM3
                 if (_timer > _timeUntilStart)
                 {
                     //GoToScreen(GameObject.Find("PlayScreen").GetComponent<BaseMenuCanvas>());
-                    //AssignOpponent();
+                    AssignOpponent();
                     
                     PhotonConnect.Instance.SetTournamentOpponent(GetMyJoinNumber()); //set correct interest groups
                     //PhotonConnect.Instance.CreatePlayers();
@@ -119,11 +116,11 @@ namespace Com.Hypester.DM3
 
         private int GetMyJoinNumber()
         {
-            foreach (GameObject playerObj in GameObject.FindGameObjectsWithTag("Player"))
+            foreach (Player player in FindObjectsOfType<Player>())
             {
-                if (playerObj.GetComponent<PhotonView>().isMine)
+                if (player.photonView.isMine)
                 {
-                    return playerObj.GetComponent<Player>().joinNumber;
+                    return player.joinNumber;
                 }
             }
             return -1;
@@ -131,32 +128,40 @@ namespace Com.Hypester.DM3
 
         private void AssignOpponent ()
         {
-            if (PhotonNetwork.inRoom && PhotonNetwork.room.MaxPlayers > 2)
-                PhotonNetwork.LeaveRoom();
-
-            foreach (GameObject playerObj in GameObject.FindGameObjectsWithTag("Player"))
+            foreach (Player player in FindObjectsOfType<Player>())
             {
-                if (playerObj.GetComponent<PhotonView>().isMine)
+                if (player.photonView.isMine)
                 {
-                    Player player = playerObj.GetComponent<Player>();
                     if (player.joinNumber == 1)
                     {
-                        PhotonNetwork.CreateRoom(PhotonNetwork.room.Name + "_Match1", new RoomOptions() { MaxPlayers = 2 }, null);
+                        player.opponent = GetPlayerWithJoinNumber(2);
                     }
                     else if (player.joinNumber == 2)
                     {
-                        PhotonNetwork.JoinRoom(PhotonNetwork.room.Name + "_Match1");
+                        player.opponent = GetPlayerWithJoinNumber(1);
                     }
                     else if (player.joinNumber == 3)
                     {
-                        PhotonNetwork.CreateRoom(PhotonNetwork.room.Name + "_Match2", new RoomOptions() { MaxPlayers = 2 }, null);
+                        player.opponent = GetPlayerWithJoinNumber(4);
                     }
                     else if (player.joinNumber == 4)
                     {
-                        PhotonNetwork.JoinRoom(PhotonNetwork.room.Name + "_Match2");
+                        player.opponent = GetPlayerWithJoinNumber(3);
                     }
                 }
             }
+        }
+
+        private Player GetPlayerWithJoinNumber(int joinNum)
+        {
+            foreach (Player player in FindObjectsOfType<Player>())
+            {
+                if (player.joinNumber == joinNum)
+                {
+                    return player;
+                }
+            }
+            return null;
         }
     }
 }

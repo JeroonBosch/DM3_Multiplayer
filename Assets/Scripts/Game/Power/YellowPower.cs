@@ -5,8 +5,6 @@ namespace Com.Hypester.DM3
 {
     public class YellowPower : Photon.MonoBehaviour
     {
-        private GameHandler _game;
-
         public Player ownerPlayer;
         public Vector2 position;
         public Vector2 mirrorPosition;
@@ -26,10 +24,9 @@ namespace Com.Hypester.DM3
         private void Start()
         {
             _curPos = transform.position;
-            _game = GameObject.FindWithTag("GameController").GetComponent<GameHandler>();
 
             if (!photonView.isMine)
-                ownerPlayer = _game.EnemyPlayer;
+                ownerPlayer = PhotonConnect.Instance.GameController.EnemyPlayer;
         }
 
         private void Update()
@@ -91,12 +88,17 @@ namespace Com.Hypester.DM3
         {
             if (collision.gameObject.tag == "OpponentPlayer_Avatar" && photonView.isMine)
             {
-                _game.photonView.RPC("RPC_FireballHit", PhotonTargets.All);
+                PhotonConnect.Instance.GameController.photonView.RPC("RPC_FireballHit", PhotonTargets.All);
             }
             else
             {
                 Debug.Log("hit " + collision.gameObject.name);
             }
+        }
+
+        public void Hide ()
+        {
+            gameObject.SetActive(false);
         }
 
         public void PickUp()

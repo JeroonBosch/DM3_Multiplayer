@@ -5,7 +5,6 @@ namespace Com.Hypester.DM3
 {
     public class TrapPower : MonoBehaviour
     {
-        private GameHandler _game;
 
         public Player ownerPlayer;
 
@@ -18,9 +17,7 @@ namespace Com.Hypester.DM3
 
         private void Start()
         {
-            _game = GameObject.FindWithTag("GameController").GetComponent<GameHandler>();
-
-            ownerPlayer = _game.MyPlayer;
+            ownerPlayer = PhotonConnect.Instance.GameController.MyPlayer;
         }
 
         private void SetBaseTileHover(BaseTile baseTile) {
@@ -41,13 +38,13 @@ namespace Com.Hypester.DM3
         {
             if (_isPickedUp && _overBasetile != null) {
                 _overBasetile.TrapNotHovered();
-                _game.photonView.RPC("RPC_CreateTrapBooster", PhotonTargets.All, _overBasetile.position, ownerPlayer.localID);
+                PhotonConnect.Instance.GameController.photonView.RPC("RPC_CreateTrapBooster", PhotonTargets.All, _overBasetile.position, ownerPlayer.localID);
 
                 GameObject placeParticle = Instantiate(Resources.Load("ParticleEffects/TrapPlaced")) as GameObject;
                 placeParticle.transform.position = _overBasetile.transform.position;
                 Destroy(gameObject);
 
-               _game.ResetTimer();
+                PhotonConnect.Instance.GameController.ResetTimer();
             } else
             {
                 _isPickedUp = false;
