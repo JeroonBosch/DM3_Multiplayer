@@ -12,8 +12,8 @@ namespace Com.Hypester.DM3
 
         private void Update()
         {
-            if (PhotonConnect.Instance.GameController != null) {
-                if (_wiggling && !_lockedOut && PhotonConnect.Instance.GameController.IsMyTurn())
+            if (PhotonController.Instance.GameController != null) {
+                if (_wiggling && !_lockedOut && PhotonController.Instance.GameController.IsMyTurn())
                 {
                     _wiggleCounter += Time.deltaTime;
 
@@ -34,7 +34,7 @@ namespace Com.Hypester.DM3
                     }
 
                 }
-                else if (_wiggling && _lockedOut && PhotonConnect.Instance.GameController.IsMyTurn())
+                else if (_wiggling && _lockedOut && PhotonController.Instance.GameController.IsMyTurn())
                 {
                     _wiggleCounter += Time.deltaTime;
 
@@ -45,7 +45,7 @@ namespace Com.Hypester.DM3
                     }
 
                 }
-                else if (_wiggling && !PhotonConnect.Instance.GameController.IsMyTurn()) { 
+                else if (_wiggling && !PhotonController.Instance.GameController.IsMyTurn()) { 
                     _wiggleCounter = 0f;
                     _lockedOut = false;
                     Quaternion r = transform.rotation;

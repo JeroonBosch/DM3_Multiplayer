@@ -32,7 +32,7 @@ namespace Com.Hypester.DM3
             GameObject powerObject = null;
 
             _targetPlayer = targetPlayer;
-            if (_targetPlayer.localID == PhotonConnect.Instance.GameController.MyPlayer.localID)
+            if (_targetPlayer.localID == PhotonController.Instance.GameController.MyPlayer.localID)
                 myBooster = false;
 
             switch (color)

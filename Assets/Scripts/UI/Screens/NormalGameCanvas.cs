@@ -34,7 +34,7 @@ namespace Com.Hypester.DM3
 
             int playerCount = 0;
             if (PhotonNetwork.connected)
-                playerCount = PhotonNetwork.countOfPlayers;
+                playerCount = PhotonNetwork.countOfPlayers; //TODO Lobby player count instead of ALL players
             foreach (GameObject stage in stages)
             {
                 Transform textObject = stage.transform.Find("AmountOfPlayersText").transform;
@@ -50,7 +50,7 @@ namespace Com.Hypester.DM3
 
         public void SetReady ()
         {
-            PhotonConnect.Instance.MatchPlayers(); //This should load the next scene.
+            PhotonController.Instance.MatchPlayers(); //This should load the next scene.
             //Button readyButton = transform.Find("ReadyButton").GetComponent<Button>();
             //readyButton.interactable = false;
             findOpponent.SetActive(true);

@@ -33,13 +33,13 @@ namespace Com.Hypester.DM3
 
         private void Update()
         {
-            if (PhotonConnect.Instance.GameController == null || !PhotonConnect.Instance.GameController.gameObject.GetActive())
+            if (PhotonController.Instance.GameController == null || !PhotonController.Instance.GameController.gameObject.GetActive())
                 return;
-            else if (PhotonConnect.Instance.GameController && PhotonConnect.Instance.GameController.MyPlayer != null)
+            else if (PhotonController.Instance.GameController && PhotonController.Instance.GameController.MyPlayer != null)
             {
-                if (PhotonConnect.Instance.GameController.IsMyTurn())
+                if (PhotonController.Instance.GameController.IsMyTurn())
                     transform.Find("FingerTracker").GetComponent<Image>().enabled = false;
-                else if (!gameObject.GetComponent<PhotonView>().isMine && PhotonConnect.Instance.GameController.Active)
+                else if (!gameObject.GetComponent<PhotonView>().isMine && PhotonController.Instance.GameController.Active)
                     transform.Find("FingerTracker").GetComponent<Image>().enabled = true;
             }
             GetComponent<Canvas>().worldCamera = Camera.main;
@@ -181,8 +181,8 @@ namespace Com.Hypester.DM3
         public float GetHealth ()
         {
             if (localID == 0)
-                return PhotonConnect.Instance.GameController.healthPlayerOne;
-            return PhotonConnect.Instance.GameController.healthPlayerTwo;
+                return PhotonController.Instance.GameController.healthPlayerOne;
+            return PhotonController.Instance.GameController.healthPlayerTwo;
         }
 
         public void Reset()
@@ -196,58 +196,7 @@ namespace Com.Hypester.DM3
             return profileName;
         }
 
-        #region SelectionRPCs
-        public void NewSelection(Vector2 pos)
-        {
-            //This is only done by the selecting player, on his local device.
-            iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.SelectionChange);
-
-            photonView.RPC("RPC_AddToSelection", PhotonTargets.All, PhotonConnect.Instance.GameController.GameID, pos);
-        }
-        [PunRPC]
-        void RPC_AddToSelection(int gameID, Vector2 pos)
-        {
-            if (IsRelevantGame(PhotonConnect.Instance.GameController.GameID))
-                PhotonConnect.Instance.GameController.AddToSelection(pos);
-        }
-
-
-        public void RemoveSelection(Vector2 pos)
-        {
-            photonView.RPC("RPC_RemoveFromSelection", PhotonTargets.All, PhotonConnect.Instance.GameController.GameID, pos);
-        }
-        [PunRPC]
-        void RPC_RemoveFromSelection(int gameID, Vector2 pos)
-        {
-            if (IsRelevantGame(PhotonConnect.Instance.GameController.GameID))
-                PhotonConnect.Instance.GameController.RemoveFromSelection(pos);
-        }
-
-
-        public void RemoveAllSelections()
-        {
-            photonView.RPC("RPC_RemoveAllSelections", PhotonTargets.All, PhotonConnect.Instance.GameController.GameID);
-        }
-        [PunRPC]
-        void RPC_RemoveAllSelections(int gameID)
-        {
-            if (IsRelevantGame(PhotonConnect.Instance.GameController.GameID))
-                PhotonConnect.Instance.GameController.RemoveSelections();
-        }
-        #endregion
-
-        public void InitiateCombo()
-        {
-            iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.ImpactLight);
-
-            photonView.RPC("RPC_InitiateCombo", PhotonTargets.All, PhotonConnect.Instance.GameController.GameID);
-        }
-        [PunRPC]
-        void RPC_InitiateCombo(int gameID)
-        {
-            if (IsRelevantGame(PhotonConnect.Instance.GameController.GameID))
-                PhotonConnect.Instance.GameController.InitiateCombo();
-        }
+    
 
         [PunRPC]
         public void RPC_RequestRematch()
@@ -260,17 +209,6 @@ namespace Com.Hypester.DM3
         {
             profileName = profName;
             UpdateLabels();
-        }
-
-        public void PowerClicked (int color)
-        {
-            photonView.RPC("RPC_PowerClick", PhotonTargets.All, PhotonConnect.Instance.GameController.GameID, color);
-        }
-        [PunRPC]
-        void RPC_PowerClick(int gameID, int color)
-        {
-            if (IsRelevantGame(PhotonConnect.Instance.GameController.GameID))
-                PhotonConnect.Instance.GameController.PowerClicked(color);
         }
     }
 }

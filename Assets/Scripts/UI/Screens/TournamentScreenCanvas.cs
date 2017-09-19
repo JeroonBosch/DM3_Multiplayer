@@ -84,8 +84,8 @@ namespace Com.Hypester.DM3
                     //GoToScreen(GameObject.Find("PlayScreen").GetComponent<BaseMenuCanvas>());
                     AssignOpponent();
                     
-                    PhotonConnect.Instance.SetTournamentOpponent(GetMyJoinNumber()); //set correct interest groups
-                    //PhotonConnect.Instance.CreatePlayers();
+                    PhotonController.Instance.SetTournamentOpponent(GetMyJoinNumber()); //set correct interest groups
+                    //PhotonController.Instance.CreatePlayers();
                     PhotonNetwork.LoadLevel("Match");
                     Debug.Log("Match loaded from Tournament.");
                     enabled = false;

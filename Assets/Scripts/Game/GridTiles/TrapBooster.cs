@@ -12,7 +12,7 @@ namespace Com.Hypester.DM3
         private void SetOwner(int owner)
         {
             _ownerPlayer = owner;
-            if (PhotonConnect.Instance.GameController.MyPlayer.localID != _ownerPlayer)
+            if (PhotonController.Instance.GameController.MyPlayer.localID != _ownerPlayer)
             {
                 GetComponent<Animator>().enabled = false;
                 GetComponent<Image>().enabled = false;

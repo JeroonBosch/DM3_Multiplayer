@@ -6,7 +6,7 @@ namespace Com.Hypester.DM3
     public class TimedEffect : MonoBehaviour
     {
         public GameObject prefabToCreate;
-        public BaseTile basetileToHide;
+        public TileView basetileToHide;
 
         public float createAfterTime = 2f;
         private float _timer = 0f;

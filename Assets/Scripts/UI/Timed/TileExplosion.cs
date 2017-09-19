@@ -34,7 +34,7 @@ namespace Com.Hypester.DM3
             _startPosition = _rt.position;
 
             _endPosition = new Vector2();
-            if (_targetPlayer.localID == PhotonConnect.Instance.GameController.MyPlayer.localID)
+            if (_targetPlayer.localID == PhotonController.Instance.GameController.MyPlayer.localID)
                 _endPosition = GameObject.Find("MyAvatar").transform.position;
             else
                 _endPosition = GameObject.Find("OpponentAvatar").transform.position;

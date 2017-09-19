@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Com.Hypester.DM3
 {
-    public class BaseTile : MonoBehaviour
+    public class TileView : MonoBehaviour
     {
         //Purely visualized version of the 'Tile' class, in Grid.cs. None of this data is transferred.
         public Vector2 position { get; set; }
@@ -137,14 +137,14 @@ namespace Com.Hypester.DM3
             }
         }
 
-        public List<BaseTile> ListCollateralDamage (GameHandler grid, float radius)
+        public List<TileView> ListCollateralDamage (GameHandler grid, float radius)
         {
             //GameHandler grid = GameObject.FindWithTag("GameController").GetComponent<GameHandler>();
-            List<BaseTile> toDestroy = new List<BaseTile>();
+            List<TileView> toDestroy = new List<TileView>();
 
             if (_boosterLevel == 1) { 
-                List<BaseTile> adjacentInRadius = grid.FindAdjacentTiles(position, radius);
-                foreach (BaseTile tile in adjacentInRadius)
+                List<TileView> adjacentInRadius = grid.FindAdjacentTiles(position, radius);
+                foreach (TileView tile in adjacentInRadius)
                 {
                     if (tile)// && !tile.isBeingDestroyed)
                         if (!toDestroy.Contains(tile) && !(tile.position.x == position.x && tile.position.y == position.y))
@@ -183,13 +183,13 @@ namespace Com.Hypester.DM3
 
                 for (int i = 0; i < positions.Count; i++)
                 {
-                    BaseTile baseTile = grid.BaseTileAtPos(positions[i]);
+                    TileView baseTile = grid.TileViewAtPos(positions[i]);
                     if (baseTile)// && !baseTile.isBeingDestroyed)
                         toDestroy.Add(baseTile);
                 }
 
-                List<BaseTile> adjacentInRadius = grid.FindAdjacentTiles(new Vector2(position.x, position.y), radius);
-                foreach (BaseTile tile in adjacentInRadius)
+                List<TileView> adjacentInRadius = grid.FindAdjacentTiles(new Vector2(position.x, position.y), radius);
+                foreach (TileView tile in adjacentInRadius)
                 {
                     if (tile)// && !tile.isBeingDestroyed)
                         if (!toDestroy.Contains(tile) && !(tile.position.x == position.x && tile.position.y == position.y))
@@ -227,14 +227,14 @@ namespace Com.Hypester.DM3
 
                 for (int i = 0; i < positions.Count; i++)
                 {
-                    BaseTile baseTile = grid.BaseTileAtPos(positions[i]);
+                    TileView baseTile = grid.TileViewAtPos(positions[i]);
                     if (baseTile)// && !baseTile.isBeingDestroyed)
                         toDestroy.Add(baseTile);
                 }
 
                 float newRadius = Mathf.Max(2f, radius);
-                List<BaseTile> adjacentInRadius = grid.FindAdjacentTiles(new Vector2(position.x, position.y), newRadius);
-                foreach (BaseTile tile in adjacentInRadius)
+                List<TileView> adjacentInRadius = grid.FindAdjacentTiles(new Vector2(position.x, position.y), newRadius);
+                foreach (TileView tile in adjacentInRadius)
                 {
                     if (tile)// && !tile.isBeingDestroyed)
                         if (!toDestroy.Contains(tile) && !(tile.position.x == position.x && tile.position.y == position.y))
@@ -253,7 +253,7 @@ namespace Com.Hypester.DM3
                 return false;
         }
 
-        public float DistanceToTile (BaseTile tile)
+        public float DistanceToTile (TileView tile)
         {
             Vector2 thisPosition = new Vector2(position.x, position.y);
             Vector2 thatPosition = new Vector2(tile.position.x, tile.position.y);
@@ -266,7 +266,7 @@ namespace Com.Hypester.DM3
             return Vector2.Distance(thisPosition, thatPosition);
         }
 
-        public bool IsAdjacentTo(BaseTile tile)
+        public bool IsAdjacentTo(TileView tile)
         {
             if (DistanceToTile(tile) <= Constants.DistanceBetweenTiles)
                 return true;

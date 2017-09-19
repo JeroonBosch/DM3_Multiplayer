@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace Com.Hypester.DM3
 {
-    public class PhotonConnect : PunBehaviour
+    public class PhotonController : PunBehaviour
     {
         private bool _connect;
 
@@ -20,10 +20,10 @@ namespace Com.Hypester.DM3
         public GameHandler GameController { get { return GetGameController(); } set { _game = value; } }
 
 
-        private static PhotonConnect instance;
-        public static PhotonConnect Instance
+        private static PhotonController instance;
+        public static PhotonController Instance
         {
-            get { return instance ?? (instance = new GameObject("PhotonConnect").AddComponent<PhotonConnect>()); }
+            get { return instance ?? (instance = new GameObject("PhotonController").AddComponent<PhotonController>()); }
         }
 
         private void Awake()
@@ -40,6 +40,7 @@ namespace Com.Hypester.DM3
         {
             if (PhotonNetwork.inRoom && SceneManager.GetActiveScene().name == "Menu")
             {
+                //TODO needs looking into but works
                 if (PhotonNetwork.room.MaxPlayers == 2)
                     PhotonNetwork.LoadLevel("NormalGame");
                 else
@@ -47,11 +48,6 @@ namespace Com.Hypester.DM3
 
                 Debug.Log("Loading match-making. " + PhotonNetwork.room.MaxPlayers);
             }
-            /*if (PhotonNetwork.inRoom && SceneManager.GetActiveScene().name == "TournamentGame")
-            {
-                if (PhotonNetwork.room.MaxPlayers == 2)
-                    PhotonNetwork.LoadLevel("Match");
-            }*/
                     
 
             if (_connect && !PhotonNetwork.connecting && !PhotonNetwork.connected)
@@ -90,9 +86,9 @@ namespace Com.Hypester.DM3
                 if (PhotonNetwork.insideLobby)
                 {
                     if (PhotonNetwork.lobby == _normalLobby)
-                        PhotonNetwork.JoinRandomRoom(null, 2);
-                    else
-                        PhotonNetwork.JoinRandomRoom(null, 4);
+                        PhotonNetwork.JoinRandomRoom(null, 2); //2 player match
+                    else if (PhotonNetwork.lobby == _tournamentLobby)
+                        PhotonNetwork.JoinRandomRoom(null, 4); //tournament match
                 }
                 
             }
@@ -141,8 +137,6 @@ namespace Com.Hypester.DM3
         public void CreatePlayers ()
         {
             Debug.Log("Destroying previous players...");
-            foreach (Player player in FindObjectsOfType<Player>())
-                Destroy(player.gameObject);
             CreatePlayer();
         }
 
@@ -150,8 +144,11 @@ namespace Com.Hypester.DM3
         {
             base.OnLeftRoom();
             Debug.Log("Left room.");
-            PhotonNetwork.LoadLevel("Menu");
+            PhotonNetwork.LoadLevel("Menu"); //TODO needs changes! it just goes to menu whenever ANYONE disconnects
             Debug.Log("Menu loaded because room was left.");
+
+            foreach (Player player in FindObjectsOfType<Player>()) //TODO maybe not needed / move to when leaving room
+                Destroy(player.gameObject);
         }
 
         public override void OnJoinedLobby()
@@ -184,7 +181,7 @@ namespace Com.Hypester.DM3
 
             playerGO.GetComponent<Player>().joinNumber = PhotonNetwork.room.PlayerCount;
 
-            if (PhotonNetwork.isMasterClient || playerGO.GetComponent<Player>().joinNumber == 3) //okay
+            if (PhotonNetwork.isMasterClient || playerGO.GetComponent<Player>().joinNumber == 3) //TODO 
                 playerGO.GetComponent<Player>().localID = 0;
             else
                 playerGO.GetComponent<Player>().localID = 1;
@@ -209,7 +206,7 @@ namespace Com.Hypester.DM3
             {
                 gameID_requested = 1;
             }
-            else if (myJoinNumber == 5 || myJoinNumber == 6) //TODO tournament 8 player
+            else if (myJoinNumber == 5 || myJoinNumber == 6)
             {
                 gameID_requested = 2;
             }

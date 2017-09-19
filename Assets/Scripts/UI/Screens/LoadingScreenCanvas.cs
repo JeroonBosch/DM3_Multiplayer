@@ -22,8 +22,8 @@ namespace Com.Hypester.DM3
                 go.transform.Find("FingerTracker").GetComponent<Image>().enabled = false;
             }
 
-            if (PhotonNetwork.isMasterClient && PhotonConnect.Instance.tournamentMode)
-            { // PhotonConnect.Instance.allGroups[1] //TODO for 8 player tournaments, create even more 'grid's
+            if (PhotonNetwork.isMasterClient && PhotonController.Instance.tournamentMode)
+            {  //TODO for 8 player tournaments, create even more 'grid's
                 GameObject newGrid = PhotonNetwork.Instantiate("Grid", Vector3.zero, Quaternion.identity, 0);
                 newGrid.GetPhotonView().RPC("RPC_InitGameHandler", PhotonTargets.All, 1);
             }

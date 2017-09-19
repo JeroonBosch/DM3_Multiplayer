@@ -5,6 +5,7 @@ namespace Com.Hypester.DM3
 {
     public class YellowPower : Photon.MonoBehaviour
     {
+        public int gameID;
         public Player ownerPlayer;
         public Vector2 position;
         public Vector2 mirrorPosition;
@@ -26,46 +27,51 @@ namespace Com.Hypester.DM3
             _curPos = transform.position;
 
             if (!photonView.isMine)
-                ownerPlayer = PhotonConnect.Instance.GameController.EnemyPlayer;
+                ownerPlayer = PhotonController.Instance.GameController.EnemyPlayer;
         }
 
         private void Update()
         {
-            if (!photonView.isMine)
+            if (gameID != PhotonController.Instance.gameID_requested)
             {
-                if (!_isFlying)
-                    transform.localPosition = new Vector2(mirrorPosition.x, mirrorPosition.y + 2f); //No idea why the +2f is needed, but it is..
-                else
+                Hide();
+            } else { 
+                if (!photonView.isMine)
                 {
-                    Vector2 mirrorVelocity = new Vector2(-_velocity.x, -_velocity.y);
-                    Rigidbody2D rb = gameObject.GetComponent<Rigidbody2D>();
-                    rb.velocity = mirrorVelocity * _speed;
-                }
-            }
-            else
-            {
-                if (!_isFlying)
-                {
-                    _velocity = new Vector2(_curPos.x - _lastPos.x, _curPos.y - _lastPos.y);
-                    _lastPos = _curPos;
-                    _curPos = transform.position;
-                }
-                else
-                {
-                    if (_velocity.x < .3f && _velocity.y < .3f)
+                    if (!_isFlying)
+                        transform.localPosition = new Vector2(mirrorPosition.x, mirrorPosition.y + 2f); //No idea why the +2f is needed, but it is..
+                    else
                     {
-                        _isFlying = false;
-                        GetComponent<Rigidbody2D>().velocity = new Vector2(0, 0);
+                        Vector2 mirrorVelocity = new Vector2(-_velocity.x, -_velocity.y);
+                        Rigidbody2D rb = gameObject.GetComponent<Rigidbody2D>();
+                        rb.velocity = mirrorVelocity * _speed;
+                    }
+                }
+                else
+                {
+                    if (!_isFlying)
+                    {
+                        _velocity = new Vector2(_curPos.x - _lastPos.x, _curPos.y - _lastPos.y);
+                        _lastPos = _curPos;
+                        _curPos = transform.position;
                     }
                     else
                     {
-                        //position = transform.localPosition;
-                    }
+                        if (_velocity.x < .3f && _velocity.y < .3f)
+                        {
+                            _isFlying = false;
+                            GetComponent<Rigidbody2D>().velocity = new Vector2(0, 0);
+                        }
+                        else
+                        {
+                            //position = transform.localPosition;
+                        }
 
-                    if (transform.localPosition.x > 5f || transform.localPosition.y > 5f || transform.localPosition.x < -5f || transform.localPosition.y < -5f)
-                    {
-                        Destroy(gameObject);
-                        photonView.RPC("RPC_DestroyFireball", PhotonTargets.Others);
+                        if (transform.localPosition.x > 5f || transform.localPosition.y > 5f || transform.localPosition.x < -5f || transform.localPosition.y < -5f)
+                        {
+                            Destroy(gameObject);
+                            photonView.RPC("RPC_DestroyFireball", PhotonTargets.Others);
+                        }
                     }
                 }
             }
@@ -76,10 +82,12 @@ namespace Com.Hypester.DM3
             if (stream.isWriting)
             {
                 stream.SendNext(position);
+                stream.SendNext(gameID);
             }
             else
             {
                 position = (Vector2)stream.ReceiveNext();
+                gameID = (int)stream.ReceiveNext();
                 mirrorPosition = MirrorPosition(position);
             }
         }
@@ -88,7 +96,7 @@ namespace Com.Hypester.DM3
         {
             if (collision.gameObject.tag == "OpponentPlayer_Avatar" && photonView.isMine)
             {
-                PhotonConnect.Instance.GameController.photonView.RPC("RPC_FireballHit", PhotonTargets.All);
+                PhotonController.Instance.GameController.photonView.RPC("RPC_FireballHit", PhotonTargets.All);
             }
             else
             {

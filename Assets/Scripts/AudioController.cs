@@ -2,14 +2,14 @@
 
 namespace Com.Hypester.DM3
 {
-    public class AudioHandler : MonoBehaviour
+    public class AudioController : MonoBehaviour
     {
         // Public field, set in the inspector we can access
         // the audio clip through the singleton instance
         public AudioClip explosionClip;
 
         // Static singleton property
-        public static AudioHandler Instance { get; private set; }
+        public static AudioController Instance { get; private set; }
 
         void Awake()
         {

@@ -37,11 +37,8 @@ namespace Com.Hypester.DM3
 
         public void Login()
         {
-            GameObject.Find("LoggingIn").GetComponent<Text>().enabled = true;
-            GameObject.Find("NameField").SetActive(false);
-            GameObject.Find("LoginButton").SetActive(false);
-            GameObject.Find("PleaseEnterNickname").SetActive(false);
-            PhotonConnect.Instance.EnsureConnection();
+            HideLoginFields();
+            PhotonController.Instance.EnsureConnection();
 
             if (_text.text != "")
                 MainController.Instance.playerData.profileName = _text.text;
@@ -51,18 +48,20 @@ namespace Com.Hypester.DM3
 
         public void LoginFB()
         {
-            MainController.Instance.CallFBLogin();
 
+
+            HideLoginFields();
+            PhotonController.Instance.EnsureConnection();
+
+            MainController.Instance.CallFBLogin();
+        }
+
+        private void HideLoginFields ()
+        {
             GameObject.Find("LoggingIn").GetComponent<Text>().enabled = true;
             GameObject.Find("NameField").SetActive(false);
             GameObject.Find("LoginButton").SetActive(false);
             GameObject.Find("PleaseEnterNickname").SetActive(false);
-            PhotonConnect.Instance.EnsureConnection();
-
-            //if (_text.text != "")
-            //    PhotonConnect.Instance.profileName = MainController.Instance.FB
-            //else
-            //    PhotonConnect.Instance.profileName = "Player" + Random.Range(1000, 9999).ToString();
         }
     }
 }

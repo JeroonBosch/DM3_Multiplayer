@@ -45,43 +45,43 @@ namespace Com.Hypester.DM3
 
         private void Update()
         {
-            if (PhotonConnect.Instance.GameController != null) { 
+            if (PhotonController.Instance.GameController != null) { 
 
-                if (PhotonConnect.Instance.GameController.MyPlayer != null) {
+                if (PhotonController.Instance.GameController.MyPlayer != null) {
 
                     if (_animateHealth) {
                         //health
-                        if ((PhotonConnect.Instance.GameController.MyPlayer.localID == 0 && IsMyInterface()) || (PhotonConnect.Instance.GameController.MyPlayer.localID == 1 && !IsMyInterface())) {
-                            if (GetShownHitpoints() >= PhotonConnect.Instance.GameController.healthPlayerOne)
-                                SetHitpoints(Mathf.Max(GetShownHitpoints() - Time.deltaTime * Constants.HealthDroppingSpeed, PhotonConnect.Instance.GameController.healthPlayerOne));
+                        if ((PhotonController.Instance.GameController.MyPlayer.localID == 0 && IsMyInterface()) || (PhotonController.Instance.GameController.MyPlayer.localID == 1 && !IsMyInterface())) {
+                            if (GetShownHitpoints() >= PhotonController.Instance.GameController.healthPlayerOne)
+                                SetHitpoints(Mathf.Max(GetShownHitpoints() - Time.deltaTime * Constants.HealthDroppingSpeed, PhotonController.Instance.GameController.healthPlayerOne));
                             else
                                 _animateHealth = false;
                         }
                         else {
-                            if (GetShownHitpoints() >= PhotonConnect.Instance.GameController.healthPlayerTwo)
-                                SetHitpoints(Mathf.Max(GetShownHitpoints() - Time.deltaTime * Constants.HealthDroppingSpeed, PhotonConnect.Instance.GameController.healthPlayerTwo));
+                            if (GetShownHitpoints() >= PhotonController.Instance.GameController.healthPlayerTwo)
+                                SetHitpoints(Mathf.Max(GetShownHitpoints() - Time.deltaTime * Constants.HealthDroppingSpeed, PhotonController.Instance.GameController.healthPlayerTwo));
                             else
                                _animateHealth = false;
                         }
                     }
 
                     //timer
-                    if ((PhotonConnect.Instance.GameController.IsMyTurn() && IsMyInterface()) || (!PhotonConnect.Instance.GameController.IsMyTurn() && !IsMyInterface())) { 
-                        SetTimer(PhotonConnect.Instance.GameController.turnTimer);
+                    if ((PhotonController.Instance.GameController.IsMyTurn() && IsMyInterface()) || (!PhotonController.Instance.GameController.IsMyTurn() && !IsMyInterface())) { 
+                        SetTimer(PhotonController.Instance.GameController.turnTimer);
                     }
                     else { 
                         SetTimer(Constants.TurnTime); //invisible.
                     }
 
-                    if (PhotonConnect.Instance.GameController.MyPlayer.localID == 0 && IsMyInterface())
+                    if (PhotonController.Instance.GameController.MyPlayer.localID == 0 && IsMyInterface())
                     {
                         //powers
-                        _bluePowerText.text = PhotonConnect.Instance.GameController.P1_PowerBlue + "/" + Constants.BluePowerReq;
-                        _greenPowerText.text = PhotonConnect.Instance.GameController.P1_PowerGreen + "/" + Constants.GreenPowerReq;
-                        _redPowerText.text = PhotonConnect.Instance.GameController.P1_PowerRed + "/" + Constants.RedPowerReq;
-                        _yellowPowerText.text = PhotonConnect.Instance.GameController.P1_PowerYellow + "/" + Constants.YellowPowerReq;
+                        _bluePowerText.text = PhotonController.Instance.GameController.P1_PowerBlue + "/" + Constants.BluePowerReq;
+                        _greenPowerText.text = PhotonController.Instance.GameController.P1_PowerGreen + "/" + Constants.GreenPowerReq;
+                        _redPowerText.text = PhotonController.Instance.GameController.P1_PowerRed + "/" + Constants.RedPowerReq;
+                        _yellowPowerText.text = PhotonController.Instance.GameController.P1_PowerYellow + "/" + Constants.YellowPowerReq;
 
-                        if (PhotonConnect.Instance.GameController.P1_PowerBlue >= Constants.BluePowerReq)
+                        if (PhotonController.Instance.GameController.P1_PowerBlue >= Constants.BluePowerReq)
                         {
                             _bluePowerImage.sprite = Resources.Load<Sprite>("UI/ActivePower/IconPowerupBlueActive");
                             _bluePowerImage.gameObject.GetComponent<Wiggle>().StartWiggle();
@@ -92,7 +92,7 @@ namespace Com.Hypester.DM3
                             _bluePowerImage.gameObject.GetComponent<Wiggle>().StopWiggle();
                         }
 
-                        if (PhotonConnect.Instance.GameController.P1_PowerGreen >= Constants.GreenPowerReq)
+                        if (PhotonController.Instance.GameController.P1_PowerGreen >= Constants.GreenPowerReq)
                         {
                             _greenPowerImage.sprite = Resources.Load<Sprite>("UI/ActivePower/IconPowerupGreenActive");
                             _greenPowerImage.gameObject.GetComponent<Wiggle>().StartWiggle();
@@ -103,7 +103,7 @@ namespace Com.Hypester.DM3
                             _greenPowerImage.gameObject.GetComponent<Wiggle>().StopWiggle();
                         }
 
-                        if (PhotonConnect.Instance.GameController.P1_PowerRed >= Constants.RedPowerReq)
+                        if (PhotonController.Instance.GameController.P1_PowerRed >= Constants.RedPowerReq)
                         {
                             _redPowerImage.sprite = Resources.Load<Sprite>("UI/ActivePower/IconPowerupRedActive");
                             _redPowerImage.gameObject.GetComponent<Wiggle>().StartWiggle();
@@ -114,7 +114,7 @@ namespace Com.Hypester.DM3
                             _redPowerImage.gameObject.GetComponent<Wiggle>().StopWiggle();
                         }
 
-                        if (PhotonConnect.Instance.GameController.P1_PowerYellow >= Constants.YellowPowerReq)
+                        if (PhotonController.Instance.GameController.P1_PowerYellow >= Constants.YellowPowerReq)
                         {
                             _yellowPowerImage.sprite = Resources.Load<Sprite>("UI/ActivePower/IconPowerupYellowActive");
                             _yellowPowerImage.gameObject.GetComponent<Wiggle>().StartWiggle();
@@ -125,15 +125,15 @@ namespace Com.Hypester.DM3
                             _yellowPowerImage.gameObject.GetComponent<Wiggle>().StopWiggle();
                         }
 
-                    } else if (PhotonConnect.Instance.GameController.MyPlayer.localID == 1 && playerNumber == 0)
+                    } else if (PhotonController.Instance.GameController.MyPlayer.localID == 1 && playerNumber == 0)
                     {
                         //powers
-                        _bluePowerText.text = PhotonConnect.Instance.GameController.P2_PowerBlue + "/" + Constants.BluePowerReq;
-                        _greenPowerText.text = PhotonConnect.Instance.GameController.P2_PowerGreen + "/" + Constants.GreenPowerReq;
-                        _redPowerText.text = PhotonConnect.Instance.GameController.P2_PowerRed + "/" + Constants.RedPowerReq;
-                        _yellowPowerText.text = PhotonConnect.Instance.GameController.P2_PowerYellow + "/" + Constants.YellowPowerReq;
+                        _bluePowerText.text = PhotonController.Instance.GameController.P2_PowerBlue + "/" + Constants.BluePowerReq;
+                        _greenPowerText.text = PhotonController.Instance.GameController.P2_PowerGreen + "/" + Constants.GreenPowerReq;
+                        _redPowerText.text = PhotonController.Instance.GameController.P2_PowerRed + "/" + Constants.RedPowerReq;
+                        _yellowPowerText.text = PhotonController.Instance.GameController.P2_PowerYellow + "/" + Constants.YellowPowerReq;
 
-                        if (PhotonConnect.Instance.GameController.P2_PowerBlue >= Constants.BluePowerReq)
+                        if (PhotonController.Instance.GameController.P2_PowerBlue >= Constants.BluePowerReq)
                         {
                             _bluePowerImage.sprite = Resources.Load<Sprite>("UI/ActivePower/IconPowerupBlueActive");
                             _bluePowerImage.gameObject.GetComponent<Wiggle>().StartWiggle();
@@ -144,7 +144,7 @@ namespace Com.Hypester.DM3
                             _bluePowerImage.gameObject.GetComponent<Wiggle>().StopWiggle();
                         }
 
-                        if (PhotonConnect.Instance.GameController.P2_PowerGreen >= Constants.GreenPowerReq)
+                        if (PhotonController.Instance.GameController.P2_PowerGreen >= Constants.GreenPowerReq)
                         {
                             _greenPowerImage.sprite = Resources.Load<Sprite>("UI/ActivePower/IconPowerupGreenActive");
                             _greenPowerImage.gameObject.GetComponent<Wiggle>().StartWiggle();
@@ -155,7 +155,7 @@ namespace Com.Hypester.DM3
                             _greenPowerImage.gameObject.GetComponent<Wiggle>().StopWiggle();
                         }
 
-                        if (PhotonConnect.Instance.GameController.P2_PowerRed >= Constants.RedPowerReq) { 
+                        if (PhotonController.Instance.GameController.P2_PowerRed >= Constants.RedPowerReq) { 
                             _redPowerImage.sprite = Resources.Load<Sprite>("UI/ActivePower/IconPowerupRedActive");
                             _redPowerImage.gameObject.GetComponent<Wiggle>().StartWiggle();
                         }
@@ -164,7 +164,7 @@ namespace Com.Hypester.DM3
                             _redPowerImage.gameObject.GetComponent<Wiggle>().StopWiggle();
                         }
 
-                        if (PhotonConnect.Instance.GameController.P2_PowerYellow >= Constants.YellowPowerReq) { 
+                        if (PhotonController.Instance.GameController.P2_PowerYellow >= Constants.YellowPowerReq) { 
                             _yellowPowerImage.sprite = Resources.Load<Sprite>("UI/ActivePower/IconPowerupYellowActive");
                             _yellowPowerImage.gameObject.GetComponent<Wiggle>().StartWiggle();
                         }
@@ -205,13 +205,13 @@ namespace Com.Hypester.DM3
 
         public void AnimateHealth ()
         {
-            if ((PhotonConnect.Instance.GameController.MyPlayer.localID == 0 && IsMyInterface()) || (PhotonConnect.Instance.GameController.MyPlayer.localID == 1 && !IsMyInterface()))
+            if ((PhotonController.Instance.GameController.MyPlayer.localID == 0 && IsMyInterface()) || (PhotonController.Instance.GameController.MyPlayer.localID == 1 && !IsMyInterface()))
             {
-                if (GetShownHitpoints() >= PhotonConnect.Instance.GameController.healthPlayerOne)
+                if (GetShownHitpoints() >= PhotonController.Instance.GameController.healthPlayerOne)
                     _animateHealth = true;
             } else
             {
-                if (GetShownHitpoints() >= PhotonConnect.Instance.GameController.healthPlayerTwo)
+                if (GetShownHitpoints() >= PhotonController.Instance.GameController.healthPlayerTwo)
                     _animateHealth = true;
             }
                 

@@ -13,7 +13,7 @@ namespace Com.Hypester.DM3
         public bool Active { get { return _isActive; } }
         private Grid _grid;
         private int _curPlayer;
-        private List<BaseTile> _baseTiles;
+        private List<TileView> _baseTiles;
         private Player _myPlayer;
         private Player _enemyPlayer;
         private List<Vector2> _selectedTiles;
@@ -39,8 +39,10 @@ namespace Com.Hypester.DM3
 
         public GameStates gameState;
 
+        //Health
         public float healthPlayerOne;
         public float healthPlayerTwo;
+
         public float turnTimer;
 
         //powers
@@ -63,16 +65,17 @@ namespace Com.Hypester.DM3
         public delegate byte[] SerializeMethod(object customObject);
         public delegate object DeserializeMethod(byte[] serializedCustomObject);
 
-        private void GameIDSet ()
+        private void GameIDSet()
         {
-            Debug.Log("Game ID Set to " + _gameID + " while " + PhotonConnect.Instance.gameID_requested + " is requested.");
-            if (_gameID == PhotonConnect.Instance.gameID_requested)
+            Debug.Log("Game ID Set to " + _gameID + " while " + PhotonController.Instance.gameID_requested + " is requested.");
+            if (_gameID == PhotonController.Instance.gameID_requested)
             {
-                PhotonConnect.Instance.GameController = this;
+                PhotonController.Instance.GameController = this;
             }
         }
 
-        [PunRPC] void RPC_InitGameHandler (int id)
+        [PunRPC]
+        void RPC_InitGameHandler(int id)
         {
             GameID = id;
             gameObject.name = "Grid" + id;
@@ -90,7 +93,7 @@ namespace Com.Hypester.DM3
             _isActive = false;
             _gameDone = false;
             _selectedTiles = new List<Vector2>();
-            _baseTiles = new List<BaseTile>();
+            _baseTiles = new List<TileView>();
             _curPlayer = 0;
 
             turnTimer = 0;
@@ -155,7 +158,7 @@ namespace Com.Hypester.DM3
             }
         }
 
-        public void Hide ()
+        public void Hide()
         {
             transform.localScale = new Vector3(0, 0, 0);
         }
@@ -268,7 +271,8 @@ namespace Com.Hypester.DM3
                     float prevHealthTwo = healthPlayerTwo;
                     healthPlayerTwo = (float)stream.ReceiveNext();
 
-                    if (IsGameRelevant()) {  //Only visualize relevant game data.
+                    if (IsGameRelevant())
+                    {  //Only visualize relevant game data.
                         if (prevHealthOne != healthPlayerOne)
                         {
                             float difference = healthPlayerOne - prevHealthOne;
@@ -405,7 +409,7 @@ namespace Com.Hypester.DM3
             foreach (Transform child in transform)
                 Destroy(child.gameObject);
 
-            _baseTiles = new List<BaseTile>();
+            _baseTiles = new List<TileView>();
 
             for (int x = 0; x < Constants.gridXsize; x++)
             {
@@ -414,8 +418,8 @@ namespace Com.Hypester.DM3
                     GameObject tile = Instantiate(Resources.Load("Tiles/Tile")) as GameObject;
                     tile.name = "Tile (" + x + "," + y + ")";
                     tile.transform.SetParent(transform, false);
-                    tile.GetComponent<BaseTile>().position = new Vector2(x, y);
-                    _baseTiles.Add(tile.GetComponent<BaseTile>());
+                    tile.GetComponent<TileView>().position = new Vector2(x, y);
+                    _baseTiles.Add(tile.GetComponent<TileView>());
                     if (x % 2 == 0)
                         tile.transform.localPosition = new Vector3((-Constants.gridXsize / 2 + x) * Constants.tileWidth + Constants.tileWidth / 2, (-Constants.gridYsize / 2 + y) * Constants.tileHeight + (Constants.tileHeight * .75f), 0f);
                     else
@@ -424,8 +428,8 @@ namespace Com.Hypester.DM3
                     if (_grid.data[x, y].color < Constants.AmountOfColors)
                     {
                         tile.GetComponent<Image>().enabled = true;
-                        tile.GetComponent<BaseTile>().color = _grid.data[x, y].color;
-                        tile.GetComponent<BaseTile>().SetSelected = false;
+                        tile.GetComponent<TileView>().color = _grid.data[x, y].color;
+                        tile.GetComponent<TileView>().SetSelected = false;
 
                         //tile.GetComponent<Image>().sprite = HexSprite(TileTypes.EColor.yellow + _grid.data[x, y].color);
                     }
@@ -440,14 +444,14 @@ namespace Com.Hypester.DM3
         {
             if (_gridVisualized)
             {
-                Debug.Log("Grid updated.");
+                //Debug.Log("Grid updated.");
 
                 for (int x = 0; x < Constants.gridXsize; x++)
                 {
                     for (int y = 0; y < Constants.gridYsize; y++)
                     {
                         Vector2 pos = new Vector2(x, y);
-                        BaseTile tile = BaseTileAtPos(pos);
+                        TileView tile = TileViewAtPos(pos);
                         if (tile != null)
                         {
                             if (_grid.data[x, y].color < Constants.AmountOfColors)
@@ -476,7 +480,7 @@ namespace Com.Hypester.DM3
             {
                 for (int y = 0; y < Constants.gridYsize; y++)
                 {
-                    BaseTile baseTile = BaseTileAtPos(new Vector2(x, y));
+                    TileView baseTile = TileViewAtPos(new Vector2(x, y));
                     if (baseTile != null)
                     {
                         if (baseTile.color >= Constants.AmountOfColors)
@@ -725,7 +729,7 @@ namespace Com.Hypester.DM3
             return _grid.data[(int)position.x, (int)position.y];
         }
 
-        public BaseTile BaseTileAtPos(Vector2 position)
+        public TileView TileViewAtPos(Vector2 position)
         {
             return _baseTiles.Find(item => item.position.x == position.x && item.position.y == position.y); ;
         }
@@ -733,24 +737,24 @@ namespace Com.Hypester.DM3
         [PunRPC]
         public void RPC_SendTile(Tile tile)
         {
-                _grid.data[tile.x, tile.y].color = tile.color;
-                _grid.data[tile.x, tile.y].boosterLevel = tile.boosterLevel;
-                BaseTileAtPos(new Vector2(tile.x, tile.y)).boosterLevel = tile.boosterLevel;
+            _grid.data[tile.x, tile.y].color = tile.color;
+            _grid.data[tile.x, tile.y].boosterLevel = tile.boosterLevel;
+            TileViewAtPos(new Vector2(tile.x, tile.y)).boosterLevel = tile.boosterLevel;
         }
 
         [PunRPC]
         public void RPC_RequestGridData()
         {
-                Debug.Log("Grid did not render properly, requesting update.");
-                photonView.RPC("RPC_SendGridData", PhotonTargets.Others, _grid);
+            Debug.Log("Grid did not render properly, requesting update.");
+            photonView.RPC("RPC_SendGridData", PhotonTargets.Others, _grid);
         }
 
         [PunRPC]
         public void RPC_SendGridData(Grid grid)
         {
-                _gridReceived = true;
-                _grid.data = grid.data;
-                GridUpdate();
+            _gridReceived = true;
+            _grid.data = grid.data;
+            GridUpdate();
         }
         #endregion
 
@@ -785,60 +789,59 @@ namespace Com.Hypester.DM3
         [PunRPC]
         private void RPC_ResetTimer()
         {
-                turnTimer = 0f;
+            turnTimer = 0f;
         }
 
-        public void AddToSelection(Vector2 pos) //master-client and guest side, both.
+        #region selections
+        [PunRPC]
+        public void RPC_AddToSelection(Vector2 pos) //master-client and guest side, both.
         {
-            Debug.Log("Tile added to selection. My player subscribed to Game#" + MyPlayer.GetRequestedGameID() + " and this is " + GameID);
+            //Debug.Log("Tile added to selection. My player subscribed to Game#" + MyPlayer.GetRequestedGameID() + " and this is " + GameID);
             _selectedTiles.Add(pos);
-            BaseTileAtPos(pos).SetSelected = true;
+            TileViewAtPos(pos).SetSelected = true;
 
             RecalculateCollateral();
             RecalculateDamage();
-
-            //iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.SelectionChange);
         }
 
-        public void RemoveFromSelection(Vector2 pos) //master-client and guest side, both.
+        [PunRPC]
+        public void RPC_RemoveFromSelection(Vector2 pos) //master-client and guest side, both.
         {
             _selectedTiles.Remove(pos);
-            BaseTileAtPos(pos).SetSelected = false;
+            TileViewAtPos(pos).SetSelected = false;
 
-            if (BaseTileAtPos(pos).boosterLevel > 0)
+            if (TileViewAtPos(pos).boosterLevel > 0)
                 RecalculateCollateral();
             RecalculateDamage();
-
-            //iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.SelectionChange);
         }
 
-        public void RemoveSelections() //master-client and guest side, both.
+        [PunRPC]
+        public void RPC_RemoveSelections() //master-client and guest side, both.
         {
             _selectedTiles.Clear();
-            foreach (BaseTile tile in FindObjectsOfType<BaseTile>())
+            foreach (TileView tile in FindObjectsOfType<TileView>())
             {
                 tile.SetSelected = false;
                 tile.collateral = false;
             }
 
             RecalculateCollateral();
-            //iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.SelectionChange);
-            //RecalculateDamage();
         }
+        #endregion
 
         private void RecalculateCollateral()
         {
-            List<BaseTile> collateral = new List<BaseTile>();
+            List<TileView> collateral = new List<TileView>();
 
             //Reset
-            foreach (BaseTile tile in FindObjectsOfType<BaseTile>())
+            foreach (TileView tile in FindObjectsOfType<TileView>())
             {
                 tile.collateral = false;
             }
 
             foreach (Vector2 pos in _selectedTiles)
             {
-                foreach (BaseTile tile in BaseTileAtPos(pos).ListCollateralDamage(this, 1f))
+                foreach (TileView tile in TileViewAtPos(pos).ListCollateralDamage(this, 1f))
                 {
                     collateral.Add(tile);
                     tile.collateral = true;
@@ -848,16 +851,16 @@ namespace Com.Hypester.DM3
             LoopCollateralDamage(collateral);
         }
 
-        private void LoopCollateralDamage(List<BaseTile> collateral)
+        private void LoopCollateralDamage(List<TileView> collateral)
         {
-            List<BaseTile> copy = new List<BaseTile>(collateral);
+            List<TileView> copy = new List<TileView>(collateral);
 
             bool anyChanges = false;
-            foreach (BaseTile collateralTile in copy)
+            foreach (TileView collateralTile in copy)
             {
                 if (collateralTile.boosterLevel > 0)
                 {
-                    foreach (BaseTile affectedTile in collateralTile.ListCollateralDamage(this, 1f))
+                    foreach (TileView affectedTile in collateralTile.ListCollateralDamage(this, 1f))
                     {
                         if (!copy.Contains(affectedTile) && affectedTile.collateral == false)
                         {
@@ -876,29 +879,31 @@ namespace Com.Hypester.DM3
 
         private void RecalculateDamage()
         {
-            foreach (Player player in FindObjectsOfType<Player>())
-            {
-                if (_curPlayer != player.localID) //Show potential damage on the target player.
+            if (IsGameRelevant()) { 
+                foreach (Player player in FindObjectsOfType<Player>())
                 {
-                    float targetPlayerHealth;
-                    if (player.localID == 0)
-                        targetPlayerHealth = healthPlayerOne;
-                    else
-                        targetPlayerHealth = healthPlayerTwo;
+                    if (_curPlayer != player.localID) //Show potential damage on the target player.
+                    {
+                        float targetPlayerHealth;
+                        if (player.localID == 0)
+                            targetPlayerHealth = healthPlayerOne;
+                        else
+                            targetPlayerHealth = healthPlayerTwo;
 
-                    float damage = (_selectedTiles.Count * _selectedTiles.Count - 2) + _baseTiles.FindAll(item => item.collateral == true).Count * Constants.BoosterCollateralDamage;
-                    float calculatedDamage = targetPlayerHealth - damage;
-                    player.FindInterface().SetHitpoints(calculatedDamage);
+                        float damage = (_selectedTiles.Count * _selectedTiles.Count - 2) + _baseTiles.FindAll(item => item.collateral == true).Count * Constants.BoosterCollateralDamage;
+                        float calculatedDamage = targetPlayerHealth - damage;
+                        player.FindInterface().SetHitpoints(calculatedDamage);
+                    }
                 }
             }
         }
 
-        public List<BaseTile> FindAdjacentTiles(Vector2 position, float radius)
+        public List<TileView> FindAdjacentTiles(Vector2 position, float radius)
         {
-            List<BaseTile> allTiles = _baseTiles;
-            BaseTile centerTile = allTiles.Find(item => item.position.x == position.x && item.position.y == position.y);
-            List<BaseTile> targetTiles = new List<BaseTile>();
-            foreach (BaseTile tile in allTiles)
+            List<TileView> allTiles = _baseTiles;
+            TileView centerTile = allTiles.Find(item => item.position.x == position.x && item.position.y == position.y);
+            List<TileView> targetTiles = new List<TileView>();
+            foreach (TileView tile in allTiles)
             {
                 if (centerTile.DistanceToTile(tile) <= Constants.DistanceBetweenTiles * radius)
                     targetTiles.Add(tile);
@@ -907,12 +912,13 @@ namespace Com.Hypester.DM3
             return targetTiles;
         }
 
-        public void InitiateCombo()
+        [PunRPC]
+        public void RPC_InitiateCombo()
         {
             bool trapped = false;
             //Both host and client execute this command.
             if (IsGameRelevant())
-            { 
+            {
                 Player targetPlayer = GetNextPlayer(_curPlayer);
                 if (targetPlayer.localID == 0)
                     targetPlayer.FindInterface().SetHitpoints(healthPlayerOne);
@@ -923,7 +929,7 @@ namespace Com.Hypester.DM3
                 trapped = false;
                 foreach (Vector2 pos in _selectedTiles)
                 {
-                    if (BaseTileAtPos(pos).boosterLevel >= 4)
+                    if (TileViewAtPos(pos).boosterLevel >= 4)
                         trapped = true;
                 }
 
@@ -937,12 +943,12 @@ namespace Com.Hypester.DM3
                 foreach (Vector2 pos in _selectedTiles)
                 {
                     CreateTileAttackPlayerEffect(pos, count, trapped);
-                    BaseTile baseTile = BaseTileAtPos(pos);
+                    TileView baseTile = TileViewAtPos(pos);
 
                     if (baseTile.boosterLevel > 0)
                     {
-                        List<BaseTile> indivCollateral = baseTile.ListCollateralDamage(this, 1f);
-                        foreach (BaseTile colTile in indivCollateral)
+                        List<TileView> indivCollateral = baseTile.ListCollateralDamage(this, 1f);
+                        foreach (TileView colTile in indivCollateral)
                         {
                             CreateTileAttackPlayerEffect(colTile.position, count + Mathf.RoundToInt(colTile.DistanceToTile(baseTile) / Constants.DistanceBetweenTiles), true, trapped);
 
@@ -957,49 +963,46 @@ namespace Com.Hypester.DM3
                         highestCount = count;
                 }
 
-                foreach (BaseTile tile in _baseTiles.FindAll(item => item.collateral == true))
+                foreach (TileView tile in _baseTiles.FindAll(item => item.collateral == true))
                 {
                     if (!tile.isBeingDestroyed)
                         CreateTileAttackPlayerEffect(tile.position, highestCount, true, trapped);
                 }
             }
 
-            photonView.RPC("RPC_InitiateComboServer", PhotonTargets.MasterClient);
+            if (IsGameMaster())
+            {
+                trapped = false;
+                //Only master client will update the _grid and then sync it.
+                int color = TileViewAtPos(_selectedTiles[_selectedTiles.Count - 1]).color;
+                foreach (Vector2 pos in _selectedTiles)
+                {
+                    DestroyTileAtPosition(pos);
+                    if (TileViewAtPos(pos).boosterLevel >= 4)
+                        trapped = true;
+                }
+
+                foreach (TileView tile in _baseTiles.FindAll(item => item.collateral == true))
+                {
+                    DestroyTileAtPosition(tile.position);
+                }
+
+                CreateBooster(_selectedTiles[_selectedTiles.Count - 1], _selectedTiles.Count, color);
+
+                if ((_curPlayer == 0 && !trapped) || (_curPlayer == 1 && trapped))
+                {
+                    DamagePlayerWithCombo(1, _selectedTiles.Count, _baseTiles.FindAll(item => item.collateral == true).Count * Constants.BoosterCollateralDamage);
+                    FillPowerBar(0, color, _selectedTiles.Count);
+                }
+                else
+                {
+                    DamagePlayerWithCombo(0, _selectedTiles.Count, _baseTiles.FindAll(item => item.collateral == true).Count * Constants.BoosterCollateralDamage);
+                    FillPowerBar(1, color, _selectedTiles.Count);
+                }
+            }
 
             EndTurn();
             _selectedTiles.Clear();
-        }
-
-        [PunRPC]
-        private void RPC_InitiateComboServer ()
-        {
-            bool trapped = false;
-            //Only master client will update the _grid and then sync it.
-            int color = BaseTileAtPos(_selectedTiles[_selectedTiles.Count - 1]).color;
-            foreach (Vector2 pos in _selectedTiles)
-            {
-                DestroyTileAtPosition(pos);
-                if (BaseTileAtPos(pos).boosterLevel >= 4)
-                    trapped = true;
-            }
-
-            foreach (BaseTile tile in _baseTiles.FindAll(item => item.collateral == true))
-            {
-                DestroyTileAtPosition(tile.position);
-            }
-
-            CreateBooster(_selectedTiles[_selectedTiles.Count - 1], _selectedTiles.Count, color);
-
-            if ((_curPlayer == 0 && !trapped) || (_curPlayer == 1 && trapped))
-            {
-                DamagePlayerWithCombo(1, _selectedTiles.Count, _baseTiles.FindAll(item => item.collateral == true).Count * Constants.BoosterCollateralDamage);
-                FillPowerBar(0, color, _selectedTiles.Count);
-            }
-            else
-            {
-                DamagePlayerWithCombo(0, _selectedTiles.Count, _baseTiles.FindAll(item => item.collateral == true).Count * Constants.BoosterCollateralDamage);
-                FillPowerBar(1, color, _selectedTiles.Count);
-            }
         }
 
         private void CreateTileAttackPlayerEffect(Vector2 pos, int count, bool trapped)
@@ -1020,7 +1023,7 @@ namespace Com.Hypester.DM3
                 }
             }
 
-            BaseTile baseTile = BaseTileAtPos(pos);
+            TileView baseTile = TileViewAtPos(pos);
             go.transform.position = baseTile.transform.position;
             go.GetComponent<TileExplosion>().Init(targetPlayer, count, baseTile.HexSprite(TileTypes.EColor.yellow + baseTile.color));
 
@@ -1191,52 +1194,57 @@ namespace Com.Hypester.DM3
 
         private void FillPowerBar(int playerNumber, int color, int increaseBy)
         {
-                if (playerNumber == 0)
+            //Executed Master Client side only.
+            if (playerNumber == 0)
+            {
+                if (color == 1)
                 {
-                    if (color == 1) // yellow, blue, green, red
-                        P1_PowerBlue = Mathf.Min(P1_PowerBlue + increaseBy, Constants.BluePowerReq);
-                    else if (color == 2)
-                        P1_PowerGreen = Mathf.Min(P1_PowerGreen + increaseBy, Constants.GreenPowerReq);
-                    else if (color == 3)
-                        P1_PowerRed = Mathf.Min(P1_PowerRed + increaseBy, Constants.RedPowerReq);
-                    else if (color == 0)
-                        P1_PowerYellow = Mathf.Min(P1_PowerYellow + increaseBy, Constants.YellowPowerReq);
-
-                    /*if (P1_PowerBlue == Constants.BluePowerReq)
-                        _gameContext.ShowText("Shield ability available!");
-                    if (P1_PowerGreen == Constants.GreenPowerReq)
-                        _gameContext.ShowText("Heal ability available!");
-                    if (P1_PowerRed == Constants.RedPowerReq)
-                        _gameContext.ShowText("Trap ability available!");
-                    if (P1_PowerYellow == Constants.YellowPowerReq)
-                        _gameContext.ShowText("Fireball ability available!");*/
+                    P1_PowerBlue = Mathf.Min(P1_PowerBlue + increaseBy, Constants.BluePowerReq);
+                    photonView.RPC("RPC_FillPower", PhotonTargets.All, playerNumber, color, P1_PowerBlue);
                 }
-                else
+                else if (color == 2)
                 {
-                    if (color == 1)
-                    {
-                        P2_PowerBlue = Mathf.Min(P2_PowerBlue + increaseBy, Constants.BluePowerReq);
-                        photonView.RPC("RPC_FillPower", PhotonTargets.Others, color, P2_PowerBlue);
-                    }
-                    else if (color == 2)
-                    {
-                        P2_PowerGreen = Mathf.Min(P2_PowerGreen + increaseBy, Constants.GreenPowerReq);
-                        photonView.RPC("RPC_FillPower", PhotonTargets.Others, color, P2_PowerGreen);
-                    }
-                    else if (color == 3)
-                    {
-                        P2_PowerRed = Mathf.Min(P2_PowerRed + increaseBy, Constants.RedPowerReq);
-                        photonView.RPC("RPC_FillPower", PhotonTargets.Others, color, P2_PowerRed);
-                    }
-                    else if (color == 0)
-                    {
-                        P2_PowerYellow = Mathf.Min(P2_PowerYellow + increaseBy, Constants.YellowPowerReq);
-                        photonView.RPC("RPC_FillPower", PhotonTargets.Others, color, P2_PowerYellow);
-                    }
+                    P1_PowerGreen = Mathf.Min(P1_PowerGreen + increaseBy, Constants.GreenPowerReq);
+                    photonView.RPC("RPC_FillPower", PhotonTargets.All, playerNumber, color, P1_PowerGreen);
                 }
+                else if (color == 3)
+                {
+                    P1_PowerRed = Mathf.Min(P1_PowerRed + increaseBy, Constants.RedPowerReq);
+                    photonView.RPC("RPC_FillPower", PhotonTargets.All, playerNumber, color, P1_PowerRed);
+                }
+                else if (color == 0)
+                {
+                    P1_PowerYellow = Mathf.Min(P1_PowerYellow + increaseBy, Constants.YellowPowerReq);
+                    photonView.RPC("RPC_FillPower", PhotonTargets.All, playerNumber, color, P1_PowerYellow);
+                }
+            }
+            else
+            {
+                if (color == 1)
+                {
+                    P2_PowerBlue = Mathf.Min(P2_PowerBlue + increaseBy, Constants.BluePowerReq);
+                    photonView.RPC("RPC_FillPower", PhotonTargets.All, playerNumber, color, P2_PowerBlue);
+                }
+                else if (color == 2)
+                {
+                    P2_PowerGreen = Mathf.Min(P2_PowerGreen + increaseBy, Constants.GreenPowerReq);
+                    photonView.RPC("RPC_FillPower", PhotonTargets.All, playerNumber, color, P2_PowerGreen);
+                }
+                else if (color == 3)
+                {
+                    P2_PowerRed = Mathf.Min(P2_PowerRed + increaseBy, Constants.RedPowerReq);
+                    photonView.RPC("RPC_FillPower", PhotonTargets.All, playerNumber, color, P2_PowerRed);
+                }
+                else if (color == 0)
+                {
+                    P2_PowerYellow = Mathf.Min(P2_PowerYellow + increaseBy, Constants.YellowPowerReq);
+                    photonView.RPC("RPC_FillPower", PhotonTargets.All, playerNumber, color, P2_PowerYellow);
+                }
+            }
         }
 
-        public void PowerClicked(int color)
+        [PunRPC]
+        public void RPC_PowerClicked(int color)
         {
             if (IsGameMaster())
             {
@@ -1247,24 +1255,22 @@ namespace Com.Hypester.DM3
                         P1_ShieldActive = true;
                         photonView.RPC("RPC_ShieldActivated", PhotonTargets.All, 0);
                         P1_PowerBlue = 0;
+                        photonView.RPC("RPC_EmptyPower", PhotonTargets.All, _curPlayer, color);
                     }
                     else if (color == 2 && P1_PowerGreen >= Constants.GreenPowerReq) //green
                     {
                         healthPlayerOne += Constants.HealPower;
                         photonView.RPC("RPC_HealEffect", PhotonTargets.All, 0);
                         P1_PowerGreen = 0;
+                        photonView.RPC("RPC_EmptyPower", PhotonTargets.All, _curPlayer, color);
 
-                        if (IsGameRelevant())
-                        {
-                            GetPlayerByID(_curPlayer).FindInterface().SetHitpoints(healthPlayerOne);
-                            GetPlayerByID(_curPlayer).FindInterface().UpdateShadowhealth(healthPlayerOne);
-                            photonView.RPC("RPC_UpdateHealth", PhotonTargets.Others, _curPlayer, healthPlayerOne);
-                        }
+                        photonView.RPC("RPC_UpdateHealth", PhotonTargets.All, _curPlayer, healthPlayerOne);
                     }
                     else if (color == 3 && P1_PowerRed >= Constants.RedPowerReq) //red
                     {
-                        CreateTrap();
+                        photonView.RPC("RPC_CreateTrap", PhotonTargets.All, _curPlayer); 
                         P1_PowerRed = 0;
+                        photonView.RPC("RPC_EmptyPower", PhotonTargets.All, _curPlayer, color);
 
                         if (IsGameRelevant())
                         {
@@ -1274,8 +1280,9 @@ namespace Com.Hypester.DM3
                     }
                     else if (color == 0 && P1_PowerYellow >= Constants.YellowPowerReq) //yellow
                     {
-                        CreateFireball();
+                        photonView.RPC("RPC_Create_Fireball", PhotonTargets.All, _curPlayer);  
                         P1_PowerYellow = 0;
+                        photonView.RPC("RPC_EmptyPower", PhotonTargets.All, _curPlayer, color);
 
                         if (IsGameRelevant())
                         {
@@ -1291,29 +1298,25 @@ namespace Com.Hypester.DM3
                         P2_ShieldActive = true;
                         photonView.RPC("RPC_ShieldActivated", PhotonTargets.All, 1);
                         P2_PowerBlue = 0;
-                        photonView.RPC("RPC_EmptyPower", PhotonTargets.Others, color); //Sync with non-host player.
+                        photonView.RPC("RPC_EmptyPower", PhotonTargets.All, _curPlayer, color);
                     }
                     else if (color == 2 && P2_PowerGreen >= Constants.GreenPowerReq) //green
                     {
                         healthPlayerTwo += Constants.HealPower;
                         photonView.RPC("RPC_HealEffect", PhotonTargets.All, 1);
                         P2_PowerGreen = 0;
-                        photonView.RPC("RPC_EmptyPower", PhotonTargets.Others, color);
+                        photonView.RPC("RPC_EmptyPower", PhotonTargets.All, _curPlayer, color);
 
-                        if (IsGameRelevant())
-                        {
-                            GetPlayerByID(_curPlayer).FindInterface().SetHitpoints(healthPlayerTwo);
-                            GetPlayerByID(_curPlayer).FindInterface().UpdateShadowhealth(healthPlayerTwo);
-                            photonView.RPC("RPC_UpdateHealth", PhotonTargets.Others, _curPlayer, healthPlayerTwo);
-                        }
+                        photonView.RPC("RPC_UpdateHealth", PhotonTargets.Others, _curPlayer, healthPlayerTwo); 
                     }
                     else if (color == 3 && P2_PowerRed >= Constants.RedPowerReq) //red
                     {
-                        photonView.RPC("RPC_P2_CreateTrap", PhotonTargets.Others);
+                        photonView.RPC("RPC_CreateTrap", PhotonTargets.All, _curPlayer); 
                         P2_PowerRed = 0;
-                        photonView.RPC("RPC_EmptyPower", PhotonTargets.Others, color);
+                        photonView.RPC("RPC_EmptyPower", PhotonTargets.All, _curPlayer, color);
 
-                        if (IsGameRelevant()) { 
+                        if (IsGameRelevant())
+                        {
                             _gameContext.ShowText("Opponent placed a trap. Be careful!");
                             _gameContext.ShowLargeText("Trap placed, careful!");
                             iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.Warning);
@@ -1321,9 +1324,9 @@ namespace Com.Hypester.DM3
                     }
                     else if (color == 0 && P2_PowerYellow >= Constants.YellowPowerReq) //yellow
                     {
-                        photonView.RPC("RPC_P2_Create_Fireball", PhotonTargets.Others);
+                        photonView.RPC("RPC_Create_Fireball", PhotonTargets.All, _curPlayer); 
                         P2_PowerYellow = 0;
-                        photonView.RPC("RPC_EmptyPower", PhotonTargets.Others, color);
+                        photonView.RPC("RPC_EmptyPower", PhotonTargets.All, _curPlayer, color);
 
                         if (IsGameRelevant())
                             _gameContext.ShowText("Opponent summoned a fireball!");
@@ -1337,17 +1340,15 @@ namespace Com.Hypester.DM3
             GameObject fireballGO = PhotonNetwork.Instantiate("Fireball", Vector3.zero, Quaternion.identity, 0);
 
             fireballGO.GetComponent<YellowPower>().ownerPlayer = MyPlayer;
+            fireballGO.GetComponent<YellowPower>().gameID = GameID;
             fireballGO.name = "Fireball" + MyPlayer.localID;
             fireballGO.transform.position = GameObject.Find("MyYellow").transform.position;
-
-            if (!IsGameRelevant())
-                fireballGO.GetComponent<YellowPower>().Hide();
         }
 
         [PunRPC]
-        private void RPC_P2_Create_Fireball()
+        private void RPC_Create_Fireball(int playerNo)
         {
-            if (IsGameRelevant())
+            if (GetPlayerByID(playerNo) == MyPlayer)
             {
                 CreateFireball();
                 _gameContext.ShowText("Touch the fireball and throw it!");
@@ -1357,34 +1358,31 @@ namespace Com.Hypester.DM3
         [PunRPC]
         public void RPC_FireballHit() //should be both master-client side and guest-side
         {
-                GameObject fireball = GameObject.FindGameObjectWithTag("ActiveFireball");
+            GameObject fireball = GameObject.FindGameObjectWithTag("ActiveFireball");
 
+            string avatarObjName = "MyAvatar";
+            if (fireball != null)
+            {
                 if (fireball.GetComponent<YellowPower>().ownerPlayer == MyPlayer)
-                {
-                    GameObject explosion = Instantiate(Resources.Load("ParticleEffects/FireballHit")) as GameObject;
-                    explosion.transform.position = GameObject.Find("OpponentAvatar").transform.position;
+                    avatarObjName = "OpponentAvatar";
+            }
 
-                    if (IsGameMaster())
-                    {
-                        DamagePlayer(EnemyPlayer.localID, Constants.FireballPower);
-                        ResetTimer();
-                    }
-                }
-                else
-                {
-                    GameObject explosion = Instantiate(Resources.Load("ParticleEffects/FireballHit")) as GameObject;
-                    explosion.transform.position = GameObject.Find("MyAvatar").transform.position;
+            if (IsGameRelevant())
+            {
+                GameObject explosion = Instantiate(Resources.Load("ParticleEffects/FireballHit")) as GameObject;
+                explosion.transform.position = GameObject.Find(avatarObjName).transform.position;
+            }
 
-                    if (IsGameMaster())
-                    {
-                        DamagePlayer(MyPlayer.localID, Constants.FireballPower);
-                        ResetTimer();
-                    }
-                }
+            if (IsGameMaster())
+            {
+                DamagePlayer(EnemyPlayer.localID, Constants.FireballPower);
+                ResetTimer();
+            }
 
-                iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.ImpactHeavy);
 
-                Destroy(fireball);
+            iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.ImpactHeavy);
+
+            Destroy(fireball);
         }
 
         private void CreateTrap()
@@ -1392,27 +1390,29 @@ namespace Com.Hypester.DM3
             GameObject trapGO = Instantiate(Resources.Load("TrapPower")) as GameObject;
 
             trapGO.GetComponent<TrapPower>().ownerPlayer = MyPlayer;
+            trapGO.GetComponent<TrapPower>().gameID = GameID;
             trapGO.name = "TrapPower" + MyPlayer.localID;
             trapGO.transform.position = GameObject.Find("MyRed").transform.position;
         }
 
         [PunRPC]
-        private void RPC_P2_CreateTrap()
+        private void RPC_CreateTrap(int playerNo)
         {
-            CreateTrap();
-            if (IsGameRelevant())
+            if (GetPlayerByID(playerNo) == MyPlayer) {
+                CreateTrap();
                 _gameContext.ShowText("You placed a trap. Don't trigger it yourself!");
+            }
         }
 
         [PunRPC]
         public void RPC_CreateTrapBooster(Vector2 pos, int creatorPlayer)
         {
-                if (IsGameMaster())
-                {
-                    _grid.data[(int)pos.x, (int)pos.y].boosterLevel = 4 + creatorPlayer;
-                    Tile tile = _grid.data[(int)pos.x, (int)pos.y];
-                    photonView.RPC("RPC_SendTile", PhotonTargets.All, tile);
-                }
+            if (IsGameMaster())
+            {
+                _grid.data[(int)pos.x, (int)pos.y].boosterLevel = 4 + creatorPlayer;
+                Tile tile = _grid.data[(int)pos.x, (int)pos.y];
+                photonView.RPC("RPC_SendTile", PhotonTargets.All, tile);
+            }
         }
 
         [PunRPC]
@@ -1452,7 +1452,7 @@ namespace Com.Hypester.DM3
         {
             if (IsGameRelevant())
             {
-                BaseTile dropIntoTile = BaseTileAtPos(new Vector2(tile.x, tile.y));
+                TileView dropIntoTile = TileViewAtPos(new Vector2(tile.x, tile.y));
 
                 //Debug.Log("Anim request: " + tile + " | " + tile.x + ", " + tile.y + " > " + tile.color);
 
@@ -1473,8 +1473,20 @@ namespace Com.Hypester.DM3
         }
 
         [PunRPC]
-        private void RPC_FillPower(int color, int value)
+        private void RPC_FillPower(int playerNo, int color, int value)
         {
+            if (playerNo == 0)
+            {
+                if (color == 1)
+                    P1_PowerBlue = value;
+                else if (color == 2)
+                    P1_PowerGreen = value;
+                else if (color == 3)
+                    P1_PowerRed = value;
+                else if (color == 0)
+                    P1_PowerYellow = value;
+            } else
+            {
                 if (color == 1)
                     P2_PowerBlue = value;
                 else if (color == 2)
@@ -1483,11 +1495,24 @@ namespace Com.Hypester.DM3
                     P2_PowerRed = value;
                 else if (color == 0)
                     P2_PowerYellow = value;
+            }
         }
 
         [PunRPC]
-        private void RPC_EmptyPower(int color)
+        private void RPC_EmptyPower(int playerNo, int color)
         {
+            if (playerNo == 0)
+            {
+                if (color == 1)
+                    P1_PowerBlue = 0;
+                else if (color == 2)
+                    P1_PowerGreen = 0;
+                else if (color == 3)
+                    P1_PowerRed = 0;
+                else if (color == 0)
+                    P1_PowerYellow = 0;
+            } else
+            {
                 if (color == 1)
                     P2_PowerBlue = 0;
                 else if (color == 2)
@@ -1496,6 +1521,7 @@ namespace Com.Hypester.DM3
                     P2_PowerRed = 0;
                 else if (color == 0)
                     P2_PowerYellow = 0;
+            }
         }
 
 
@@ -1569,15 +1595,17 @@ namespace Com.Hypester.DM3
             }
         }
 
-        private bool IsGameMaster ()
+        private bool IsGameMaster()
         {
-            if (_myPlayer != null) {
+            if (_myPlayer != null)
+            {
                 //if (PhotonNetwork.isMasterClient || _myPlayer.joinNumber == 3) //okay
                 if (PhotonNetwork.isMasterClient) //okay
                     return true;
                 else
                     return false;
-            } else
+            }
+            else
             {
                 if (PhotonNetwork.isMasterClient) //okay
                     return true;
@@ -1588,7 +1616,7 @@ namespace Com.Hypester.DM3
             //photonView.isMine eventually, if player 3 creates his own Grid. This is the way to go I think.
         }
 
-        private bool IsGameRelevant ()
+        private bool IsGameRelevant()
         {
             if (_myPlayer != null)
             {
@@ -1624,7 +1652,8 @@ namespace Com.Hypester.DM3
         [PunRPC]
         private void RPC_ShieldMessage(int targetPlayer, float damage)
         {
-            if (IsGameRelevant()) {
+            if (IsGameRelevant())
+            {
                 if (_myPlayer.localID == targetPlayer)
                 {
                     _gameContext.ShowText("You blocked " + damage + " damage with your shield!");

@@ -58,17 +58,17 @@ namespace Com.Hypester.DM3
             {
                 Text nameText = nameObject.GetComponent<Text>();
                 if (PhotonNetwork.isMasterClient)
-                    nameText.text = PhotonConnect.Instance.GameController.MyPlayer.profileName;
+                    nameText.text = PhotonController.Instance.GameController.MyPlayer.profileName;
                 else
-                    nameText.text = PhotonConnect.Instance.GameController.EnemyPlayer.profileName;
+                    nameText.text = PhotonController.Instance.GameController.EnemyPlayer.profileName;
             }
             foreach (GameObject nameObject in GameObject.FindGameObjectsWithTag("Player_2_Name"))
             {
                 Text nameText = nameObject.GetComponent<Text>();
                 if (!PhotonNetwork.isMasterClient)
-                    nameText.text = PhotonConnect.Instance.GameController.MyPlayer.profileName;
+                    nameText.text = PhotonController.Instance.GameController.MyPlayer.profileName;
                 else
-                    nameText.text = PhotonConnect.Instance.GameController.EnemyPlayer.profileName;
+                    nameText.text = PhotonController.Instance.GameController.EnemyPlayer.profileName;
             }
         }
 
@@ -95,24 +95,24 @@ namespace Com.Hypester.DM3
         {
             base.Update();
 
-            if (PhotonConnect.Instance.GameController != null && PhotonConnect.Instance.GameController.EnemyPlayer != null)
+            if (PhotonController.Instance.GameController != null && PhotonController.Instance.GameController.EnemyPlayer != null)
             {
-                if (PhotonConnect.Instance.GameController.EnemyPlayer.wantsRematch && _enemyRematchBubble.enabled == false)
+                if (PhotonController.Instance.GameController.EnemyPlayer.wantsRematch && _enemyRematchBubble.enabled == false)
                 {
                     _enemyRematchBubble.enabled = true;
                 }
 
-                if (PhotonConnect.Instance.GameController.MyPlayer.wantsRematch && _myRematchBubble.enabled == false)
+                if (PhotonController.Instance.GameController.MyPlayer.wantsRematch && _myRematchBubble.enabled == false)
                 {
                     _myRematchBubble.enabled = true;
                     _myRematchButton.enabled = false;
                 }
 
-                if (PhotonConnect.Instance.GameController.MyPlayer.wantsRematch && PhotonConnect.Instance.GameController.EnemyPlayer.wantsRematch && PhotonNetwork.isMasterClient)
+                if (PhotonController.Instance.GameController.MyPlayer.wantsRematch && PhotonController.Instance.GameController.EnemyPlayer.wantsRematch && PhotonNetwork.isMasterClient)
                 {
-                    PhotonConnect.Instance.Rematch();
-                    PhotonConnect.Instance.GameController.MyPlayer.wantsRematch = false;
-                    PhotonConnect.Instance.GameController.EnemyPlayer.wantsRematch = false;
+                    PhotonController.Instance.Rematch();
+                    PhotonController.Instance.GameController.MyPlayer.wantsRematch = false;
+                    PhotonController.Instance.GameController.EnemyPlayer.wantsRematch = false;
                 }
 
 
@@ -133,8 +133,8 @@ namespace Com.Hypester.DM3
 
         public void RequestRematch()
         {
-            PhotonConnect.Instance.GameController.MyPlayer.photonView.RPC("RPC_RequestRematch", PhotonTargets.Others);
-            PhotonConnect.Instance.GameController.MyPlayer.wantsRematch = true;
+            PhotonController.Instance.GameController.MyPlayer.photonView.RPC("RPC_RequestRematch", PhotonTargets.Others);
+            PhotonController.Instance.GameController.MyPlayer.wantsRematch = true;
         }
     }
 }
