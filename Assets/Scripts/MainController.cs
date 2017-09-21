@@ -19,6 +19,13 @@ namespace Com.Hypester.DM3
 
         private bool _gotFacebookData;
 
+        //Connections
+        public bool wantsPhotonConnection = true;
+        public bool wantsFBConnection = false;
+        public bool wantsDBConnection = false; //TODO
+
+        public bool facebookConnected;
+
         private static MainController instance;
         public static MainController Instance
         {
@@ -63,7 +70,15 @@ namespace Com.Hypester.DM3
 
         public void CallFBLogin()
         {
-            FB.LogInWithReadPermissions(new List<string>() { "public_profile", "email", "user_friends" });
+            FB.LogInWithReadPermissions(new List<string>() { "public_profile", "email", "user_friends" }, LoginCallback);
+        }
+
+        private void LoginCallback (ILoginResult result)
+        {
+            if (FB.IsLoggedIn)
+                facebookConnected = true;
+            else
+                Debug.Log(result.Error);
         }
 
         public void CallFBLogout()

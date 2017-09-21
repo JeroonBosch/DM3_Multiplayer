@@ -144,7 +144,7 @@ namespace Com.Hypester.DM3
         {
             base.OnLeftRoom();
             Debug.Log("Left room.");
-            PhotonNetwork.LoadLevel("Menu"); //TODO needs changes! it just goes to menu whenever ANYONE disconnects
+            PhotonNetwork.LoadLevel("Menu"); 
             Debug.Log("Menu loaded because room was left.");
 
             foreach (Player player in FindObjectsOfType<Player>()) //TODO maybe not needed / move to when leaving room
@@ -158,6 +158,7 @@ namespace Com.Hypester.DM3
 
         public override void OnPhotonPlayerDisconnected(PhotonPlayer otherPlayer)
         {
+            //TODO needs changes! it just goes to menu whenever ANYONE disconnects
             base.OnPhotonPlayerDisconnected(otherPlayer);
             if (PhotonNetwork.inRoom && PhotonNetwork.room.MaxPlayers == 2 && SceneManager.GetActiveScene().name != "Menu")
             {
