@@ -11,6 +11,7 @@ namespace Com.Hypester.DM3
         #region private variables
         private bool _isActive;
         public bool Active { get { return _isActive; } }
+
         private Grid _grid;
         private int _curPlayer;
         private List<TileView> _baseTiles;
@@ -30,7 +31,7 @@ namespace Com.Hypester.DM3
         private bool _rematchRequested = false;
         #endregion
 
-        #region public game logic
+        #region public variables
         private int _gameID = 0; //Used for tournaments.
         public int GameID { get { return _gameID; } set { _gameID = value; GameIDSet(); } }
 

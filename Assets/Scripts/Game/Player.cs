@@ -4,10 +4,12 @@ using System.Collections;
 
 namespace Com.Hypester.DM3
 {
+    //Each player in a room creates his/her own 'Player'
+    //Class name could be changed to represent it being a photon view with client-control rather than master-client control
     public class Player : Photon.MonoBehaviour
     {
         public int localID;
-        public int joinNumber; //only for tournaments?
+        public int joinNumber; //only for tournaments
         public string profileName;
         public string profilePicURL;
         public bool wantsRematch;

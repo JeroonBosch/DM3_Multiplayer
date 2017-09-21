@@ -5,6 +5,7 @@ namespace Com.Hypester.DM3
 {
     public class Wiggle : MonoBehaviour
     {
+        //Simple shake/wiggle effect. Currently used for power ups. When a power up is ready for use, it wiggles from time to time.
         private bool _wiggling;
         private float _direction = 1f; //Either 1f or -1f
         private float _wiggleCounter;

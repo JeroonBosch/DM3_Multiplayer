@@ -47,7 +47,6 @@ namespace Com.Hypester.DM3
                 _timer += Time.deltaTime;
 
                 if (_timer > _timeUntilStart) {
-                    //GoToScreen(GameObject.Find("PlayScreen").GetComponent<BaseMenuCanvas>());
                     PhotonNetwork.LoadLevel("Match");
                     Debug.Log("Menu loaded because a player left the match.");
                     enabled = false;

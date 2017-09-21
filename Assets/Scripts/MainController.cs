@@ -8,8 +8,9 @@ using System.Collections;
 
 namespace Com.Hypester.DM3
 {
-    //Not currently used.
-    //Meant to contain general info (see Player Data) later, when login systems are in place.
+    //Could be renamed to something like DataController.
+    //This singleton carries over between scenes and is meant to have database data, facebook data and such. 
+    //Profile data (coins, xp) should be retrieved from this singleton.
 
     public class MainController : MonoBehaviour
     {

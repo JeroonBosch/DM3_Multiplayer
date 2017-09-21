@@ -283,8 +283,8 @@ namespace Com.Hypester.DM3
 
         public void EndGame (int winnerPlayer)
         {
-            GoToScreen(GameObject.Find("EndScreen").GetComponent<BaseMenuCanvas>());
-            GameObject.Find("EndScreen").GetComponent<EndScreenCanvas>().winnerPlayer = winnerPlayer;
+            GoToScreen(FindObjectOfType<EndScreenCanvas>());
+            FindObjectOfType<EndScreenCanvas>().winnerPlayer = winnerPlayer;
             enabled = false;
         }
 

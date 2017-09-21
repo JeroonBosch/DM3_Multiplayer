@@ -2,6 +2,8 @@
 
 namespace Com.Hypester.DM3
 {
+    //Standard Audio player class.
+    //No audio is added yet, so the class is not active yet.
     public class AudioController : MonoBehaviour
     {
         // Public field, set in the inspector we can access

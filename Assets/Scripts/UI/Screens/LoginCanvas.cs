@@ -9,9 +9,12 @@ namespace Com.Hypester.DM3
         //This class passes on the 'nickname' to Photon.
         private InputField _text;
 
+        public GameObject[] hideWhenLoggingIn;
+
         private void Awake()
         {
             MainController.Instance.FacebookInit();
+            GoToScreen(this); //start screen.
         }
 
         protected override void Start()
@@ -29,7 +32,7 @@ namespace Com.Hypester.DM3
             base.Update();
 
             if (PhotonNetwork.connected) { 
-                GoToScreen(GameObject.Find("MainmenuScreen").GetComponent<BaseMenuCanvas>());
+                GoToScreen(FindObjectOfType<MainmenuCanvas>());
                 enabled = false;
             }
         }
@@ -58,10 +61,11 @@ namespace Com.Hypester.DM3
 
         private void HideLoginFields ()
         {
+            foreach (GameObject go in hideWhenLoggingIn)
+            {
+                go.SetActive(false);
+            }
             GameObject.Find("LoggingIn").GetComponent<Text>().enabled = true;
-            GameObject.Find("NameField").SetActive(false);
-            GameObject.Find("LoginButton").SetActive(false);
-            GameObject.Find("PleaseEnterNickname").SetActive(false);
         }
     }
 }

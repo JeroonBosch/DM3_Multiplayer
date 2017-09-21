@@ -179,6 +179,7 @@ namespace Com.Hypester.DM3
 
         public void SetAvatars ()
         {
+            //TODO Placeholders.
             if (!PhotonNetwork.isMasterClient)
             {
                 GameObject.Find("MyAvatar").GetComponent<Image>().sprite = Resources.Load<Sprite>("UI/AvatarB");

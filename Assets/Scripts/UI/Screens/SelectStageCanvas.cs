@@ -5,10 +5,10 @@ using UnityEngine.UI;
 
 namespace Com.Hypester.DM3
 {
-    public class NormalGameCanvas : BaseMenuCanvas
+    public class SelectStageCanvas : BaseMenuCanvas
     {
-
-        GameObject findOpponent;
+        //Currently used for both the Normal 1v1 game and tournament.
+        GameObject _findOpponent;
 
         protected override void Start()
         {
@@ -16,8 +16,8 @@ namespace Com.Hypester.DM3
             PhotonNetwork.autoJoinLobby = false;
             PhotonNetwork.automaticallySyncScene = true;
 
-            findOpponent = transform.Find("FindOpponent").gameObject;
-            findOpponent.SetActive(false);
+            _findOpponent = transform.Find("FindOpponent").gameObject;
+            _findOpponent.SetActive(false);
         }
 
         protected override void Update()
@@ -34,7 +34,8 @@ namespace Com.Hypester.DM3
 
             int playerCount = 0;
             if (PhotonNetwork.connected)
-                playerCount = PhotonNetwork.countOfPlayers; //TODO Lobby player count instead of ALL players
+                playerCount = PhotonNetwork.countOfPlayers; //TODO Lobby player count instead of ALL players. Might not be possible.
+
             foreach (GameObject stage in stages)
             {
                 Transform textObject = stage.transform.Find("AmountOfPlayersText").transform;
@@ -43,17 +44,12 @@ namespace Com.Hypester.DM3
             }
         }
 
-        public override void Show()
-        {
-            base.Show();
-        }
-
         public void SetReady ()
         {
             PhotonController.Instance.MatchPlayers(); //This should load the next scene.
             //Button readyButton = transform.Find("ReadyButton").GetComponent<Button>();
             //readyButton.interactable = false;
-            findOpponent.SetActive(true);
+            _findOpponent.SetActive(true);
         }
     }
 }

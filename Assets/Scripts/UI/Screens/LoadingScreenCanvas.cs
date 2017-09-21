@@ -10,10 +10,14 @@ namespace Com.Hypester.DM3
         private float _timer = 0f;
         private float _timeUntilStart = 4f;
 
+        private void Awake()
+        {
+            GoToScreen(this); //start screen.
+        }
+
         protected override void Start ()
         {
             base.Start();
-            GoToScreen(this); //start screen.
 
             _playersReady = false;
 
@@ -23,9 +27,13 @@ namespace Com.Hypester.DM3
             }
 
             if (PhotonNetwork.isMasterClient && PhotonController.Instance.tournamentMode)
-            {  //TODO for 8 player tournaments, create even more 'grid's
-                GameObject newGrid = PhotonNetwork.Instantiate("Grid", Vector3.zero, Quaternion.identity, 0);
-                newGrid.GetPhotonView().RPC("RPC_InitGameHandler", PhotonTargets.All, 1);
+            {  //Create a grid for every 2 players.
+                int gridAmount = Mathf.RoundToInt(PhotonNetwork.room.PlayerCount / 2);
+                for (int i = 1; i < gridAmount; i++)
+                {
+                    GameObject newGrid = PhotonNetwork.Instantiate("Grid", Vector3.zero, Quaternion.identity, 0);
+                    newGrid.GetPhotonView().RPC("RPC_InitGameHandler", PhotonTargets.All, i);
+                }
             }
         }
 
@@ -49,7 +57,7 @@ namespace Com.Hypester.DM3
                 _timer += Time.deltaTime;
 
                 if (_timer > _timeUntilStart) {
-                    GoToScreen(GameObject.Find("PlayScreen").GetComponent<BaseMenuCanvas>());
+                    GoToScreen(FindObjectOfType<PlayGameCanvas>());
                     enabled = false;
                 }
             } if (players.Length > 2)

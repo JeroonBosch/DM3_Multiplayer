@@ -5,6 +5,7 @@ namespace Com.Hypester.DM3
 {
     public class TournamentScreenCanvas : BaseMenuCanvas
     {
+        //Shows the tournament match-making tree. Replaces 'FindMatchCanvas'
         private bool _fullTournament;
 
         private GameObject _searchObject2;
@@ -81,11 +82,9 @@ namespace Com.Hypester.DM3
 
                 if (_timer > _timeUntilStart)
                 {
-                    //GoToScreen(GameObject.Find("PlayScreen").GetComponent<BaseMenuCanvas>());
                     AssignOpponent();
                     
                     PhotonController.Instance.SetTournamentOpponent(GetMyJoinNumber()); //set correct interest groups
-                    //PhotonController.Instance.CreatePlayers();
                     PhotonNetwork.LoadLevel("Match");
                     Debug.Log("Match loaded from Tournament.");
                     enabled = false;
@@ -105,7 +104,8 @@ namespace Com.Hypester.DM3
             _opponentAvatar4.SetActive(true);
             _searchObject4.SetActive(false);
 
-            if (!PhotonNetwork.isMasterClient) //okay
+            //TODO Placeholder avatars
+            if (!PhotonNetwork.isMasterClient)
             {
                 GameObject.Find("player1").GetComponent<Image>().sprite = Resources.Load<Sprite>("UI/AvatarB");
                 GameObject.Find("player2").GetComponent<Image>().sprite = Resources.Load<Sprite>("UI/AvatarA");

@@ -57,6 +57,8 @@ namespace Com.Hypester.DM3
                 foreach (BaseMenuCanvas menu in GetAllScreens())
                     menu.Hide();
                 screen.Show();
+
+                MainController.Instance.currentScreen = screen;
             }
         }
 

@@ -2,6 +2,8 @@
 {
     public static class Constants
     {
+        //Constants variables. Some things would eventually be tied to the skill tree and thus no longer constants.
+
         //Game variables
         public const int PlayerStartHP = 800;
         public const int BluePowerReq = 12;

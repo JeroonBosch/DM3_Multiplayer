@@ -5,6 +5,8 @@ namespace Com.Hypester.DM3
 {
     public class YellowPower : Photon.MonoBehaviour
     {
+        //Fireball power. Besides 'Player' class, the only other photon view class that's client-side rather than master-client.
+
         public int gameID;
         public Player ownerPlayer;
         public Vector2 position;
