@@ -26,24 +26,62 @@ namespace Com.Hypester.DM3
 
         public bool facebookConnected;
 
-        private static MainController instance;
+        private static Database data;
+        public static Database Data
+        {
+            get
+            {
+                if (data == null)
+                {
+                    data = ((GameObject)Instantiate(Resources.Load("Data"), Instance.transform)).GetComponent<Database>();
+                }
+                return data;
+            }
+        }
+
+        private static volatile MainController instance;
+        private static object syncRoot = new Object();
+
+        private MainController() { }
+
         public static MainController Instance
         {
-            get { return instance ?? (instance = new GameObject("MainController").AddComponent<MainController>()); }
+            get
+            {
+                if (instance == null)
+                {
+                    lock (syncRoot)
+                    {
+                        if (instance == null)
+                            instance = new GameObject("MainController").AddComponent<MainController>();
+                    }
+                }
+
+                return instance;
+            }
         }
 
         public void FacebookInit() { FB.Init(); }
 
-
         private void OnEnable()
         {
+            PlayerEvent.OnPlayerLogin += PlayerLogin;
+
+            instance = this;
             DontDestroyOnLoad(gameObject);
             BaseMenuCanvas firstScreen = GameObject.Find("LoginScreen").GetComponent<BaseMenuCanvas>();
             firstScreen.GoToScreen(firstScreen);
             currentScreen = firstScreen;
             playerData = new PlayerData();
 
+            playerData.SetCoins(150);
+
             _gotFacebookData = false;
+        }
+
+        private void OnDisable()
+        {
+            PlayerEvent.OnPlayerLogin -= PlayerLogin;
         }
 
         private void Update()
@@ -63,7 +101,7 @@ namespace Com.Hypester.DM3
             Application.Quit();
         }
 
-        public void GetPlayerData ()
+        public void GetPlayerDataFromDB ()
         {
             //Retrieve data from DB.
         }
@@ -92,15 +130,16 @@ namespace Com.Hypester.DM3
 
             Debug.Log("fbName: " + fbName);
 
-            playerData.profileName = fbName;
+            playerData.SetProfileName(fbName);
         }
 
         private void GetFacebookPicture(IGraphResult result)
         {
+            Debug.Log(result.Texture);
             if (result.Texture != null)
             {
-                GameObject.Find("ProfileAvatar").GetComponent<Image>().sprite = Sprite.Create(result.Texture, new Rect(0, 0, 128, 128), new Vector2());
-                playerData.profilePicture = result.Texture;
+                GameObject.Find("AvatarIcon").GetComponent<Image>().sprite = Sprite.Create(result.Texture, new Rect(0, 0, 128, 128), new Vector2());
+                playerData.SetProfilePicture(result.Texture);
             }
         }
 
@@ -112,23 +151,176 @@ namespace Com.Hypester.DM3
             playerData.pictureURL = dataDict["url"].ToString();
             Debug.Log("pic : " + dataDict["url"].ToString());
         }
-    }
 
+        void PlayerLogin(LoginCanvas.LoginType loginType)
+        {
+            List<PlayerStatsInfo> randomPsi = new List<PlayerStatsInfo>();
+            PlayerStatsInfo psi1 = new PlayerStatsInfo(Random.Range(1, 4), Random.Range(10, 3000), Random.Range(1, 30), Random.Range(0, 2), Random.Range(0, 2), Random.Range(0, 2), Random.Range(0, 2));
+            PlayerStatsInfo psi2 = new PlayerStatsInfo(Random.Range(5, 11), Random.Range(300, 200), Random.Range(11, 90), Random.Range(0, 3), Random.Range(0, 3), Random.Range(0, 3), Random.Range(0, 3));
+            PlayerStatsInfo psi3 = new PlayerStatsInfo(Random.Range(12, 14), Random.Range(200, 200), Random.Range(100, 250), Random.Range(1, 4), Random.Range(1, 4), Random.Range(1, 4), Random.Range(1, 4));
+            PlayerStatsInfo psi4 = new PlayerStatsInfo(Random.Range(15, 17), Random.Range(200, 500), Random.Range(170, 600), Random.Range(2, 6), Random.Range(2, 6), Random.Range(2, 6), Random.Range(2, 6));
+            PlayerStatsInfo psi5 = new PlayerStatsInfo(Random.Range(18, 22), Random.Range(300, 1000), Random.Range(600, 1500), Random.Range(2, 6), Random.Range(2, 6), Random.Range(2, 6), Random.Range(2, 6));
+            randomPsi.Add(psi1);
+            randomPsi.Add(psi2);
+            randomPsi.Add(psi3);
+            randomPsi.Add(psi4);
+            randomPsi.Add(psi5);
+
+            PlayerStatsInfo psi = randomPsi[Random.Range(0, randomPsi.Count)];
+
+            playerData.SetCoins(psi.coinAmount);
+            playerData.SetXp(psi.xpLevel);
+            playerData.SetUnspentSkill(psi.skillAmount);
+            playerData.SetSkillLevel("blue", psi.bluePowerLevel);
+            playerData.SetSkillLevel("green", psi.greenPowerLevel);
+            playerData.SetSkillLevel("red", psi.redPowerLevel);
+            playerData.SetSkillLevel("yellow", psi.yellowPowerLevel);
+        }
+    }
 
     public class PlayerData
     {
         public int profileID;
-        public string profileName;
+        public string profileName { get; private set; }
         public string pictureURL = "";
-        public Texture2D profilePicture;
+        public Texture2D profilePicture { get; private set; }
 
-        public int coins;
-        public int trophies;
-        public int xp;
-        public int unspentSkill;
-        public int blueSkill;
-        public int greenSkill;
-        public int redSkill;
-        public int yellowSkill;
+        public int coins { get; private set; }
+        public int trophies { get; private set; }
+        public int xp { get; private set; }
+        public int unspentSkill { get; private set; }
+        public int blueSkill { get; private set; }
+        public int greenSkill { get; private set; }
+        public int redSkill { get; private set; }
+        public int yellowSkill { get; private set; }
+
+        public void SetProfileName(string value)
+        {
+            profileName = value;
+            PlayerEvent.ProfileNameChange(profileName);
+        }
+
+        public int GetSkillLevel(string skillColor)
+        {
+            switch (skillColor)
+            {
+                case "blue":
+                    return blueSkill;
+                case "green":
+                    return greenSkill;
+                case "red":
+                    return redSkill;
+                case "yellow":
+                    return yellowSkill;
+                default:
+                    return 0;
+            }
+        }
+        public void SetSkillLevel(string skillColor, int amount)
+        {
+            switch (skillColor)
+            {
+                case "blue":
+                    blueSkill = amount;
+                    PlayerEvent.SkillLevelChange("blue", blueSkill);
+                    break;
+                case "green":
+                    greenSkill = amount;
+                    PlayerEvent.SkillLevelChange("green", greenSkill);
+                    break;
+                case "red":
+                    redSkill = amount;
+                    PlayerEvent.SkillLevelChange("red", redSkill);
+                    break;
+                case "yellow":
+                    yellowSkill = amount;
+                    PlayerEvent.SkillLevelChange("yellow", yellowSkill);
+                    break;
+            }
+        }
+
+        public void SetProfilePicture(Texture2D newImage)
+        {
+            profilePicture = newImage;
+            PlayerEvent.ProfileImageChange(profilePicture);
+        }
+        public void SetCoins(int value)
+        {
+            coins = value;
+            PlayerEvent.CoinAmountChange(coins);
+        }
+        public void SetTrophies(int value)
+        {
+            PlayerEvent.TrophyAmountChange(value);
+            trophies = value;
+        }
+        public void SetXp(int value)
+        {
+            PlayerEvent.XpAmountChange(value);
+            xp = value;
+        }
+        public void SetUnspentSkill(int value)
+        {
+            PlayerEvent.UnspentSkillPointAmountChange(value);
+            unspentSkill = value;
+        }
+
+        public void AddCoins(int value)
+        {
+            coins += value;
+            PlayerEvent.CoinAmountChange(coins);
+        }
+        public void AddUnspentSkillPoints(int value)
+        {
+            unspentSkill += value;
+            PlayerEvent.UnspentSkillPointAmountChange(unspentSkill);
+        }
+    }
+
+    [System.Serializable]
+    public class PlayerStatsInfo
+    {
+        public int xpLevel;
+        public int coinAmount;
+        public int skillAmount;
+
+        public int bluePowerLevel;
+        public int greenPowerLevel;
+        public int redPowerLevel;
+        public int yellowPowerLevel;
+
+        public PlayerStatsInfo(int xpLevel, int coinAmount, int skillAmount, int bluePowerLevel, int greenPowerLevel, int redPowerLevel, int yellowPowerLevel)
+        {
+            this.xpLevel = xpLevel;
+            this.coinAmount = coinAmount;
+            this.skillAmount = skillAmount;
+
+            this.bluePowerLevel = bluePowerLevel;
+            this.greenPowerLevel = greenPowerLevel;
+            this.redPowerLevel = redPowerLevel;
+            this.yellowPowerLevel = yellowPowerLevel;
+        }
+
+        public int GetSkillLevel(string skillColor)
+        {
+            switch (skillColor)
+            {
+                case "blue":
+                    return bluePowerLevel;
+                case "green":
+                    return greenPowerLevel;
+                case "red":
+                    return redPowerLevel;
+                case "yellow":
+                    return yellowPowerLevel;
+                default:
+                    return 0;
+            }
+        }
+
+        public static PlayerStatsInfo CreateFromJSON(string jsonString)
+        {
+            return JsonUtility.FromJson<PlayerStatsInfo>(jsonString);
+        }
     }
 }

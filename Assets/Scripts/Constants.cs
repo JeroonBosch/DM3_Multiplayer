@@ -4,6 +4,10 @@
     {
         //Constants variables. Some things would eventually be tied to the skill tree and thus no longer constants.
 
+
+        //Stats
+        public const int MaxSkillLevel = 6;
+        
         //Game variables
         public const int PlayerStartHP = 800;
         public const int BluePowerReq = 12;
@@ -37,5 +41,8 @@
         public const float WigglePause = 4f;
         public const float WiggleDuration = 1f;
         public const float SearchMatchTimeout = 30f;
+
+        //Timeouts
+        public const float loginTimeout = 2f;
     }
 }

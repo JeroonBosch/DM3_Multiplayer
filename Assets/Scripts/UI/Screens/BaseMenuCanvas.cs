@@ -6,6 +6,10 @@ namespace Com.Hypester.DM3
 {
     public class BaseMenuCanvas : MonoBehaviour
     {
+        [SerializeField] protected BaseMenuCanvas previousScreen;
+        [SerializeField] protected BaseMenuCanvas nextScreen;
+        [SerializeField] protected Header header;
+
         protected bool isShown;
 
         // Use this for initialization
@@ -20,30 +24,24 @@ namespace Com.Hypester.DM3
 
         }
 
+        protected virtual void OnEnable()
+        {
+
+        }
+
+        protected virtual void OnDisable()
+        {
+
+        }
+
         protected virtual BaseMenuCanvas NextScreen()
         {
-            BaseMenuCanvas nextScreen = null;
-
-            List<BaseMenuCanvas> menus = new List<BaseMenuCanvas>();
-            menus = GetAllScreens();
-            int index = menus.IndexOf(this);
-            if (menus.Count > (index + 1))
-                nextScreen = menus[index + 1];
-
             return nextScreen;
         }
 
         protected virtual BaseMenuCanvas PrevScreen()
         {
-            BaseMenuCanvas prevScreen = null;
-
-            List<BaseMenuCanvas> menus = new List<BaseMenuCanvas>();
-            menus = GetAllScreens();
-            int index = menus.IndexOf(this);
-            if (menus.Count > (index - 1))
-                prevScreen = menus[index - 1];
-
-            return prevScreen;
+            return previousScreen;
         }
 
         protected virtual List<BaseMenuCanvas> GetAllScreens()
@@ -64,12 +62,14 @@ namespace Com.Hypester.DM3
 
         public virtual void Hide()
         {
+            if (header != null) { header.headerGraphics.SetActive(false); }
             GetComponent<Canvas>().enabled = false;
             isShown = false;
         }
 
         public virtual void Show()
         {
+            if (header != null) { header.headerGraphics.SetActive(true); }
             GetComponent<Canvas>().enabled = true;
             isShown = true;
         }

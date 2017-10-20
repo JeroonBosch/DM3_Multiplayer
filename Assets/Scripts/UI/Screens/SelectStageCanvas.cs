@@ -8,48 +8,48 @@ namespace Com.Hypester.DM3
     public class SelectStageCanvas : BaseMenuCanvas
     {
         //Currently used for both the Normal 1v1 game and tournament.
-        GameObject _findOpponent;
+        [SerializeField] GameObject coverForeground;
+        [SerializeField] StageCarousel stageCarousel;
 
         protected override void Start()
         {
             base.Start();
+
             PhotonNetwork.autoJoinLobby = false;
             PhotonNetwork.automaticallySyncScene = true;
-
-            _findOpponent = transform.Find("FindOpponent").gameObject;
-            _findOpponent.SetActive(false);
+            coverForeground.SetActive(false);
         }
 
-        protected override void Update()
+        public override void Show()
         {
-            base.Update();
+            base.Show();
+            stageCarousel.InitializeCarousel();
+        }
 
-            Transform carousel = transform.Find("StageCarousel");
-            List<GameObject> stages = new List<GameObject>();
-            foreach (Transform child in carousel)
+        public override void Hide()
+        {
+            base.Hide();
+            stageCarousel.ClearCarousel();
+        }
+
+        public void SetReady (StageEntry se)
+        {
+            // TODO: Server side check
+            if (MainController.Instance.playerData.coins >= se.coinCost)
             {
-                if (child.tag == "CarouselStage")
-                    stages.Add(child.gameObject);
+                coverForeground.SetActive(true);
+                MainController.Instance.playerData.AddCoins(-se.coinCost);
+                PhotonController.Instance.MatchPlayers(); //This should load the next scene.
             }
-
-            int playerCount = 0;
-            if (PhotonNetwork.connected)
-                playerCount = PhotonNetwork.countOfPlayers; //TODO Lobby player count instead of ALL players. Might not be possible.
-
-            foreach (GameObject stage in stages)
+            else
             {
-                Transform textObject = stage.transform.Find("AmountOfPlayersText").transform;
-                if (textObject)
-                    textObject.GetComponent<Text>().text = "Players online: " + playerCount;
+                UIEvent.InsufficientCurrency(SkillLevelEntry.Currency.Coins);
             }
         }
 
-        public void SetReady ()
+        public void PreviousScreen()
         {
-            PhotonController.Instance.MatchPlayers(); //This should load the next scene.
-            //Button readyButton = transform.Find("ReadyButton").GetComponent<Button>();
-            //readyButton.interactable = false;
-            _findOpponent.SetActive(true);
+            GoToScreen(PrevScreen());
         }
     }
 }

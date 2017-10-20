@@ -6,8 +6,12 @@ namespace Com.Hypester.DM3
 {
     public class LoginCanvas : BaseMenuCanvas
     {
+        public enum LoginType { Incognito, Facebook }
+
         //This class passes on the 'nickname' to Photon.
-        private InputField _text;
+        [SerializeField] InputField nameFieldText;
+
+        [SerializeField] Text loggingInText;
 
         private bool _tryingToLogin;
         private float _loginTimer;
@@ -23,11 +27,9 @@ namespace Com.Hypester.DM3
         protected override void Start()
         {
             base.Start();
-
-            _text = GameObject.Find("NameField").GetComponent<InputField>();
-            _text.text = "Guest" + Random.Range(1000, 9999).ToString();
-
-            GameObject.Find("LoggingIn").GetComponent<Text>().enabled = false;
+            
+            nameFieldText.text = "Guest" + Random.Range(1000, 9999).ToString();
+            loggingInText.enabled = false;
         }
 
         protected override void Update()
@@ -47,12 +49,17 @@ namespace Com.Hypester.DM3
 
                 if (isLoggedIn)
                 {
+                    if (MainController.Instance.facebookConnected)
+                    {
+                        PlayerEvent.PlayerLogin(LoginType.Facebook);
+                    } else { PlayerEvent.PlayerLogin(LoginType.Incognito); }
+
                     GoToScreen(FindObjectOfType<MainmenuCanvas>());
                     _tryingToLogin = false;
                     enabled = false;
                 }
 
-                if (_loginTimer > 10f)
+                if (_loginTimer > Constants.loginTimeout)
                 {
                     TimeOutLogin();
                 }
@@ -74,10 +81,10 @@ namespace Com.Hypester.DM3
             MainController.Instance.wantsFBConnection = false;
             PhotonController.Instance.EnsureConnection();
 
-            if (_text.text != "")
-                MainController.Instance.playerData.profileName = _text.text;
+            if (nameFieldText.text != "")
+                MainController.Instance.playerData.SetProfileName(nameFieldText.text);
             else
-                MainController.Instance.playerData.profileName = "Guest" + Random.Range(1000, 9999).ToString();
+                MainController.Instance.playerData.SetProfileName("Guest" + Random.Range(1000, 9999).ToString());
         }
 
         public void LoginFB()
@@ -97,7 +104,7 @@ namespace Com.Hypester.DM3
             {
                 go.SetActive(false);
             }
-            GameObject.Find("LoggingIn").GetComponent<Text>().enabled = true;
+            loggingInText.enabled = true;
         }
 
         private void ShowLoginFields()
@@ -106,7 +113,7 @@ namespace Com.Hypester.DM3
             {
                 go.SetActive(true);
             }
-            GameObject.Find("LoggingIn").GetComponent<Text>().enabled = false;
+            loggingInText.enabled = false;
         }
     }
 }

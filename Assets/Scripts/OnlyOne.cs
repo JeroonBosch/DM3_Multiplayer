@@ -4,7 +4,7 @@ namespace Com.Hypester.DM3
 {
     public class OnlyOne : MonoBehaviour
     {
-        //Class to give when there's only supposed to be one instance. Requires an unique tag.
+        //Class to give when there's only supposed to be one instance. Requires a unique tag.
         void OnEnable()
         {
             string tag = gameObject.tag;
