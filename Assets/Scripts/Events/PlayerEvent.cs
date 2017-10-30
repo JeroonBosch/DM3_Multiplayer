@@ -2,15 +2,15 @@
 
 namespace Com.Hypester.DM3
 {
-    public class PlayerEvent : MonoBehaviour
+    public class PlayerEvent
     {
-        public delegate void LoginAction(LoginCanvas.LoginType loginType);
+        public delegate void LoginAction(LoginType loginType, PlayerService.LoginRequestObject loginObject);
 
         public static event LoginAction OnPlayerLogin;
 
-        public static void PlayerLogin(LoginCanvas.LoginType loginType)
+        public static void PlayerLogin(LoginType loginType, PlayerService.LoginRequestObject loginObject)
         {
-            if (OnPlayerLogin != null) OnPlayerLogin(loginType);
+            if (OnPlayerLogin != null) OnPlayerLogin(loginType, loginObject);
         }
 
         public delegate void ProfileImageAction(Texture2D newImage);

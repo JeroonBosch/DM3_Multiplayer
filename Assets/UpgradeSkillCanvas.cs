@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -99,6 +100,9 @@ namespace Com.Hypester.DM3
         {
             base.Show();
 
+            MainController.ServiceEconomy.LoadShop(OnShopLoaded);
+
+            /*
             blueSkills.Add(new SkillLevelInfo("Blue (shield)", "blue", "10% Less blue required to activate", 1, 500, 10, 2, new List<float>() { 1, 1 }));
             blueSkills.Add(new SkillLevelInfo("Blue (shield)", "blue", "Reflects 10% damage", 2, 2500, 25, 5, new List<float>() { 1, 1 }));
             blueSkills.Add(new SkillLevelInfo("Blue (shield)", "blue", "20% Less blue req. + reflects 20% damage", 3, 10000, 75, 8, new List<float>() { 1, 1 }));
@@ -130,8 +134,8 @@ namespace Com.Hypester.DM3
             string[] skillNames = new string[4] { "blue", "green", "red", "yellow" };
 
             PlayerData playerData = MainController.Instance.playerData;
+
             
-            /*
             blueText.text = playerData.blueSkill.ToString() + "/" + blueSkills.Count.ToString();
             greenText.text = playerData.greenSkill.ToString() + "/" + greenSkills.Count.ToString();
             redText.text = playerData.redSkill.ToString() + "/" + redSkills.Count.ToString();
@@ -140,7 +144,7 @@ namespace Com.Hypester.DM3
             greenIcon.sprite = MainController.Data.sprites.GetSkillSprite("green", playerData.greenSkill);
             redIcon.sprite = MainController.Data.sprites.GetSkillSprite("red", playerData.redSkill);
             yellowIcon.sprite = MainController.Data.sprites.GetSkillSprite("yellow", playerData.yellowSkill);
-            */
+            
 
             for (int i = 0; i < skillNames.Length; i++)
             {
@@ -206,6 +210,85 @@ namespace Com.Hypester.DM3
                     }
                 }
                 skillLevelLists.Add(skillNames[i], skillList);
+                skillList.SetActive(false);
+            }
+
+            SelectSkill("blue");
+            */
+        }
+
+        private void OnShopLoaded(bool isSuccess, string errorMessage, EconomyService.ShopRequestObject shop)
+        {
+            // TODO: error popup events
+            Debug.Log("Shop loading complete");
+
+            if (!isShown) { return; }
+
+            bool hasError = !string.IsNullOrEmpty(errorMessage);
+            if (!isSuccess || shop == null || hasError)
+            {
+                Debug.LogError(string.Format("!isSuccess({0}), shop == null ({1}), hasError({2})", !isSuccess, shop == null, hasError));
+                if (hasError) { Debug.Log(errorMessage); }
+                return;
+            }
+            if (shop.skills == null)
+            {
+                Debug.LogError("Could not create shop object.");
+                return;
+            }
+            Debug.Log("shop.skills.Count: " + shop.skills.Count);
+            PlayerData playerData = MainController.Instance.playerData; // TODO: use the received skill list to get current player level
+            for (int i=0; i < shop.skills.Count; i++)
+            {
+                EconomyService.Skill skill = shop.skills[i];
+                if (skill.levels == null || skill.levels.Count <= 0) { Debug.LogError("No level information for " + skill.name); continue; }
+
+                GameObject skillList = Instantiate(skillLevelListPrefab, this.transform, false);
+                skillList.name = skill.syscode + "List";
+                Transform contentTransform = skillList.GetComponentInChildren<VerticalLayoutGroup>().transform;
+
+                foreach (EconomyService.Level skillLevel in skill.levels)
+                {
+                    SkillLevelEntry sle = Instantiate(skillLevelEntryPrefab, contentTransform, false).GetComponent<SkillLevelEntry>();
+
+                    sle.syscode = skill.syscode;
+                    sle.description = skillLevel.description;
+                    sle.level = skillLevel.level;
+                    sle.coinCost = int.Parse(skillLevel.coins);
+                    sle.skillCost = int.Parse(skillLevel.skills);
+                    sle.requiredXp = int.Parse(skillLevel.xp);
+
+                    sle.SetLevelText("Level " + skillLevel.level.ToString());
+                    sle.SetDescription(skillLevel.description);
+                    sle.SetLevelImage(MainController.Data.sprites.GetSkillSprite(skill.syscode, skillLevel.level));
+                    if (playerData.GetSkillLevel(skill.syscode) >= skillLevel.level) // Player has unlocked this already.
+                    {
+                        sle.UnlockSkill();
+                        sle.state = SkillLevelEntry.State.Unlocked;
+                    }
+                    else
+                    {
+                        sle.SetCoinCost(int.Parse(skillLevel.coins));
+                        sle.SetSkillCost(int.Parse(skillLevel.skills));
+                        if (playerData.xp < int.Parse(skillLevel.xp)) // Restricted for player due to xp requirement.
+                        {
+                            sle.ToggleLockIcon(true);
+                            sle.ToggleXpRequirementText(true, int.Parse(skillLevel.xp));
+                            sle.state = SkillLevelEntry.State.RestrictedByXp;
+                        }
+                        else if (playerData.GetSkillLevel(skill.syscode) < skillLevel.level - 1)
+                        {
+                            sle.ToggleLockIcon(true);
+                            sle.ToggleXpRequirementText(false, 0);
+                            sle.state = SkillLevelEntry.State.RestrictedByPrevious;
+                        }
+                        else
+                        {
+                            sle.state = SkillLevelEntry.State.Locked;
+                        }
+                    }
+                }
+                skillLevelLists.Add(skill.syscode, skillList);
                 skillList.SetActive(false);
             }
 

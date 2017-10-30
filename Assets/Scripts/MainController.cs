@@ -20,11 +20,13 @@ namespace Com.Hypester.DM3
         private bool _gotFacebookData;
 
         //Connections
-        public bool wantsPhotonConnection = true;
         public bool wantsFBConnection = false;
         public bool wantsDBConnection = false; //TODO
 
         public bool facebookConnected;
+
+        // Services
+        public static SettingsService settingsService { get; private set; }
 
         private static Database data;
         public static Database Data
@@ -36,6 +38,42 @@ namespace Com.Hypester.DM3
                     data = ((GameObject)Instantiate(Resources.Load("Data"), Instance.transform)).GetComponent<Database>();
                 }
                 return data;
+            }
+        }
+        private static EconomyService serviceEconomy;
+        public static EconomyService ServiceEconomy
+        {
+            get
+            {
+                if (serviceEconomy == null)
+                {
+                    serviceEconomy = ((GameObject)Instantiate(Resources.Load("ServiceEconomy"), Instance.transform)).GetComponent<EconomyService>();
+                }
+                return serviceEconomy;
+            }
+        }
+        private static NetworkService serviceNetwork;
+        public static NetworkService ServiceNetwork
+        {
+            get
+            {
+                if (serviceNetwork == null)
+                {
+                    serviceNetwork = ((GameObject)Instantiate(Resources.Load("ServiceNetwork"), Instance.transform)).GetComponent<NetworkService>();
+                }
+                return serviceNetwork;
+            }
+        }
+        private static PlayerService servicePlayer;
+        public static PlayerService ServicePlayer
+        {
+            get
+            {
+                if (servicePlayer == null)
+                {
+                    servicePlayer = ((GameObject)Instantiate(Resources.Load("ServicePlayer"), Instance.transform)).GetComponent<PlayerService>();
+                }
+                return servicePlayer;
             }
         }
 
@@ -56,15 +94,15 @@ namespace Com.Hypester.DM3
                             instance = new GameObject("MainController").AddComponent<MainController>();
                     }
                 }
-
                 return instance;
             }
         }
 
-        public void FacebookInit() { FB.Init(); }
-
         private void OnEnable()
         {
+            // Services
+            settingsService = new SettingsService();
+
             PlayerEvent.OnPlayerLogin += PlayerLogin;
 
             instance = this;
@@ -73,8 +111,6 @@ namespace Com.Hypester.DM3
             firstScreen.GoToScreen(firstScreen);
             currentScreen = firstScreen;
             playerData = new PlayerData();
-
-            playerData.SetCoins(150);
 
             _gotFacebookData = false;
         }
@@ -101,22 +137,9 @@ namespace Com.Hypester.DM3
             Application.Quit();
         }
 
-        public void GetPlayerDataFromDB ()
+        public void OnHideUnity(bool isGameShown)
         {
-            //Retrieve data from DB.
-        }
-
-        public void CallFBLogin()
-        {
-            FB.LogInWithReadPermissions(new List<string>() { "public_profile", "email", "user_friends" }, LoginCallback);
-        }
-
-        private void LoginCallback (ILoginResult result)
-        {
-            if (FB.IsLoggedIn)
-                facebookConnected = true;
-            else
-                Debug.Log(result.Error);
+            Time.timeScale = isGameShown ? 1 : 0;
         }
 
         public void CallFBLogout()
@@ -152,7 +175,7 @@ namespace Com.Hypester.DM3
             Debug.Log("pic : " + dataDict["url"].ToString());
         }
 
-        void PlayerLogin(LoginCanvas.LoginType loginType)
+        void PlayerLogin(LoginType loginType, PlayerService.LoginRequestObject loginObject)
         {
             List<PlayerStatsInfo> randomPsi = new List<PlayerStatsInfo>();
             PlayerStatsInfo psi1 = new PlayerStatsInfo(Random.Range(1, 4), Random.Range(10, 3000), Random.Range(1, 30), Random.Range(0, 2), Random.Range(0, 2), Random.Range(0, 2), Random.Range(0, 2));
@@ -168,9 +191,9 @@ namespace Com.Hypester.DM3
 
             PlayerStatsInfo psi = randomPsi[Random.Range(0, randomPsi.Count)];
 
-            playerData.SetCoins(psi.coinAmount);
-            playerData.SetXp(psi.xpLevel);
-            playerData.SetUnspentSkill(psi.skillAmount);
+            playerData.SetCoins(loginObject.coins);
+            playerData.SetXp(loginObject.XPlevel);
+            playerData.SetUnspentSkill(loginObject.skillPoints);
             playerData.SetSkillLevel("blue", psi.bluePowerLevel);
             playerData.SetSkillLevel("green", psi.greenPowerLevel);
             playerData.SetSkillLevel("red", psi.redPowerLevel);

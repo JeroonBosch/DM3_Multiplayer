@@ -48,10 +48,8 @@ namespace Com.Hypester.DM3
 
                 Debug.Log("Loading match-making. " + PhotonNetwork.room.MaxPlayers);
             }
-                    
 
-            if (_connect && !PhotonNetwork.connecting && !PhotonNetwork.connected)
-                PhotonNetwork.ConnectUsingSettings("v0.2");
+            if (_connect && !PhotonNetwork.connected && !PhotonNetwork.connecting) { PhotonNetwork.ConnectUsingSettings("v0.2"); }
         }
 
         private GameHandler GetGameController ()
@@ -64,10 +62,8 @@ namespace Com.Hypester.DM3
                     if (gh.GameID == gameID_requested)
                         return gh;
                 }
-            } else
-            {
-                return _game;
-            }
+            } else { return _game; }
+
             return null;
         }
 
@@ -90,7 +86,6 @@ namespace Com.Hypester.DM3
                     else if (PhotonNetwork.lobby == _tournamentLobby)
                         PhotonNetwork.JoinRandomRoom(null, 4); //tournament match
                 }
-                
             }
         }
 
@@ -104,6 +99,19 @@ namespace Com.Hypester.DM3
         {
             PhotonNetwork.JoinLobby(_tournamentLobby);
             PhotonNetwork.playerName = MainController.Instance.playerData.profileName;
+        }
+
+        public override void OnFailedToConnectToPhoton(DisconnectCause cause)
+        {
+            base.OnFailedToConnectToPhoton(cause);
+
+            NetworkEvent.FailedToConnectToPhoton(cause);
+        }
+        public override void OnConnectedToPhoton()
+        {
+            base.OnConnectedToPhoton();
+
+            NetworkEvent.ConnectedToPhoton();
         }
 
         public override void OnPhotonRandomJoinFailed(object[] codeAndMsg)

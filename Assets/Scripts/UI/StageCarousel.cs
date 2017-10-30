@@ -116,6 +116,9 @@ namespace Com.Hypester.DM3
 
         public void InitializeCarousel()
         {
+            MainController.ServiceEconomy.LoadStages(OnStagesLoaded);
+
+            /*
             List<StageEntryInfoDB> entries = new List<StageEntryInfoDB>();
             if (type == Type.Normal)
             {
@@ -149,6 +152,48 @@ namespace Com.Hypester.DM3
             }
 
             _highestIndex = entries.Count - 1;
+            ButtonColorCheck();
+            */
+        }
+
+        private void OnStagesLoaded(bool isSuccess, string errorMessage, EconomyService.StagesRequestObject stageRequestObject)
+        {
+            // TODO: error popup events
+            Debug.Log("Stages loading complete");
+
+            bool hasError = !string.IsNullOrEmpty(errorMessage);
+            if (!isSuccess || stageRequestObject == null || hasError)
+            {
+                Debug.LogError(string.Format("!isSuccess({0}), stageRequestObject == null ({1}), hasError({2})", !isSuccess, stageRequestObject == null, hasError));
+                if (hasError) { Debug.Log(errorMessage); }
+                return;
+            }
+            if (stageRequestObject.stages == null)
+            {
+                Debug.LogError("Could not create stageRequestObject object.");
+                return;
+            }
+
+            int positionCounter = 0;
+            foreach (EconomyService.Stage stage in stageRequestObject.stages)
+            {
+                StageEntry entry = Instantiate(stageEntryPrefab, transform, false).GetComponent<StageEntry>();
+
+                entry.transform.localPosition = new Vector2(1000f * positionCounter, 0f); ;
+                entry.playButton.onClick.RemoveAllListeners();
+                entry.playButton.onClick.AddListener(() => canvas.SetReady(entry));
+
+                int coinReward = type == Type.Normal ? int.Parse(stage.reward) : int.Parse(stage.tourna_reward);
+                int coinCost = type == Type.Normal ? int.Parse(stage.buyin) : int.Parse(stage.tourna_buyin);
+                entry.SetCoinPrize(coinReward);
+                entry.SetCoinCost(coinCost);
+                entry.SetSpecialRule("");
+
+                stageEntries.Add(entry.gameObject);
+                positionCounter++;
+            }
+
+            _highestIndex = stageRequestObject.stages.Count - 1;
             ButtonColorCheck();
         }
 
