@@ -228,11 +228,15 @@ namespace Com.Hypester.DM3
             if (!isSuccess || shop == null || hasError)
             {
                 Debug.LogError(string.Format("!isSuccess({0}), shop == null ({1}), hasError({2})", !isSuccess, shop == null, hasError));
-                if (hasError) { Debug.Log(errorMessage); }
-                return;
+                if (hasError) {
+                    UIEvent.Info(errorMessage, PopupType.Error);
+                    Debug.Log(errorMessage);
+                    return;
+                }
             }
-            if (shop.skills == null)
+            if (shop == null)
             {
+                UIEvent.Info("Shop serialization failed", PopupType.Error);
                 Debug.LogError("Could not create shop object.");
                 return;
             }
@@ -260,7 +264,7 @@ namespace Com.Hypester.DM3
 
                     sle.SetLevelText("Level " + skillLevel.level.ToString());
                     sle.SetDescription(skillLevel.description);
-                    sle.SetLevelImage(MainController.Data.sprites.GetSkillSprite(skill.syscode, skillLevel.level));
+                    sle.SetLevelImage(MainController.Data.sprites.GetSkillSprite(skill.syscode, skillLevel.level-1));
                     if (playerData.GetSkillLevel(skill.syscode) >= skillLevel.level) // Player has unlocked this already.
                     {
                         sle.UnlockSkill();

@@ -1,43 +1,84 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
-public class SpriteDatabase : MonoBehaviour {
-
-    [Header("Avatars")]
-    public Sprite guestAvatar;
-
-    [Header("Icons")]
-    public Sprite thumbsUp;
-    public Sprite thumbsDown;
-    public Sprite lockIcon;
-    public Sprite coinIcon;
-    public Sprite coinIcon7;
-    public Sprite skillIcon;
-
-    [Header("Skills")]
-    [SerializeField] List<Sprite> blueSprites = new List<Sprite>();
-    [SerializeField] List<Sprite> greenSprites = new List<Sprite>();
-    [SerializeField] List<Sprite> redSprites = new List<Sprite>();
-    [SerializeField] List<Sprite> yellowSprites = new List<Sprite>();
-
-    public Sprite GetSkillSprite(string skillColor, int level)
+namespace Com.Hypester.DM3
+{
+    public class SpriteDatabase : MonoBehaviour
     {
-        Sprite skillSprite = null;
-        switch (skillColor)
+        [Header("Avatars")]
+        public Sprite guestAvatar;
+
+        [Header("Icons")]
+        public Sprite thumbsUp;
+        public Sprite thumbsDown;
+        public Sprite lockIcon;
+        public Sprite skillIcon;
+        public Sprite coinIcon;
+        [SerializeField] List<Sprite> coinPiles = new List<Sprite>();
+
+        [Header("Skills")]
+        [SerializeField]
+        List<Sprite> blueSprites = new List<Sprite>();
+        [SerializeField] List<Sprite> greenSprites = new List<Sprite>();
+        [SerializeField] List<Sprite> redSprites = new List<Sprite>();
+        [SerializeField] List<Sprite> yellowSprites = new List<Sprite>();
+
+        [Header("Stages")]
+        [SerializeField] List<StageArtEntry> stages;
+
+        [Header("Popups")]
+        [SerializeField] List<PopupArtEntry> popups;
+
+        public Sprite GetSkillSprite(string syscode, int level)
         {
-            case "blue":
-                skillSprite = blueSprites[level];
-                break;
-            case "green":
-                skillSprite = greenSprites[level];
-                break;
-            case "red":
-                skillSprite = redSprites[level];
-                break;
-            case "yellow":
-                skillSprite = yellowSprites[level];
-                break;
+            Sprite skillSprite = null;
+            switch (syscode)
+            {
+                case "blue":
+                    skillSprite = blueSprites[level];
+                    break;
+                case "green":
+                    skillSprite = greenSprites[level];
+                    break;
+                case "red":
+                    skillSprite = redSprites[level];
+                    break;
+                case "yellow":
+                    skillSprite = yellowSprites[level];
+                    break;
+            }
+            return skillSprite;
         }
-        return skillSprite;
+
+        public Sprite GetCoinPileSprite(int level)
+        {
+            return (coinPiles.Count == 0 ? null : coinPiles[level]);
+        }
+
+        public StageArt GetStageArt(string syscode)
+        {
+            StageArt stageArt = new StageArt();
+            foreach (StageArtEntry sae in stages)
+            {
+                if (string.Equals(sae.syscode, syscode)) { stageArt = sae.stageArt; break; }
+            }
+            return stageArt;
+        }
+
+        public Sprite GetPopupBackground(PopupType type)
+        {
+            Sprite popupBg = null;
+            foreach (PopupArtEntry pae in popups)
+            {
+                if (pae.type == type) { popupBg = pae.bg; break; }
+            }
+            return popupBg;
+        }
     }
+
+    [System.Serializable]
+    public struct StageArtEntry { public string syscode; public StageArt stageArt; }
+    [System.Serializable]
+    public struct PopupArtEntry { public PopupType type; public Sprite bg; }
 }

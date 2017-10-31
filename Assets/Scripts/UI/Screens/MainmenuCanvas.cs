@@ -61,12 +61,17 @@ namespace Com.Hypester.DM3
 
         public void Preferences()
         {
-            GoToScreen(GameObject.Find("PreferencesScreen").GetComponent<PreferencesCanvas>());
+            GoToScreen(GameObject.Find("SettingsScreen").GetComponent<SettingsCanvas>());
         }
 
         public void PlayerProfile()
         {
             GoToScreen(GameObject.Find("PlayerProfileScreen").GetComponent<PlayerProfileCanvas>());
+        }
+
+        public void Shop()
+        {
+            GoToScreen(GameObject.Find("ShopScreen").GetComponent<ShopCanvas>());
         }
 
         public void CoinShop()

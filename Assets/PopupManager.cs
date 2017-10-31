@@ -7,6 +7,9 @@ namespace Com.Hypester.DM3
     {
         // TODO: use object pool for popups.
 
+        [Header("General")]
+        [SerializeField] GameObject infoPrefab;
+
         [Header("Currency")]
         [SerializeField] GameObject coinPurchasePrefab;
         [SerializeField] GameObject insufficientCurrencyPrefab;
@@ -29,7 +32,9 @@ namespace Com.Hypester.DM3
             UIEvent.OnSkillUpgradeSuccess += SkillUpgradeSuccess;
 
             UIEvent.OnPopupClose += PopupClose;
+            UIEvent.OnInfo += Info;
         }
+
         private void OnDisable()
         {
             UIEvent.OnCoinPurchaseSuccess -= CoinPurchaseSuccess;
@@ -40,6 +45,7 @@ namespace Com.Hypester.DM3
             UIEvent.OnSkillUpgradeSuccess -= SkillUpgradeSuccess;
 
             UIEvent.OnPopupClose -= PopupClose;
+            UIEvent.OnInfo -= Info;
         }
 
         private void Update()
@@ -53,6 +59,18 @@ namespace Com.Hypester.DM3
             }
         }
 
+        private void Info(string msg, PopupType type)
+        {
+            InfoPopup ip = Instantiate(infoPrefab).GetComponent<InfoPopup>();
+
+            ip.msgIcon.sprite = MainController.Data.sprites.thumbsDown;
+            ip.msgTitle.text = "Oops...";
+            ip.msgBody.text = msg;
+            ip.background.sprite = MainController.Data.sprites.GetPopupBackground(type);
+
+            AddPopupToQueue(ip.gameObject);
+        }
+
         void InsufficientCurrency(SkillLevelEntry.Currency currency)
         {
             InsufficientCurrencyPopup icp = Instantiate(insufficientCurrencyPrefab).GetComponent<InsufficientCurrencyPopup>();
@@ -61,7 +79,7 @@ namespace Com.Hypester.DM3
             switch (currency)
             {
                 case SkillLevelEntry.Currency.Coins:
-                    icp.msgIcon.sprite = MainController.Data.sprites.coinIcon7;
+                    icp.msgIcon.sprite = MainController.Data.sprites.coinIcon;
                     icp.msgTitle.text = "Not enough coins";
                     icp.msgBody.text = "Win more coins by playing against opponents or visit the coin store";
                     icp.refuseButton.SetActive(true);

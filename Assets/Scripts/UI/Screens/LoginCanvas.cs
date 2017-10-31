@@ -56,18 +56,6 @@ namespace Com.Hypester.DM3
                     loggingInText.text = "Connecting to Photon...(" + ((int)_loginTimer).ToString() + ")";
                 }
 
-                bool isLoggedIn = true;
-
-                if (MainController.Instance.wantsFBConnection && !MainController.Instance.facebookConnected)
-                    isLoggedIn = false;
-
-                if (isLoggedIn)
-                {
-                    GoToScreen(FindObjectOfType<MainmenuCanvas>());
-                    connectingToPhoton = false;
-                    enabled = false;
-                }
-
                 if (_loginTimer > Constants.loginTimeout)
                 {
                     TimeOutLogin();
@@ -77,37 +65,36 @@ namespace Com.Hypester.DM3
 
         private void TimeOutLogin()
         {
+            GoToScreen(FindObjectOfType<MainmenuCanvas>());
             connectingToPhoton = false;
+            enabled = false;
             _loginTimer = 0f;
-            ShowLoginFields();
+
+            UIEvent.Info("Failed to connect Photon. Matchmaking unavailable. Establishing connection.", PopupType.Warning);
         }
 
         public void Login()
         {
-            MainController.settingsService.lastLoginType = LoginType.DEVICE;
-            MainController.ServicePlayer.Ping(OnInitConnect);
             HideLoginFields();
+            MainController.settingsService.lastLoginType = LoginType.DEVICE;
 
-            /*
-            _tryingToLogin = true;
+            //MainController.ServicePlayer.Ping(OnInitConnect);
             
-            MainController.Instance.wantsFBConnection = false;
-            PhotonController.Instance.EnsureConnection();
-
-            if (nameFieldText.text != "")  {
-                MainController.Instance.playerData.SetProfileName(nameFieldText.text);
-            }
-            else {
-                MainController.Instance.playerData.SetProfileName("Guest" + Random.Range(1000, 9999).ToString());
-            }
-            */
+            SetLoginText("Logging in...");
+            string mobile_id = string.IsNullOrEmpty(MainController.settingsService.mobileId) ? "new" : MainController.settingsService.mobileId;
+            MainController.ServicePlayer.Login("", mobile_id, OnPlayerLogin);
+            
         }
 
         public void LoginFB()
         {
-            MainController.settingsService.lastLoginType = LoginType.FACEBOOK;
-            MainController.ServicePlayer.Ping(OnInitConnect);
             HideLoginFields();
+            MainController.settingsService.lastLoginType = LoginType.FACEBOOK;
+            //MainController.ServicePlayer.Ping(OnInitConnect);
+
+            SetLoginText("Initializing FaceBook...");
+            if (FB.IsInitialized) { Debug.LogError("Already initialized"); InitCallback(); } else { Debug.LogError("Not initialized"); FB.Init(InitCallback, MainController.Instance.OnHideUnity); }
+            
         }
         private void OnInitConnect(bool isSuccess, string message, PlayerService.PingRequestObject pingObject)
         {
@@ -117,16 +104,19 @@ namespace Com.Hypester.DM3
                 MainController.settingsService.lastLoginType = LoginType.NONE;
                 if (!string.IsNullOrEmpty(message))
                 {
+                    UIEvent.Info(message, PopupType.Error);
                     // TODO: display this for the player
-                    Debug.Log("Failed to ping the server.");
+                    Debug.LogError("Failed to ping the server.");
                     Debug.LogError(message);
                     return;
                 }
+                UIEvent.Info("Failed to ping the server", PopupType.Error);
             }
             if (pingObject == null)
             {
                 MainController.settingsService.lastLoginType = LoginType.NONE;
                 // TODO: display this for the player
+                UIEvent.Info("Could not serialize the ping object", PopupType.Error);
                 Debug.Log("Something went wrong with serializing the pingObject.");
                 return;
             }
@@ -146,10 +136,12 @@ namespace Com.Hypester.DM3
 
         private void InitCallback()
         {
+            Debug.LogError("FB.Init callback");
             if (FB.IsInitialized)
             {
+                Debug.LogError("FB.IsInitialized");
                 FB.ActivateApp();
-                var perms = new List<string>() { "public_profile", "email", "user_friends" };
+                var perms = new List<string>() { "public_profile", "user_friends" };
                 SetLoginText("Logging in...");
                 FB.LogInWithReadPermissions(perms, AuthCallback);
             }
@@ -157,34 +149,43 @@ namespace Com.Hypester.DM3
             {
                 // TODO: Event for facebook login failure (popup).
                 ShowLoginFields();
-                Debug.Log("Failed to Initialize the Facebook SDK");
+                UIEvent.Info("Facebook SDK init failure", PopupType.Error);
+                Debug.LogError("Failed to Initialize the Facebook SDK");
             }
         }
 
         private void AuthCallback(ILoginResult result)
         {
+            Debug.LogError("AuthCallback");
             if (FB.IsLoggedIn)
             {
+                Debug.LogError("IsLoggedIn");
                 var aToken = AccessToken.CurrentAccessToken;
-                Debug.Log("Facebook TOKEN: " + aToken.UserId);
+                Debug.LogError("Facebook TOKEN: " + aToken.UserId);
                 string mobile_id = string.IsNullOrEmpty(MainController.settingsService.mobileId) ? "new" : MainController.settingsService.mobileId;
                 MainController.ServicePlayer.Login(aToken.TokenString, mobile_id, OnPlayerLogin);
             }
             else
             {
-                Debug.Log("User cancelled login");
+                Debug.LogError("User cancelled login");
+                if (!string.IsNullOrEmpty(result.Error))
+                {
+                    UIEvent.Info(result.Error, PopupType.Error);
+                }
                 ShowLoginFields();
             }
         }
 
         private void OnPlayerLogin(bool isSuccess, string message, PlayerService.LoginRequestObject loginObject)
         {
+            Debug.LogError("OnPlayerLogin");
             if (!isSuccess)
             {
                 MainController.settingsService.lastLoginType = LoginType.NONE;
                 if (!string.IsNullOrEmpty(message))
                 {
                     // TODO: display this for the player
+                    UIEvent.Info(message, PopupType.Error);
                     Debug.Log("Failed to login to the server.");
                     Debug.LogError(message);
                     return;
@@ -193,7 +194,7 @@ namespace Com.Hypester.DM3
             if (loginObject == null)
             {
                 MainController.settingsService.lastLoginType = LoginType.NONE;
-                // TODO: display this for the player
+                UIEvent.Info("Login serialization failed", PopupType.Error);
                 Debug.Log("Something went wrong with serializing the loginObject.");
                 return;
             }
@@ -222,6 +223,8 @@ namespace Com.Hypester.DM3
             GoToScreen(FindObjectOfType<MainmenuCanvas>());
             connectingToPhoton = false;
             enabled = false;
+
+            UIEvent.Info("Failed to connect Photon. Matchmaking unavailable. Establishing connection.", PopupType.Warning);
         }
 
         private void HideLoginFields ()

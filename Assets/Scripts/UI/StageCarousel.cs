@@ -165,12 +165,16 @@ namespace Com.Hypester.DM3
             if (!isSuccess || stageRequestObject == null || hasError)
             {
                 Debug.LogError(string.Format("!isSuccess({0}), stageRequestObject == null ({1}), hasError({2})", !isSuccess, stageRequestObject == null, hasError));
-                if (hasError) { Debug.Log(errorMessage); }
-                return;
+                if (hasError) {
+                    UIEvent.Info(errorMessage, PopupType.Error);
+                    Debug.Log(errorMessage);
+                    return;
+                }
             }
-            if (stageRequestObject.stages == null)
+            if (stageRequestObject == null)
             {
                 Debug.LogError("Could not create stageRequestObject object.");
+                UIEvent.Info("Stages serialization failed", PopupType.Error);
                 return;
             }
 
@@ -188,6 +192,8 @@ namespace Com.Hypester.DM3
                 entry.SetCoinPrize(coinReward);
                 entry.SetCoinCost(coinCost);
                 entry.SetSpecialRule("");
+                StageArt stageArt = MainController.Data.sprites.GetStageArt(stage.syscode);
+                entry.SetBackground(stageArt.splash);
 
                 stageEntries.Add(entry.gameObject);
                 positionCounter++;

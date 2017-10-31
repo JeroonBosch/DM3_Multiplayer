@@ -13,6 +13,7 @@ namespace Com.Hypester.DM3
         public delegate void PopupInsufficientCurrency(SkillLevelEntry.Currency currency);
 
         public delegate void PopupAction(IPopup popup);
+        public delegate void PopupInfoAction(string msg, PopupType type);
 
         // CURRENCY
         public static event PopupCoinPurchaseSuccessAction OnCoinPurchaseSuccess;
@@ -47,10 +48,15 @@ namespace Com.Hypester.DM3
 
         // GENERAL
         public static event PopupAction OnPopupClose;
+        public static event PopupInfoAction OnInfo;
 
         public static void PopupClose(IPopup popup)
         {
             if (OnPopupClose != null) OnPopupClose(popup);
+        }
+        public static void Info(string msg, PopupType type)
+        {
+            if (OnInfo != null) { OnInfo(msg, type); }
         }
     }
 }

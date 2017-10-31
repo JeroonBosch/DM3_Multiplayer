@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 namespace Com.Hypester.DM3
 {
-    public class PreferencesCanvas : BaseMenuCanvas
+    public class SettingsCanvas : BaseMenuCanvas
     {
         [SerializeField] GameObject hapticFeedbackActiveButton;
         [SerializeField] GameObject hapticFeedbackDeactiveButton;

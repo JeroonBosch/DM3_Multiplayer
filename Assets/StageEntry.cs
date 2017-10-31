@@ -6,7 +6,8 @@ public class StageEntry : MonoBehaviour {
     public int coinPrize { get; private set; }
     public int coinCost { get; private set; }
 
-    string specialRule;
+    private string specialRule;
+    private Image splashArt;
 
     [SerializeField] Text coinPrizeText;
     [SerializeField] Text coinCostText;
@@ -34,5 +35,10 @@ public class StageEntry : MonoBehaviour {
     {
         specialRuleTitleText.enabled = value == "" ? false : true;
         specialRuleText.text = value;
+    }
+    public void SetBackground(Sprite newImage)
+    {
+        if (newImage == null) { Debug.LogWarning("No splash image to set."); return; }
+        splashArt.sprite = newImage;
     }
 }

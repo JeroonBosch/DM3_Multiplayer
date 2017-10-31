@@ -43,6 +43,6 @@
         public const float SearchMatchTimeout = 30f;
 
         //Timeouts
-        public const float loginTimeout = 2f;
+        public const float loginTimeout = 10f;
     }
 }
