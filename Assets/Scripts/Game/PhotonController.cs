@@ -78,7 +78,6 @@ namespace Com.Hypester.DM3
             if (PhotonNetwork.connected)
             {
                 // #Critical we need at this point to attempt joining a Random Room. If it fails, we'll get notified in OnPhotonRandomJoinFailed() and we'll create one.
-
                 if (PhotonNetwork.insideLobby)
                 {
                     if (PhotonNetwork.lobby == _normalLobby)

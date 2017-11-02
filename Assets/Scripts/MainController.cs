@@ -60,6 +60,7 @@ namespace Com.Hypester.DM3
                 if (serviceNetwork == null)
                 {
                     serviceNetwork = ((GameObject)Instantiate(Resources.Load("ServiceNetwork"), Instance.transform)).GetComponent<NetworkService>();
+                    serviceNetwork.Init();
                 }
                 return serviceNetwork;
             }

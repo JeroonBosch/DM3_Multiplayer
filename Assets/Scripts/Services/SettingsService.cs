@@ -18,7 +18,8 @@ public class SettingsService
         }
         if (PlayerPrefs.HasKey("HexaClash"))
         {
-            _hexaClash = PlayerPrefs.GetString("HexaClash", "");
+            PlayerPrefs.DeleteKey("HexaClash");
+            // _hexaClash = PlayerPrefs.GetString("HexaClash", "");
         }
     }
 
@@ -63,6 +64,7 @@ public class SettingsService
         }
         set
         {
+            Debug.Log("Setting HexaClash: " + value);
             _hexaClash = value;
             PlayerPrefs.SetString("HexaClash", value);
             PlayerPrefs.Save();

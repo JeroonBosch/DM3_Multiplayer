@@ -60,7 +60,7 @@ namespace Com.Hypester.DM3
                 {
                     state = State.RestrictedByXp;
                     ToggleLockIcon(true);
-                    ToggleXpRequirementText(true, requiredXp);
+                    // ToggleXpRequirementText(true, requiredXp);
                 }
             }
         }

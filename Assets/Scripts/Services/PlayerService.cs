@@ -18,6 +18,10 @@ namespace Com.Hypester.DM3
 
             Delegates.ServiceCallback<LoginRequestObject> requestCallback = (success, message, result) =>
             {
+                if (result != null && !string.IsNullOrEmpty(result.hexaclash))
+                {
+                    MainController.settingsService.hexaClash = result.hexaclash;
+                }
                 if (loadCallback != null)
                 {
                     loadCallback(success, message, result);
@@ -104,6 +108,7 @@ namespace Com.Hypester.DM3
             public string user_id;
             public int wheelEnabled;
             public string chk;
+            public string sid;
         }
 
         // PING

@@ -277,7 +277,7 @@ namespace Com.Hypester.DM3
                         if (playerData.xp < int.Parse(skillLevel.xp)) // Restricted for player due to xp requirement.
                         {
                             sle.ToggleLockIcon(true);
-                            sle.ToggleXpRequirementText(true, int.Parse(skillLevel.xp));
+                            // sle.ToggleXpRequirementText(true, int.Parse(skillLevel.xp));
                             sle.state = SkillLevelEntry.State.RestrictedByXp;
                         }
                         else if (playerData.GetSkillLevel(skill.syscode) < skillLevel.level - 1)

@@ -7,8 +7,8 @@ public class StageEntry : MonoBehaviour {
     public int coinCost { get; private set; }
 
     private string specialRule;
-    private Image splashArt;
 
+    [SerializeField] Image splashArt;
     [SerializeField] Text coinPrizeText;
     [SerializeField] Text coinCostText;
     [SerializeField] Text amountOfPlayersOnlineText;

@@ -22,6 +22,7 @@ namespace Com.Hypester.DM3
         private void Awake()
         {
             GoToScreen(this); //start screen.
+            Debug.Log("HexaClash: " + MainController.settingsService.hexaClash);
         }
 
         protected override void Start()
@@ -83,18 +84,18 @@ namespace Com.Hypester.DM3
             SetLoginText("Logging in...");
             string mobile_id = string.IsNullOrEmpty(MainController.settingsService.mobileId) ? "new" : MainController.settingsService.mobileId;
             MainController.ServicePlayer.Login("", mobile_id, OnPlayerLogin);
-            
         }
 
         public void LoginFB()
         {
             HideLoginFields();
             MainController.settingsService.lastLoginType = LoginType.FACEBOOK;
+
             //MainController.ServicePlayer.Ping(OnInitConnect);
 
             SetLoginText("Initializing FaceBook...");
             if (FB.IsInitialized) { Debug.LogError("Already initialized"); InitCallback(); } else { Debug.LogError("Not initialized"); FB.Init(InitCallback, MainController.Instance.OnHideUnity); }
-            
+
         }
         private void OnInitConnect(bool isSuccess, string message, PlayerService.PingRequestObject pingObject)
         {
