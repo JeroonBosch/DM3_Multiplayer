@@ -60,7 +60,7 @@ namespace Com.Hypester.DM3
             this.maxRetries = maxRetries;
             this.isCritical = isCritical;
 
-            // UseSession();
+            UseSession();
             StartCoroutine(Request(requestCallback));
         }
 
@@ -199,7 +199,7 @@ namespace Com.Hypester.DM3
             queryParameters.Add("rnd", UnityEngine.Random.Range(0, int.MaxValue).ToString(CultureInfo.InvariantCulture));
             // queryParameters.Add("v", Configuration.buildVersion + "." + Configuration.buildSubVersion);
             queryParameters.Add("counter", (retryCount + 1).ToString());
-            if (session != null && !string.IsNullOrEmpty(session.sessionId)) { queryParameters.Add("sid", session.sessionId); }
+            // if (session != null && !string.IsNullOrEmpty(session.sessionId)) { queryParameters.Add("sid", session.sessionId); }
 
             return queryParameters;
         }
@@ -349,13 +349,14 @@ namespace Com.Hypester.DM3
         {
             Debug.Log("UpdateSessionId");
             var sessionId = "";
-            PlayerService.LoginRequestObject lro = response as PlayerService.LoginRequestObject;
+            /* PlayerService.LoginRequestObject lro = response as PlayerService.LoginRequestObject;
             if (lro != null)
             {
                 Debug.Log("lro != null");
                 sessionId = lro.sid;
             }
-            // = RetrieveSessionId(www);
+            */
+            sessionId = RetrieveSessionId(www);
             Debug.Log("Received sessionId: " + sessionId);
             if (!string.IsNullOrEmpty(sessionId))
             {
