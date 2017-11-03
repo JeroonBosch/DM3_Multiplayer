@@ -34,6 +34,8 @@ extern NSString *const FBUnityMessageName_OnRefreshCurrentAccessTokenComplete;
  messages back to Unity.
  */
 @interface FBUnitySDKDelegate : NSObject<
+  FBSDKAppGroupAddDialogDelegate,
+  FBSDKAppGroupJoinDialogDelegate,
   FBSDKGameRequestDialogDelegate,
   FBSDKSharingDelegate,
   FBSDKAppInviteDialogDelegate>

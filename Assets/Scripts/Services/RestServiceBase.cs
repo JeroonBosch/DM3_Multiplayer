@@ -65,6 +65,8 @@ namespace Com.Hypester.DM3
 
             string postDataString = EncodeBody(dataString);
 
+			Debug.Log ("Encoded dataString: " + postDataString);
+
             MainController.ServiceNetwork.MakeRequest(url, Encoding.UTF8.GetBytes(postDataString), headers, contentType == CONTENT_TYPE_JSON, requestCallback, maxRetrys, isCritical);
             headers.Clear();
         }

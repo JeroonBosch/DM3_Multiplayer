@@ -60,7 +60,7 @@ namespace Com.Hypester.DM3
             this.maxRetries = maxRetries;
             this.isCritical = isCritical;
 
-            // UseSession();
+            UseSession();
             StartCoroutine(Request(requestCallback));
         }
 
@@ -84,6 +84,7 @@ namespace Com.Hypester.DM3
 
             Debug.Log("Final URL");
             Debug.Log(reqUrl);
+			Debug.Log (postData.Length);
 
             wwwReq = new WWW(reqUrl, postData, headers);
 
@@ -101,6 +102,7 @@ namespace Com.Hypester.DM3
                 Debug.Log("wwwReq != null");
                 wwwError = wwwReq.error;
 
+				Debug.Log("booleanTime");
                 bool hasWWWError = !string.IsNullOrEmpty(wwwError);
                 UpdateSessionTs(hasWWWError);
 
@@ -115,8 +117,10 @@ namespace Com.Hypester.DM3
                 }
                 else
                 {
+					Debug.Log("It was NOT a simple request");
                     if (hasWWWError)
                     {
+						Debug.Log("hasWWWError");
                         KillRequest();
                         if (!isRetrysExceeded)
                         {
@@ -141,7 +145,7 @@ namespace Com.Hypester.DM3
                     {
                         Debug.Log("All good");
                         Debug.Log(wwwReq.text);
-                        
+						UpdateSessionId(wwwReq);
                         /*
                         if (RefreshingSessionId(wwwReq.text, wwwReq, requestCallback))
                         {
@@ -151,7 +155,7 @@ namespace Com.Hypester.DM3
                         
                         Debug.Log("Starting to ParseResponseBody");
                         Response responseData = ParseResponseBody<Response>(wwwReq.text);
-                        UpdateSessionId(wwwReq, wwwReq.text, responseData);
+                        //UpdateSessionId(wwwReq, wwwReq.text, responseData);
                         Debug.Log("Response body parsed.");
                         
                         /*
@@ -181,9 +185,10 @@ namespace Com.Hypester.DM3
 
             var queryStringBuilder = new StringBuilder(url);
             queryStringBuilder.Append("?");
-
+			Debug.Log ("query params");
             foreach (var queryParameter in dataParameters)
             {
+				Debug.Log (queryParameter.Key);
                 queryStringBuilder.Append(string.Format("{0}={1}&", queryParameter.Key, WWW.EscapeURL(queryParameter.Value)));
             }
 
@@ -199,7 +204,7 @@ namespace Com.Hypester.DM3
             queryParameters.Add("rnd", UnityEngine.Random.Range(0, int.MaxValue).ToString(CultureInfo.InvariantCulture));
             // queryParameters.Add("v", Configuration.buildVersion + "." + Configuration.buildSubVersion);
             queryParameters.Add("counter", (retryCount + 1).ToString());
-            if (session != null && !string.IsNullOrEmpty(session.sessionId)) { queryParameters.Add("sid", session.sessionId); }
+            // if (session != null && !string.IsNullOrEmpty(session.sessionId)) { queryParameters.Add("sid", session.sessionId); }
 
             return queryParameters;
         }
@@ -333,29 +338,34 @@ namespace Com.Hypester.DM3
 
         private void UpdateSessionTs(bool hasWWWError)
         {
+			Debug.Log ("UpdateSessionTs");
             if (!hasWWWError)
             {
+				Debug.Log ("!hasWWWError");
                 if (session != null && session.pendingSessionRequest)
                 {
+					Debug.Log ("session != null && session.pendingSessionRequest");
                     session.requestSuccessReceivedTS = Time.realtimeSinceStartup;
                 }
             }
             if (session != null)
             {
+				Debug.Log ("session != null");
                 session.pendingSessionRequest = false;
             }
         }
-        private void UpdateSessionId<Response>(WWW www, string responseString, Response response)
+        private void UpdateSessionId(WWW www)
         {
             Debug.Log("UpdateSessionId");
             var sessionId = "";
-            PlayerService.LoginRequestObject lro = response as PlayerService.LoginRequestObject;
+            /* PlayerService.LoginRequestObject lro = response as PlayerService.LoginRequestObject;
             if (lro != null)
             {
                 Debug.Log("lro != null");
                 sessionId = lro.sid;
             }
-            // = RetrieveSessionId(www);
+            */
+			sessionId = RetrieveSessionId(www);
             Debug.Log("Received sessionId: " + sessionId);
             if (!string.IsNullOrEmpty(sessionId))
             {

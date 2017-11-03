@@ -160,9 +160,9 @@ namespace Com.Hypester.DM3
             Debug.LogError("AuthCallback");
             if (FB.IsLoggedIn)
             {
-                Debug.LogError("IsLoggedIn");
+                Debug.Log("IsLoggedIn");
                 var aToken = AccessToken.CurrentAccessToken;
-                Debug.LogError("Facebook TOKEN: " + aToken.UserId);
+                Debug.Log("Facebook TOKEN: " + aToken.UserId);
                 string mobile_id = string.IsNullOrEmpty(MainController.settingsService.mobileId) ? "new" : MainController.settingsService.mobileId;
                 MainController.ServicePlayer.Login(aToken.TokenString, mobile_id, OnPlayerLogin);
             }
@@ -179,19 +179,20 @@ namespace Com.Hypester.DM3
 
         private void OnPlayerLogin(bool isSuccess, string message, PlayerService.LoginRequestObject loginObject)
         {
-            Debug.LogError("OnPlayerLogin");
-            if (!isSuccess)
+            Debug.Log("OnPlayerLogin");
+			if (!isSuccess || !string.IsNullOrEmpty(message))
             {
-                MainController.settingsService.lastLoginType = LoginType.NONE;
-                if (!string.IsNullOrEmpty(message))
-                {
-                    // TODO: display this for the player
-                    UIEvent.Info(message, PopupType.Error);
-                    Debug.Log("Failed to login to the server.");
-                    Debug.LogError(message);
-                    return;
-                }
+				Debug.LogError ("Failed to login to the server.");
+				if (!string.IsNullOrEmpty (message)) {
+					UIEvent.Info (message, PopupType.Error);
+					Debug.LogError (message);
+				} else {
+					UIEvent.Info ("Failed to login to the server.", PopupType.Error);
+				}
+				ResetLoginCanvas ();
+				return;
             }
+				
             if (loginObject == null)
             {
                 MainController.settingsService.lastLoginType = LoginType.NONE;
@@ -227,6 +228,14 @@ namespace Com.Hypester.DM3
 
             UIEvent.Info("Failed to connect Photon. Matchmaking unavailable. Establishing connection.", PopupType.Warning);
         }
+
+		private void ResetLoginCanvas() {
+			if (MainController.ServiceNetwork != null && MainController.ServiceNetwork.)
+			MainController.settingsService.lastLoginType = LoginType.NONE;
+			connectingToPhoton = false;
+			enabled = true;
+			ShowLoginFields ();
+		}
 
         private void HideLoginFields ()
         {
