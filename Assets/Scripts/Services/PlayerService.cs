@@ -31,6 +31,9 @@ namespace Com.Hypester.DM3
             };
             AsyncServerRequest(URL_LOGIN, parameters, requestCallback, 3, true);
         }
+		public void Logout() {
+			NetworkService.DestroySession ();
+		}
         public void Ping(Delegates.ServiceCallback<PingRequestObject> pingCallback)
         {
             AsyncServerRequest<PingRequestObject>(URL_PING, null, (success, message, result) =>

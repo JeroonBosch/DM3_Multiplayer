@@ -230,7 +230,7 @@ namespace Com.Hypester.DM3
         }
 
 		private void ResetLoginCanvas() {
-			if (MainController.ServiceNetwork != null && MainController.ServiceNetwork.)
+			MainController.ServicePlayer.Logout ();
 			MainController.settingsService.lastLoginType = LoginType.NONE;
 			connectingToPhoton = false;
 			enabled = true;

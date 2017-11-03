@@ -365,7 +365,9 @@ namespace Com.Hypester.DM3
                 sessionId = lro.sid;
             }
             */
+
 			sessionId = RetrieveSessionId(www);
+
             Debug.Log("Received sessionId: " + sessionId);
             if (!string.IsNullOrEmpty(sessionId))
             {
