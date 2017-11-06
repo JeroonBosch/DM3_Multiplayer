@@ -105,7 +105,7 @@ namespace Com.Hypester.DM3
 				Debug.Log("booleanTime");
                 bool hasWWWError = !string.IsNullOrEmpty(wwwError);
                 UpdateSessionTs(hasWWWError);
-
+				/* TODO: point of this?
                 if (postData == null && headers == null)
                 {
                     Debug.Log("It was a simple request");
@@ -115,62 +115,63 @@ namespace Com.Hypester.DM3
                         requestCallback(!hasWWWError, wwwError);
                     }
                 }
+
                 else
                 {
 					Debug.Log("It was NOT a simple request");
-                    if (hasWWWError)
+					*/
+                if (hasWWWError)
+                {
+					Debug.Log("hasWWWError");
+                    KillRequest();
+                    if (!isRetrysExceeded)
                     {
-						Debug.Log("hasWWWError");
-                        KillRequest();
-                        if (!isRetrysExceeded)
-                        {
-                            retryCount++;
+                        retryCount++;
 
-                            Debug.Log("RETRY " + retryCount + " " + url);
+                        Debug.Log("RETRY " + retryCount + " " + url);
 
-                            StartCoroutine(Request(requestCallback));
-                            return;
-                        }
-                        if (isCritical)
-                        {
-                            Delete();
-                            return;
-                        }
-                        if (requestCallback != null)
-                        {
-                            requestCallback(false, wwwError);
-                        }
+                        StartCoroutine(Request(requestCallback));
+                        return;
                     }
-                    else
+                    if (isCritical)
                     {
-                        Debug.Log("All good");
-                        Debug.Log(wwwReq.text);
-						UpdateSessionId(wwwReq);
-                        /*
-                        if (RefreshingSessionId(wwwReq.text, wwwReq, requestCallback))
-                        {
-                            return;
-                        }
-                        */
-                        
-                        Debug.Log("Starting to ParseResponseBody");
-                        Response responseData = ParseResponseBody<Response>(wwwReq.text);
-                        //UpdateSessionId(wwwReq, wwwReq.text, responseData);
-                        Debug.Log("Response body parsed.");
-                        
-                        /*
-                        if (isJson && !IsValidSessionResponse(wwwReq.text, responseData, requestCallback))
-                        {
-                            return;
-                        }
-                        */
-                        
-                        Debug.Log(responseData);
+                        Delete();
+                        return;
+                    }
+                    if (requestCallback != null)
+                    {
+                        requestCallback(false, wwwError);
+                    }
+                }
+                else
+                {
+                    Debug.Log("All good");
+                    Debug.Log(wwwReq.text);
+					UpdateSessionId(wwwReq);
+                    /*
+                    if (RefreshingSessionId(wwwReq.text, wwwReq, requestCallback))
+                    {
+                        return;
+                    }
+                    */
+                    
+                    Debug.Log("Starting to ParseResponseBody");
+                    Response responseData = ParseResponseBody<Response>(wwwReq.text);
+                    //UpdateSessionId(wwwReq, wwwReq.text, responseData);
+                    Debug.Log("Response body parsed.");
+                    
+                    /*
+                    if (isJson && !IsValidSessionResponse(wwwReq.text, responseData, requestCallback))
+                    {
+                        return;
+                    }
+                    */
+                    
+                    Debug.Log(responseData);
 
-                        if (requestCallback != null)
-                        {
-                            requestCallback(true, null, responseData);
-                        }
+                    if (requestCallback != null)
+                    {
+                        requestCallback(true, null, responseData);
                     }
                 }
                 KillRequest();

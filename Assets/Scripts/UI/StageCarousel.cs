@@ -189,6 +189,7 @@ namespace Com.Hypester.DM3
 
                 int coinReward = type == Type.Normal ? int.Parse(stage.reward) : int.Parse(stage.tourna_reward);
                 int coinCost = type == Type.Normal ? int.Parse(stage.buyin) : int.Parse(stage.tourna_buyin);
+				entry.SetId(stage.id);
                 entry.SetCoinPrize(coinReward);
                 entry.SetCoinCost(coinCost);
                 entry.SetSpecialRule("");

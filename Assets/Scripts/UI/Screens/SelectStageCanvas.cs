@@ -39,7 +39,7 @@ namespace Com.Hypester.DM3
             {
                 coverForeground.SetActive(true);
                 MainController.Instance.playerData.AddCoins(-se.coinCost);
-                PhotonController.Instance.MatchPlayers(); //This should load the next scene.
+                PhotonController.Instance.MatchPlayers(se); //This should load the next scene.
             }
             else
             {

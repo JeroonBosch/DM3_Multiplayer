@@ -19,6 +19,7 @@ namespace Com.Hypester.DM3
         public int gameID_requested;
         public GameHandler GameController { get { return GetGameController(); } set { _game = value; } }
 
+		private string latestStageId = "";
 
         private static PhotonController instance;
         public static PhotonController Instance
@@ -72,7 +73,7 @@ namespace Com.Hypester.DM3
             _connect = true;
         }
 
-        public void MatchPlayers()
+        public void MatchPlayers(StageEntry se)
         {
             // we check if we are connected or not, we join if we are , else we initiate the connection to the server.
             if (PhotonNetwork.connected)
@@ -80,10 +81,12 @@ namespace Com.Hypester.DM3
                 // #Critical we need at this point to attempt joining a Random Room. If it fails, we'll get notified in OnPhotonRandomJoinFailed() and we'll create one.
                 if (PhotonNetwork.insideLobby)
                 {
+					latestStageId = se.GetStageId ();
+					ExitGames.Client.Photon.Hashtable expectedRoomProps = new Hashtable { { RoomProperty.StageId, se.GetStageId() } };
                     if (PhotonNetwork.lobby == _normalLobby)
-                        PhotonNetwork.JoinRandomRoom(null, 2); //2 player match
+						PhotonNetwork.JoinRandomRoom(expectedRoomProps, 2); //2 player match
                     else if (PhotonNetwork.lobby == _tournamentLobby)
-                        PhotonNetwork.JoinRandomRoom(null, 4); //tournament match
+						PhotonNetwork.JoinRandomRoom(expectedRoomProps, 4); //tournament match
                 }
             }
         }
@@ -118,14 +121,15 @@ namespace Com.Hypester.DM3
             Debug.Log("OnPhotonRandomJoinFailed() was called by PUN. No random room available, so we create one.\nCalling: PhotonNetwork.CreateRoom(null, new RoomOptions() {maxPlayers = 2}, null);");
 
             // #Critical: we failed to join a random room, maybe none exists or they are all full. No worries, we create a new room.
-            if (PhotonNetwork.insideLobby)
+			if (PhotonNetwork.insideLobby && !string.IsNullOrEmpty(latestStageId))
             {
-                if (PhotonNetwork.lobby == _normalLobby)
-                    PhotonNetwork.CreateRoom(null, new RoomOptions() { MaxPlayers = 2 }, _normalLobby);
-                else
-                    PhotonNetwork.CreateRoom(null, new RoomOptions() { MaxPlayers = 4 }, _tournamentLobby);
+				TypedLobby typedLobby = PhotonNetwork.lobby == _normalLobby ? _normalLobby : _tournamentLobby;
+
+				RoomOptions roomOptions = new RoomOptions () { MaxPlayers = PhotonNetwork.lobby == _normalLobby ? 2 : 8 };
+				roomOptions.CustomRoomProperties = new Hashtable () { { RoomProperty.StageId, latestStageId } };
+
+				PhotonNetwork.CreateRoom(null, roomOptions, typedLobby);
             }
-            
         }
 
         public override void OnPhotonJoinRoomFailed(object[] codeAndMsg)
@@ -184,17 +188,12 @@ namespace Com.Hypester.DM3
         {
             Debug.Log("Creating player at " + PhotonNetwork.room.PlayerCount + " PlayerCount");
 
-            GameObject playerGO;
-            playerGO = PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity, 0);
+			Player playerGO = PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity, 0).GetComponent<Player>();
 
-            playerGO.GetComponent<Player>().joinNumber = PhotonNetwork.room.PlayerCount;
+            playerGO.joinNumber = PhotonNetwork.room.PlayerCount;
+			playerGO.localID = PhotonNetwork.isMasterClient || playerGO.joinNumber == 3 ? 0 : 1;
 
-            if (PhotonNetwork.isMasterClient || playerGO.GetComponent<Player>().joinNumber == 3) //TODO 
-                playerGO.GetComponent<Player>().localID = 0;
-            else
-                playerGO.GetComponent<Player>().localID = 1;
-
-            playerGO.GetComponent<Player>().UpdateLabels();
+            playerGO.UpdateLabels();
         }
 
         public void Rematch ()

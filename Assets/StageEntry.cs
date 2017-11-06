@@ -3,6 +3,8 @@ using UnityEngine.UI;
 
 public class StageEntry : MonoBehaviour {
 
+	private string id;
+
     public int coinPrize { get; private set; }
     public int coinCost { get; private set; }
 
@@ -21,6 +23,9 @@ public class StageEntry : MonoBehaviour {
         amountOfPlayersOnlineText.text = "Players online: " + playerCount;
     }
 
+	public void SetId(string id) {
+		this.id = id;
+	}
     public void SetCoinPrize(int value)
     {
         coinPrize = value;
@@ -41,4 +46,8 @@ public class StageEntry : MonoBehaviour {
         if (newImage == null) { Debug.LogWarning("No splash image to set."); return; }
         splashArt.sprite = newImage;
     }
+
+	public string GetStageId() {
+		return id;
+	}
 }
