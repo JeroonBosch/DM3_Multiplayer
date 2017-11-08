@@ -4,6 +4,7 @@ using UnityEngine.UI;
 public class StageEntry : MonoBehaviour {
 
 	private string id;
+    private string syscode;
 
     public int coinPrize { get; private set; }
     public int coinCost { get; private set; }
@@ -26,6 +27,10 @@ public class StageEntry : MonoBehaviour {
 	public void SetId(string id) {
 		this.id = id;
 	}
+    public void SetSyscode(string syscode)
+    {
+        this.syscode = syscode;
+    }
     public void SetCoinPrize(int value)
     {
         coinPrize = value;
@@ -50,4 +55,8 @@ public class StageEntry : MonoBehaviour {
 	public string GetStageId() {
 		return id;
 	}
+    public string GetStageSyscode()
+    {
+        return syscode;
+    }
 }

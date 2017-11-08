@@ -28,6 +28,19 @@ namespace Com.Hypester.DM3
         // Services
         public static SettingsService settingsService { get; private set; }
 
+        private static AssetService serviceAsset;
+        public static AssetService ServiceAsset
+        {
+            get
+            {
+                if (serviceAsset == null)
+                {
+                    serviceAsset = ((GameObject)Instantiate(Resources.Load("ServiceAsset"), Instance.transform)).GetComponent<AssetService>();
+                }
+                return serviceAsset;
+            }
+        }
+
         private static Database data;
         public static Database Data
         {
@@ -75,6 +88,18 @@ namespace Com.Hypester.DM3
                     servicePlayer = ((GameObject)Instantiate(Resources.Load("ServicePlayer"), Instance.transform)).GetComponent<PlayerService>();
                 }
                 return servicePlayer;
+            }
+        }
+        private static GameService serviceGame;
+        public static GameService ServiceGame
+        {
+            get
+            {
+                if (serviceGame == null)
+                {
+                    serviceGame = ((GameObject)Instantiate(Resources.Load("ServiceGame"), Instance.transform)).GetComponent<GameService>();
+                }
+                return serviceGame;
             }
         }
 
@@ -192,6 +217,9 @@ namespace Com.Hypester.DM3
 
             PlayerStatsInfo psi = randomPsi[Random.Range(0, randomPsi.Count)];
 
+            PlayerService.User user = loginObject.user;
+
+            playerData.SetUserId(loginObject.user_id);
             playerData.SetCoins(loginObject.coins);
             playerData.SetXp(loginObject.XPlevel);
             playerData.SetUnspentSkill(loginObject.skillPoints);
@@ -204,6 +232,7 @@ namespace Com.Hypester.DM3
 
     public class PlayerData
     {
+        public string userId;
         public int profileID;
         public string profileName { get; private set; }
         public string pictureURL = "";
@@ -218,6 +247,10 @@ namespace Com.Hypester.DM3
         public int redSkill { get; private set; }
         public int yellowSkill { get; private set; }
 
+        public void SetUserId(string value)
+        {
+            userId = value;
+        }
         public void SetProfileName(string value)
         {
             profileName = value;

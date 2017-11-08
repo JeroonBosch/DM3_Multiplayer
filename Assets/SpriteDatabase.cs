@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace Com.Hypester.DM3
@@ -8,6 +7,7 @@ namespace Com.Hypester.DM3
     {
         [Header("Avatars")]
         public Sprite guestAvatar;
+        public Sprite randomAvatarSheet;
 
         [Header("Icons")]
         public Sprite thumbsUp;

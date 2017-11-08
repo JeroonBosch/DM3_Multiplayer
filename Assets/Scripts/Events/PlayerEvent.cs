@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using ExitGames.Client.Photon;
+using UnityEngine;
 
 namespace Com.Hypester.DM3
 {
@@ -55,6 +56,16 @@ namespace Com.Hypester.DM3
         public static void SkillLevelChange(string syscode, int amount)
         {
             if (OnSkillLevelChange != null) OnSkillLevelChange(syscode, amount);
+        }
+
+        // NETWORKED PLAYER (PHOTON)
+        public delegate void PlayerStatsAction(int playerId, Hashtable stats);
+
+        public static event PlayerStatsAction OnPlayerStatsUpdate;
+
+        public static void PlayerStatsUpdate(int playerId, Hashtable stats)
+        {
+            if (null != OnPlayerStatsUpdate) OnPlayerStatsUpdate(playerId, stats);
         }
     }
 }

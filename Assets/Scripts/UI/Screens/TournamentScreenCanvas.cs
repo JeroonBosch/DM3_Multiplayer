@@ -1,10 +1,13 @@
 ﻿using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace Com.Hypester.DM3
 {
     public class TournamentScreenCanvas : BaseMenuCanvas
     {
+        [SerializeField] RawImage backgroundImage;
+
         //Shows the tournament match-making tree. Replaces 'FindMatchCanvas'
         private bool _fullTournament;
 
@@ -89,6 +92,27 @@ namespace Com.Hypester.DM3
                     Debug.Log("Match loaded from Tournament.");
                     enabled = false;
                 }
+            }
+        }
+
+        protected override void OnEnable()
+        {
+            base.OnEnable();
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+        protected override void OnDisable()
+        {
+            base.OnDisable();
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+
+        void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            Debug.Log("OnSceneLoaded: " + scene.name);
+            if (PhotonController.Instance != null && !string.IsNullOrEmpty(PhotonController.Instance.latestStageSyscode))
+            {
+                Sprite backgroundSprite = MainController.Data.sprites.GetStageArt(PhotonController.Instance.latestStageSyscode).bg;
+                backgroundImage.texture = backgroundSprite ? backgroundSprite.texture : backgroundImage.texture;
             }
         }
 

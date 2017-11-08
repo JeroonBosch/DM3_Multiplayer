@@ -5,6 +5,7 @@ namespace Com.Hypester.DM3
 {
     public class PopupManager : MonoBehaviour
     {
+        public static PopupManager instance;
         // TODO: use object pool for popups.
 
         [Header("General")]
@@ -21,6 +22,12 @@ namespace Com.Hypester.DM3
 
         Queue<GameObject> popupQueue = new Queue<GameObject>();
         GameObject activePopup;
+
+        void Awake()
+        {
+            if (!instance) { instance = this; }
+            else { Destroy(this.gameObject); }
+        }
 
         private void OnEnable()
         {
