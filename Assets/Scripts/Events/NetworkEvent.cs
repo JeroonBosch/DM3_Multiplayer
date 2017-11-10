@@ -6,10 +6,12 @@ namespace Com.Hypester.DM3
     {
         public delegate void PhotonConnectFailAction(DisconnectCause cause);
         public delegate void PhotonConnectSuccessAction();
+        public delegate void PhotonDisconnectedAction();
         public delegate void PhotonPlayerDisconnectedAction(PhotonPlayer otherPlayer);
 
         public static event PhotonConnectFailAction OnFailedToConnectToPhoton;
         public static event PhotonConnectSuccessAction OnConnectedToPhoton;
+        public static event PhotonDisconnectedAction OnPhotonDisconnected;
         public static event PhotonPlayerDisconnectedAction OnPhotonPlayerDisconnected;
 
         public static void FailedToConnectToPhoton(DisconnectCause cause)
@@ -20,9 +22,14 @@ namespace Com.Hypester.DM3
         {
             if (OnConnectedToPhoton != null) OnConnectedToPhoton();
         }
+        public static void PhotonDisconnected()
+        {
+            if (OnPhotonDisconnected != null) OnPhotonDisconnected();
+        }
         public static void PhotonPlayerDisconnected(PhotonPlayer otherPlayer)
         {
             if (OnPhotonPlayerDisconnected != null) OnPhotonPlayerDisconnected(otherPlayer);
         }
+
     }
 }

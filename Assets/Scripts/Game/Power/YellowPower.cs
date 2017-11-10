@@ -22,18 +22,15 @@ namespace Com.Hypester.DM3
         private bool _isPickedUp = false;
         public bool isPickedUp { get { return _isPickedUp; } }
 
-        private float _speed = 20f;
+        private float _speed = 4f;
 
-        private void Start()
-        {
-            _curPos = transform.position;
-
-            if (!photonView.isMine)
-                ownerPlayer = PhotonController.Instance.GameController.EnemyPlayer;
-        }
+        public Transform target;
+        int targetRetries = 20;
 
         private void Update()
         {
+            MoveTowardsTarget();
+            /*
             if (gameID != PhotonController.Instance.gameID_requested)
             {
                 Hide();
@@ -77,23 +74,30 @@ namespace Com.Hypester.DM3
                     }
                 }
             }
+            */
         }
 
-        void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
+        private void MoveTowardsTarget()
         {
-            if (stream.isWriting)
+            if (target == null) { Debug.LogWarning("Target is null."); targetRetries -= 1; if (targetRetries < 0) { Destroy(gameObject); } }
+
+            targetRetries = 10;
+
+            float step = _speed * Time.deltaTime;
+            transform.position = Vector3.MoveTowards(transform.position, target.position, step);
+
+            if (Vector3.Distance(transform.position, target.transform.position) <= Mathf.Epsilon)
             {
-                stream.SendNext(position);
-                stream.SendNext(gameID);
-            }
-            else
-            {
-                position = (Vector2)stream.ReceiveNext();
-                gameID = (int)stream.ReceiveNext();
-                mirrorPosition = MirrorPosition(position);
+                Debug.Log("Fireball reached the target!");
+                if (PhotonNetwork.isMasterClient)
+                {
+                    PhotonController.Instance.GameController.photonView.RPC("RPC_FireballHit", PhotonTargets.All, PlayerManager.instance.GetPlayerIdByPlayer(ownerPlayer));
+                }
+                Destroy(gameObject);
             }
         }
 
+        /*
         private void OnTriggerEnter2D(Collider2D collision)
         {
             if (collision.gameObject.tag == "OpponentPlayer_Avatar" && photonView.isMine)
@@ -105,54 +109,6 @@ namespace Com.Hypester.DM3
                 Debug.Log("hit " + collision.gameObject.name);
             }
         }
-
-        public void Hide ()
-        {
-            gameObject.SetActive(false);
-        }
-
-        public void PickUp()
-        {
-            _isPickedUp = true;
-            Debug.Log("Fireball picked up.");
-        }
-
-        private Vector2 MirrorPosition(Vector2 pos)
-        {
-            Vector2 mirrored = new Vector2(-pos.x, -pos.y);
-            return mirrored;
-        }
-
-        public void Fly()
-        {
-            if (_isPickedUp && !_isFlying)
-            {
-                _isFlying = true;
-                Rigidbody2D rb = gameObject.GetComponent<Rigidbody2D>();
-                rb.velocity = _velocity * _speed;
-
-                photonView.RPC("RPC_Fly", PhotonTargets.Others, _velocity);
-            }
-            else
-            {
-                _isPickedUp = false;
-            }
-        }
-
-        [PunRPC]
-        private void RPC_Fly(Vector2 velo)
-        {
-            _isFlying = true;
-            _velocity = velo;
-            Vector2 mirrorVelocity = new Vector2(-_velocity.x, -_velocity.y);
-            Rigidbody2D rb = gameObject.GetComponent<Rigidbody2D>();
-            rb.velocity = mirrorVelocity * _speed;
-        }
-
-        [PunRPC]
-        private void RPC_DestroyFireball()
-        {
-            Destroy(gameObject);
-        }
+        */
     }
 }

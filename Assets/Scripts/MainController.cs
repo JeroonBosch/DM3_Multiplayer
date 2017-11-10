@@ -237,6 +237,7 @@ namespace Com.Hypester.DM3
         public string profileName { get; private set; }
         public string pictureURL = "";
         public Texture2D profilePicture { get; private set; }
+        public Sprite profilePictureSprite;
 
         public int coins { get; private set; }
         public int trophies { get; private set; }

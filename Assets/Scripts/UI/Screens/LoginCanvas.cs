@@ -163,7 +163,7 @@ namespace Com.Hypester.DM3
                 Debug.Log("IsLoggedIn");
                 var aToken = AccessToken.CurrentAccessToken;
                 Debug.Log("Facebook TOKEN: " + aToken.UserId);
-                string mobile_id = string.IsNullOrEmpty(MainController.settingsService.mobileId) ? "new" : MainController.settingsService.mobileId;
+                string mobile_id = string.IsNullOrEmpty(MainController.settingsService.mobileId) ? "" : MainController.settingsService.mobileId;
                 MainController.ServicePlayer.Login(aToken.TokenString, mobile_id, OnPlayerLogin);
             }
             else
@@ -201,16 +201,21 @@ namespace Com.Hypester.DM3
                 return;
             }
 
-            if (!string.IsNullOrEmpty(loginObject.mobile_id))
+            if (string.IsNullOrEmpty(loginObject.mobile_id))
             {
                 Debug.Log("MOBILE_ID: " + loginObject.mobile_id);
-                MainController.settingsService.mobileId = loginObject.mobile_id;
-            }
+                MainController.settingsService.mobileId = "";
+            } else { MainController.settingsService.mobileId = loginObject.mobile_id; }
 
             PlayerEvent.PlayerLogin(MainController.settingsService.lastLoginType, loginObject); // Player has logged in already. We have the info from the server.
-            SetLoginText("Connecting to Photon..."); // Photon is only required for playing against other opponents.
-            connectingToPhoton = true;
-            PhotonController.Instance.EnsureConnection();
+
+            if (PhotonNetwork.connected) { ConnectedToPhoton(); }
+            else
+            {
+                SetLoginText("Connecting to Photon..."); // Photon is only required for playing against other opponents.
+                connectingToPhoton = true;
+                PhotonController.Instance.EnsureConnection();
+            }
         }
 
         private void ConnectedToPhoton()

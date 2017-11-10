@@ -44,5 +44,26 @@
 
         //Timeouts
         public const float loginTimeout = 10f;
+
+        public static int GetSkillActivationRequirement(SkillColor skillColor)
+        {
+            int requirement = 11;
+            switch (skillColor)
+            {
+                case SkillColor.Red:
+                    requirement = RedPowerReq;
+                    break;
+                case SkillColor.Green:
+                    requirement = GreenPowerReq;
+                    break;
+                case SkillColor.Blue:
+                    requirement = BluePowerReq;
+                    break;
+                case SkillColor.Yellow:
+                    requirement = YellowPowerReq;
+                    break;
+            }
+            return requirement;
+        }
     }
 }

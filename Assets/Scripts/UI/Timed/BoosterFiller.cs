@@ -27,45 +27,13 @@ namespace Com.Hypester.DM3
         public void Init(Player targetPlayer, int count, int color)
         {
             _count = count;
-
-            bool myBooster = true;
             GameObject powerObject = null;
-
             _targetPlayer = targetPlayer;
-            if (_targetPlayer.localID == PhotonController.Instance.GameController.MyPlayer.localID)
-                myBooster = false;
 
-            switch (color)
-            {
-                case 0 :
-                    _color = Color.yellow;
-                    if (myBooster)
-                        powerObject = GameObject.Find("MyYellow");
-                    else
-                        powerObject = GameObject.Find("EnemyYellow");
-                    break;
-                case 1:
-                    _color = Color.blue;
-                    if (myBooster)
-                        powerObject = GameObject.Find("MyBlue");
-                    else
-                        powerObject = GameObject.Find("EnemyBlue");
-                    break;
-                case 2:
-                    _color = Color.green;
-                    if (myBooster)
-                        powerObject = GameObject.Find("MyGreen");
-                    else
-                        powerObject = GameObject.Find("EnemyGreen");
-                    break;
-                default:
-                    _color = Color.red;
-                    if (myBooster)
-                        powerObject = GameObject.Find("MyRed");
-                    else
-                        powerObject = GameObject.Find("EnemyRed");
-                    break;
-            }
+            SkillColor skillColor = ColorUtility.IntToSkillColor(color);
+            PlayerInterface targetPlayerInterface = PlayerManager.instance.GetPlayerById(_targetPlayer.GetPlayerId()).playerInterface;
+            powerObject = targetPlayerInterface.GetSkillButtonBySkillColor(skillColor).gameObject;
+            _color = ColorUtility.GetUnityColorBySkillColor(skillColor);
 
             _timeToDelay = _count * Constants.DelayAfterTileDestruction;
             _delayTimer = 0f;

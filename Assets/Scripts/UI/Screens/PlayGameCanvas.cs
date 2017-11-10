@@ -19,6 +19,7 @@ namespace Com.Hypester.DM3
         {
             base.Start();
 
+            
             _selectedTiles = new List<Vector2>();
         }
 
@@ -111,7 +112,7 @@ namespace Com.Hypester.DM3
         {
             if (finger.Index == 0 && PhotonController.Instance.GameController.IsMyTurn())
             {
-                if (!GameObject.FindGameObjectWithTag("ActiveFireball") && !GameObject.FindGameObjectWithTag("ActiveTrap"))
+                if (!GameObject.FindGameObjectWithTag("ActiveTrap"))
                 {
                     GameObject interactionObject = null;
 
@@ -127,7 +128,7 @@ namespace Com.Hypester.DM3
                         for (int i = 0; i < results.Count; i++)
                         {
                             if (!resultFound)
-                                if (results[i].gameObject.tag == "Tile" || results[i].gameObject.tag == "Power")
+                                if (results[i].gameObject.tag == "Tile")
                                 {
                                     interactionObject = results[i].gameObject;
                                     resultFound = true;
@@ -143,34 +144,12 @@ namespace Com.Hypester.DM3
                             _finger = finger;
                             StartNewSelection();
                         }
-                        else if (interactionObject.tag == "Power")
-                        {
-                            if (interactionObject.name == "MyBlue")
-                                PhotonController.Instance.GameController.photonView.RPC("RPC_PowerClicked", PhotonTargets.All, 1);
-                            if (interactionObject.name == "MyGreen")
-                                PhotonController.Instance.GameController.photonView.RPC("RPC_PowerClicked", PhotonTargets.All, 2);
-                            if (interactionObject.name == "MyRed")
-                                PhotonController.Instance.GameController.photonView.RPC("RPC_PowerClicked", PhotonTargets.All, 3);
-                            if (interactionObject.name == "MyYellow")
-                                PhotonController.Instance.GameController.photonView.RPC("RPC_PowerClicked", PhotonTargets.All, 0);
-                        }
                     }
                 } else
                 {
-                    if (GameObject.FindGameObjectWithTag("ActiveFireball")) { 
-                        YellowPower fireball = GameObject.FindGameObjectWithTag("ActiveFireball").GetComponent<YellowPower>();
-                        if (fireball.GetComponent<PhotonView>().isMine)
-                        {
-                            fireball.PickUp();
-                            _finger = finger;
-                        }
-                    }
-                    else
-                    {
-                        TrapPower trap = GameObject.FindGameObjectWithTag("ActiveTrap").GetComponent<TrapPower>();
-                        trap.PickUp();
-                        _finger = finger;
-                    }
+                    TrapPower trap = GameObject.FindGameObjectWithTag("ActiveTrap").GetComponent<TrapPower>();
+                    trap.PickUp();
+                    _finger = finger;
                 }
             }
         }
@@ -179,7 +158,7 @@ namespace Com.Hypester.DM3
         {
             if (finger.Index == 0 && PhotonController.Instance.GameController.IsMyTurn())
             {
-                if (!GameObject.FindGameObjectWithTag("ActiveFireball") && !GameObject.FindGameObjectWithTag("ActiveTrap")) { 
+                if (!GameObject.FindGameObjectWithTag("ActiveTrap")) { 
                     if (_selectedTiles.Count > 2) {
                         InitiateCombo();
                     } else
@@ -189,18 +168,8 @@ namespace Com.Hypester.DM3
                     _selectedTiles.Clear();
                 } else
                 {
-                    if (GameObject.FindGameObjectWithTag("ActiveFireball"))
-                    {
-                        GameObject fireball = GameObject.FindGameObjectWithTag("ActiveFireball");
-                        if (fireball.GetComponent<PhotonView>().isMine)
-                        {
-                            fireball.GetComponent<YellowPower>().Fly();
-                        }
-                    } else
-                    {
-                        TrapPower trap = GameObject.FindGameObjectWithTag("ActiveTrap").GetComponent<TrapPower>();
-                        trap.GetComponent<TrapPower>().Place();
-                    }
+                    TrapPower trap = GameObject.FindGameObjectWithTag("ActiveTrap").GetComponent<TrapPower>();
+                    trap.GetComponent<TrapPower>().Place();
                 }
                 _finger = null;
             }

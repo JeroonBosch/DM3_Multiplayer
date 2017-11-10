@@ -59,6 +59,8 @@ namespace Com.Hypester.DM3
         public bool P1_ShieldActive = false;
         public bool P2_ShieldActive = false;
 
+        [SerializeField] GameObject fireballPrefab;
+
         private bool _MC_endTurnDelay; //Master Client only.
         private float _MC_endTurnDelayTimer; //Master Client only.
         #endregion
@@ -1245,145 +1247,135 @@ namespace Com.Hypester.DM3
         }
 
         [PunRPC]
-        public void RPC_PowerClicked(int color)
+        public void RPC_PowerClicked(SkillColor color, PhotonMessageInfo info)
         {
-            if (IsGameMaster())
+            if (IsGameMaster()) // Local player is master
             {
-                if (_curPlayer == 0)
+                if (info.sender == PhotonNetwork.player) // Local player sent this
                 {
-                    if (color == 1 && P1_PowerBlue >= Constants.BluePowerReq) //blue
+                    if (_curPlayer == 0)
                     {
-                        P1_ShieldActive = true;
-                        photonView.RPC("RPC_ShieldActivated", PhotonTargets.All, 0);
-                        P1_PowerBlue = 0;
-                        photonView.RPC("RPC_EmptyPower", PhotonTargets.All, _curPlayer, color);
-                    }
-                    else if (color == 2 && P1_PowerGreen >= Constants.GreenPowerReq) //green
-                    {
-                        healthPlayerOne += Constants.HealPower;
-                        photonView.RPC("RPC_HealEffect", PhotonTargets.All, 0);
-                        P1_PowerGreen = 0;
-                        photonView.RPC("RPC_EmptyPower", PhotonTargets.All, _curPlayer, color);
-
-                        photonView.RPC("RPC_UpdateHealth", PhotonTargets.All, _curPlayer, healthPlayerOne);
-                    }
-                    else if (color == 3 && P1_PowerRed >= Constants.RedPowerReq) //red
-                    {
-                        photonView.RPC("RPC_CreateTrap", PhotonTargets.All, _curPlayer); 
-                        P1_PowerRed = 0;
-                        photonView.RPC("RPC_EmptyPower", PhotonTargets.All, _curPlayer, color);
-
-                        if (IsGameRelevant())
+                        if (color == SkillColor.Blue && P1_PowerBlue >= Constants.BluePowerReq) //blue
                         {
-                            _gameContext.ShowText("You placed a trap. Don't trigger it yourself!");
-                            photonView.RPC("RPC_MessageTrap", PhotonTargets.Others);
+                            P1_ShieldActive = true;
+                            photonView.RPC("RPC_ShieldActivated", PhotonTargets.All, 0);
+                            P1_PowerBlue = 0;
+                            photonView.RPC("RPC_EmptyPower", PhotonTargets.All, _curPlayer, color);
                         }
-                    }
-                    else if (color == 0 && P1_PowerYellow >= Constants.YellowPowerReq) //yellow
-                    {
-                        photonView.RPC("RPC_Create_Fireball", PhotonTargets.All, _curPlayer);  
-                        P1_PowerYellow = 0;
-                        photonView.RPC("RPC_EmptyPower", PhotonTargets.All, _curPlayer, color);
-
-                        if (IsGameRelevant())
+                        else if (color == SkillColor.Green && P1_PowerGreen >= Constants.GreenPowerReq) //green
                         {
-                            _gameContext.ShowText("Touch the fireball and throw it!");
-                            photonView.RPC("RPC_MessageFireball", PhotonTargets.Others);
+                            healthPlayerOne += Constants.HealPower;
+                            photonView.RPC("RPC_HealEffect", PhotonTargets.All, 0);
+                            P1_PowerGreen = 0;
+                            photonView.RPC("RPC_EmptyPower", PhotonTargets.All, _curPlayer, color);
+
+                            photonView.RPC("RPC_UpdateHealth", PhotonTargets.All, _curPlayer, healthPlayerOne);
+                        }
+                        else if (color == SkillColor.Red && P1_PowerRed >= Constants.RedPowerReq) //red
+                        {
+                            photonView.RPC("RPC_CreateTrap", PhotonTargets.All, _curPlayer);
+                            P1_PowerRed = 0;
+                            photonView.RPC("RPC_EmptyPower", PhotonTargets.All, _curPlayer, color);
+
+                            if (IsGameRelevant())
+                            {
+                                _gameContext.ShowText("You placed a trap. Don't trigger it yourself!");
+                                photonView.RPC("RPC_MessageTrap", PhotonTargets.Others);
+                            }
+                        }
+                        else if (color == SkillColor.Yellow && P1_PowerYellow >= Constants.YellowPowerReq) //yellow
+                        {
+                            photonView.RPC("RPC_Create_Fireball", PhotonTargets.All, info.sender.ID);
+                            P1_PowerYellow = 0;
+                            photonView.RPC("RPC_EmptyPower", PhotonTargets.All, _curPlayer, color);
                         }
                     }
                 }
                 else
                 {
-                    if (color == 1 && P2_PowerBlue >= Constants.BluePowerReq) //blue
+                    if (_curPlayer != 0)
                     {
-                        P2_ShieldActive = true;
-                        photonView.RPC("RPC_ShieldActivated", PhotonTargets.All, 1);
-                        P2_PowerBlue = 0;
-                        photonView.RPC("RPC_EmptyPower", PhotonTargets.All, _curPlayer, color);
-                    }
-                    else if (color == 2 && P2_PowerGreen >= Constants.GreenPowerReq) //green
-                    {
-                        healthPlayerTwo += Constants.HealPower;
-                        photonView.RPC("RPC_HealEffect", PhotonTargets.All, 1);
-                        P2_PowerGreen = 0;
-                        photonView.RPC("RPC_EmptyPower", PhotonTargets.All, _curPlayer, color);
-
-                        photonView.RPC("RPC_UpdateHealth", PhotonTargets.Others, _curPlayer, healthPlayerTwo); 
-                    }
-                    else if (color == 3 && P2_PowerRed >= Constants.RedPowerReq) //red
-                    {
-                        photonView.RPC("RPC_CreateTrap", PhotonTargets.All, _curPlayer); 
-                        P2_PowerRed = 0;
-                        photonView.RPC("RPC_EmptyPower", PhotonTargets.All, _curPlayer, color);
-
-                        if (IsGameRelevant())
+                        if (color == SkillColor.Blue && P2_PowerBlue >= Constants.BluePowerReq) //blue
                         {
-                            _gameContext.ShowText("Opponent placed a trap. Be careful!");
-                            _gameContext.ShowLargeText("Trap placed, careful!");
-                            iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.Warning);
+                            P2_ShieldActive = true;
+                            photonView.RPC("RPC_ShieldActivated", PhotonTargets.All, 1);
+                            P2_PowerBlue = 0;
+                            photonView.RPC("RPC_EmptyPower", PhotonTargets.All, _curPlayer, color);
                         }
-                    }
-                    else if (color == 0 && P2_PowerYellow >= Constants.YellowPowerReq) //yellow
-                    {
-                        photonView.RPC("RPC_Create_Fireball", PhotonTargets.All, _curPlayer); 
-                        P2_PowerYellow = 0;
-                        photonView.RPC("RPC_EmptyPower", PhotonTargets.All, _curPlayer, color);
+                        else if (color == SkillColor.Green && P2_PowerGreen >= Constants.GreenPowerReq) //green
+                        {
+                            healthPlayerTwo += Constants.HealPower;
+                            photonView.RPC("RPC_HealEffect", PhotonTargets.All, 1);
+                            P2_PowerGreen = 0;
+                            photonView.RPC("RPC_EmptyPower", PhotonTargets.All, _curPlayer, color);
 
-                        if (IsGameRelevant())
-                            _gameContext.ShowText("Opponent summoned a fireball!");
+                            photonView.RPC("RPC_UpdateHealth", PhotonTargets.Others, _curPlayer, healthPlayerTwo);
+                        }
+                        else if (color == SkillColor.Red && P2_PowerRed >= Constants.RedPowerReq) //red
+                        {
+                            photonView.RPC("RPC_CreateTrap", PhotonTargets.All, _curPlayer);
+                            P2_PowerRed = 0;
+                            photonView.RPC("RPC_EmptyPower", PhotonTargets.All, _curPlayer, color);
+
+                            if (IsGameRelevant())
+                            {
+                                _gameContext.ShowText("Opponent placed a trap. Be careful!");
+                                _gameContext.ShowLargeText("Trap placed, careful!");
+                                iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.Warning);
+                            }
+                        }
+                        else if (color == SkillColor.Yellow && P2_PowerYellow >= Constants.YellowPowerReq) //yellow
+                        {
+                            photonView.RPC("RPC_Create_Fireball", PhotonTargets.All, info.sender.ID);
+                            P2_PowerYellow = 0;
+                            photonView.RPC("RPC_EmptyPower", PhotonTargets.All, _curPlayer, color);
+                        }
                     }
                 }
             }
         }
 
-        private void CreateFireball()
+        private void CreateFireball(int fireballOwnerId)
         {
-            GameObject fireballGO = PhotonNetwork.Instantiate("Fireball", Vector3.zero, Quaternion.identity, 0);
+            Player fireballOwner = PlayerManager.instance.GetPlayerById(fireballOwnerId);
+            if (fireballOwner == null) { return; }
+            Vector3 startingPos = fireballOwner.playerInterface.GetSkillButtonBySkillColor(SkillColor.Yellow).transform.position;
+            Transform enemyAvatarTransform = fireballOwner.opponent.playerInterface.avatarGameObject.transform;
+            YellowPower fireball = Instantiate(fireballPrefab, startingPos, Quaternion.identity).GetComponent<YellowPower>();
 
-            fireballGO.GetComponent<YellowPower>().ownerPlayer = MyPlayer;
-            fireballGO.GetComponent<YellowPower>().gameID = GameID;
-            fireballGO.name = "Fireball" + MyPlayer.localID;
-            fireballGO.transform.position = GameObject.Find("MyYellow").transform.position;
+            fireball.ownerPlayer = fireballOwner;
+            fireball.gameID = GameID;
+            fireball.name = "Fireball" + fireballOwner.localID;
+            fireball.transform.position = startingPos;
+            fireball.target = enemyAvatarTransform;
         }
 
         [PunRPC]
-        private void RPC_Create_Fireball(int playerNo)
+        private void RPC_Create_Fireball(int fireballOwner)
         {
-            if (GetPlayerByID(playerNo) == MyPlayer)
-            {
-                CreateFireball();
-                _gameContext.ShowText("Touch the fireball and throw it!");
-            }
+            CreateFireball(fireballOwner);
         }
 
         [PunRPC]
-        public void RPC_FireballHit() //should be both master-client side and guest-side
+        public void RPC_FireballHit(int fireballOwnerId) //should be both master-client side and guest-side
         {
-            GameObject fireball = GameObject.FindGameObjectWithTag("ActiveFireball");
+            Player fireballOwnerPlayer = PlayerManager.instance.GetPlayerById(fireballOwnerId);
 
-            string avatarObjName = "MyAvatar";
-            if (fireball != null)
-            {
-                if (fireball.GetComponent<YellowPower>().ownerPlayer == MyPlayer)
-                    avatarObjName = "OpponentAvatar";
-            }
+            if (fireballOwnerPlayer == null) { Debug.Log("Fireball owner left. Never mind"); return; }
 
             if (IsGameRelevant())
             {
                 GameObject explosion = Instantiate(Resources.Load("ParticleEffects/FireballHit")) as GameObject;
-                explosion.transform.position = GameObject.Find(avatarObjName).transform.position;
+                explosion.transform.position = fireballOwnerPlayer.opponent.playerInterface.avatarGameObject.transform.position;
             }
 
             if (IsGameMaster())
             {
-                DamagePlayer(EnemyPlayer.localID, Constants.FireballPower);
+                DamagePlayer(fireballOwnerPlayer.opponent.localID, Constants.FireballPower);
                 ResetTimer();
             }
 
-
             iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.ImpactHeavy);
-
-            Destroy(fireball);
         }
 
         private void CreateTrap()
@@ -1393,7 +1385,7 @@ namespace Com.Hypester.DM3
             trapGO.GetComponent<TrapPower>().ownerPlayer = MyPlayer;
             trapGO.GetComponent<TrapPower>().gameID = GameID;
             trapGO.name = "TrapPower" + MyPlayer.localID;
-            trapGO.transform.position = GameObject.Find("MyRed").transform.position;
+            trapGO.transform.position = PlayerManager.instance.GetPlayerById(PhotonNetwork.player.ID).playerInterface.GetSkillButtonBySkillColor(SkillColor.Red).transform.position;
         }
 
         [PunRPC]
@@ -1500,27 +1492,27 @@ namespace Com.Hypester.DM3
         }
 
         [PunRPC]
-        private void RPC_EmptyPower(int playerNo, int color)
+        private void RPC_EmptyPower(int playerNo, SkillColor color)
         {
             if (playerNo == 0)
             {
-                if (color == 1)
+                if (color == SkillColor.Blue)
                     P1_PowerBlue = 0;
-                else if (color == 2)
+                else if (color == SkillColor.Green)
                     P1_PowerGreen = 0;
-                else if (color == 3)
+                else if (color == SkillColor.Red)
                     P1_PowerRed = 0;
-                else if (color == 0)
+                else if (color == SkillColor.Yellow)
                     P1_PowerYellow = 0;
             } else
             {
-                if (color == 1)
+                if (color == SkillColor.Blue)
                     P2_PowerBlue = 0;
-                else if (color == 2)
+                else if (color == SkillColor.Green)
                     P2_PowerGreen = 0;
-                else if (color == 3)
+                else if (color == SkillColor.Red)
                     P2_PowerRed = 0;
-                else if (color == 0)
+                else if (color == SkillColor.Yellow)
                     P2_PowerYellow = 0;
             }
         }
@@ -1669,15 +1661,6 @@ namespace Com.Hypester.DM3
         }
 
         [PunRPC]
-        private void RPC_MessageFireball()
-        {
-            if (IsGameRelevant())
-            {
-                _gameContext.ShowText("Opponent summoned a fireball!");
-            }
-        }
-
-        [PunRPC]
         private void RPC_MessageTrap()
         {
             if (IsGameRelevant())
@@ -1812,5 +1795,26 @@ namespace Com.Hypester.DM3
             return sGrid;
         }
         #endregion
+
+        public int GetSkillChargeAmount(SkillColor skillColor, int localId)
+        {
+            int chargeAmount = 0;
+            switch (skillColor)
+            {
+                case SkillColor.Red:
+                    chargeAmount = localId == 0 ? P1_PowerRed : P2_PowerRed;
+                    break;
+                case SkillColor.Green:
+                    chargeAmount = localId == 0 ? P1_PowerGreen : P2_PowerGreen;
+                    break;
+                case SkillColor.Blue:
+                    chargeAmount = localId == 0 ? P1_PowerBlue : P2_PowerBlue;
+                    break;
+                case SkillColor.Yellow:
+                    chargeAmount = localId == 0 ? P1_PowerYellow : P2_PowerYellow;
+                    break;
+            }
+            return chargeAmount;
+        }
     }
 }

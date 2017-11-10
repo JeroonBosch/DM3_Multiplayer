@@ -13,8 +13,9 @@ namespace Com.Hypester.DM3
 
         private void Update()
         {
-            if (PhotonController.Instance.GameController != null) {
-                if (_wiggling && !_lockedOut && PhotonController.Instance.GameController.IsMyTurn())
+            GameHandler gameHandler = PhotonController.Instance.GameController;
+            if (gameHandler != null) {
+                if (_wiggling && !_lockedOut && gameHandler.IsMyTurn())
                 {
                     _wiggleCounter += Time.deltaTime;
 
@@ -35,7 +36,7 @@ namespace Com.Hypester.DM3
                     }
 
                 }
-                else if (_wiggling && _lockedOut && PhotonController.Instance.GameController.IsMyTurn())
+                else if (_wiggling && _lockedOut && gameHandler.IsMyTurn())
                 {
                     _wiggleCounter += Time.deltaTime;
 
@@ -46,7 +47,7 @@ namespace Com.Hypester.DM3
                     }
 
                 }
-                else if (_wiggling && !PhotonController.Instance.GameController.IsMyTurn()) { 
+                else if (_wiggling && !gameHandler.IsMyTurn()) { 
                     _wiggleCounter = 0f;
                     _lockedOut = false;
                     Quaternion r = transform.rotation;
@@ -55,17 +56,15 @@ namespace Com.Hypester.DM3
             }
         }
 
-        public void StartWiggle()
+        public void ToggleWiggle(bool start)
         {
-            _wiggling = true;
-        }
-
-        public void StopWiggle()
-        {
-            _wiggling = false;
-            _wiggleCounter = 0f;
-            Quaternion r = transform.rotation;
-            transform.rotation = new Quaternion(r.x, r.y, 0f, r.w);
+            _wiggling = start;
+            if (!start)
+            {
+                _wiggleCounter = 0f;
+                Quaternion r = transform.rotation;
+                transform.rotation = new Quaternion(r.x, r.y, 0f, r.w);
+            }
         }
     }
 }

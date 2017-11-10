@@ -108,6 +108,8 @@ namespace Com.Hypester.DM3
         {
             base.OnDisconnectedFromPhoton();
             Debug.Log("OnDisconnectedFromPhoton");
+
+            NetworkEvent.PhotonDisconnected();
         }
 
         public override void OnConnectedToMaster()
@@ -176,8 +178,7 @@ namespace Com.Hypester.DM3
 
         public void CreatePlayers ()
         {
-            Debug.Log("Destroying previous players...");
-            CreatePlayer();
+            PlayerManager.instance.CreatePlayer();
 
             PlayerData playerData = MainController.Instance.playerData;
             Hashtable playerProps = new Hashtable();
@@ -240,18 +241,6 @@ namespace Com.Hypester.DM3
                 PhotonNetwork.LoadLevel("Menu");
                 Debug.Log("Menu loaded because reasons.");
             }
-        }
-
-        public void CreatePlayer ()
-        {
-            Debug.Log("Creating player at " + PhotonNetwork.room.PlayerCount + " PlayerCount");
-
-			Player playerGO = PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity, 0).GetComponent<Player>();
-
-            playerGO.joinNumber = PhotonNetwork.room.PlayerCount;
-			playerGO.localID = PhotonNetwork.isMasterClient || playerGO.joinNumber == 3 ? 0 : 1;
-
-            playerGO.UpdateLabels();
         }
 
         public override void OnPhotonPlayerPropertiesChanged(object[] playerAndUpdatedprops)

@@ -8,24 +8,30 @@ namespace Com.Hypester.DM3
     //Class name could be changed to represent it being a photon view with client-control rather than master-client control
     public class Player : Photon.MonoBehaviour
     {
+        private int playerId;
+
         public int localID;
         public int joinNumber; //only for tournaments
         public string profileName;
         public string profilePicURL;
         public bool wantsRematch;
 
+        public PlayerInterface playerInterface;
         public Player opponent;
+
+        [SerializeField] Canvas playerCanvas;
+        [SerializeField] Image fingerTrackerImage;
 
         // Use this for initialization
         void Start()
         {
             DontDestroyOnLoad(gameObject);
-            GetComponent<Canvas>().worldCamera = Camera.main;
+            playerCanvas.worldCamera = Camera.main;
 
-            if (gameObject.GetComponent<PhotonView>().isMine) {
+            if (photonView.isMine) {
                 profileName = MainController.Instance.playerData.profileName;
                 profilePicURL = MainController.Instance.playerData.pictureURL;
-                transform.Find("FingerTracker").GetComponent<Image>().enabled = false;
+                ToggleFingerTracker(false);
             }
 
             wantsRematch = false;
@@ -39,12 +45,17 @@ namespace Com.Hypester.DM3
                 return;
             else if (PhotonController.Instance.GameController && PhotonController.Instance.GameController.MyPlayer != null)
             {
-                if (PhotonController.Instance.GameController.IsMyTurn())
-                    transform.Find("FingerTracker").GetComponent<Image>().enabled = false;
-                else if (!gameObject.GetComponent<PhotonView>().isMine && PhotonController.Instance.GameController.Active)
-                    transform.Find("FingerTracker").GetComponent<Image>().enabled = true;
+                if (PhotonController.Instance.GameController.IsMyTurn()) { ToggleFingerTracker(false); }
+                else if (!photonView.isMine && PhotonController.Instance.GameController.Active) { ToggleFingerTracker(true); }
             }
-            GetComponent<Canvas>().worldCamera = Camera.main;
+            playerCanvas.worldCamera = Camera.main;
+        }
+
+        void OnPhotonInstantiate(PhotonMessageInfo info)
+        {
+            transform.position = Vector3.zero;
+            SetPlayerId(info.sender.ID);
+            PlayerManager.instance.AddPlayer(playerId, this);
         }
 
         void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
@@ -160,6 +171,8 @@ namespace Com.Hypester.DM3
             }
         }
 
+        public void ToggleFingerTracker(bool turnOn)  { fingerTrackerImage.enabled = turnOn; }
+
         private IEnumerator ImageFromURL (Image img)
         {
             WWW www = new WWW(profilePicURL);
@@ -173,7 +186,7 @@ namespace Com.Hypester.DM3
 
             foreach (PlayerInterface tryInterface in FindObjectsOfType<PlayerInterface>())
             {
-                if ((photonView.isMine && tryInterface.playerNumber == 0) || (!photonView.isMine && tryInterface.playerNumber == 1))
+                if ((photonView.isMine && tryInterface.owner == PlayerInterface.Owner.Local) || (!photonView.isMine && tryInterface.owner == PlayerInterface.Owner.Remote))
                     return tryInterface;
             }
 
@@ -198,7 +211,8 @@ namespace Com.Hypester.DM3
             return profileName;
         }
 
-    
+        public int GetPlayerId() { return playerId; }
+        public void SetPlayerId(int id) { playerId = id; }
 
         [PunRPC]
         public void RPC_RequestRematch()

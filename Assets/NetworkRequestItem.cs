@@ -388,7 +388,7 @@ namespace Com.Hypester.DM3
             Debug.Log("We got the cookieString!!! (" +cookieString+ ")");
             if (string.IsNullOrEmpty(cookieString) || !cookieString.Contains(COOKIE_PHPSESSION))
             {
-                Debug.LogError("cookieString is empty(" + (string.IsNullOrEmpty(cookieString)) + ") or does not contain COOKIE_PHPSESSION("+ !cookieString.Contains(COOKIE_PHPSESSION) + ")");
+                Debug.LogWarning("cookieString is empty(" + (string.IsNullOrEmpty(cookieString)) + ") or does not contain COOKIE_PHPSESSION("+ !cookieString.Contains(COOKIE_PHPSESSION) + ")");
                 return null;
             }
 

@@ -227,7 +227,7 @@ namespace Com.Hypester.DM3
                 _starting = true;
                 SetInfoText("Game Starting");
                 MainController.ServiceGame.StartGame(factory.startingGame.gameId, OnStartGame);
-            } else { SetInfoText("Game starts in..." + ((int)_timeUntilStart - (int)_timer).ToString()); }
+            } else { if (!_started) { SetInfoText("Game starts in..." + ((int)_timeUntilStart - (int)_timer).ToString()); } }
 
             if (_starting)
             {
@@ -235,6 +235,9 @@ namespace Com.Hypester.DM3
                 {
                     if (remotePlayer.CustomProperties[PlayerProperty.State] != null && ((PlayerState)remotePlayer.CustomProperties[PlayerProperty.State] == PlayerState.StartingGameWaitForOther)) // Both players got the info. Go!
                     {
+                        Player localPlayer = PlayerManager.instance.GetPlayerById(PhotonNetwork.player.ID);
+                        localPlayer.opponent = PlayerManager.instance.GetPlayerById(PhotonNetwork.otherPlayers[0].ID);
+                        localPlayer.opponent.opponent = localPlayer;
                         Debug.Log("Both players have started their game (startGame)");
                         _started = true;
                         PhotonNetwork.LoadLevel("Match");

@@ -13,11 +13,17 @@ namespace Com.Hypester.DM3
         public void Login(string fbToken, string mobile_id, Delegates.ServiceCallback<LoginRequestObject> loadCallback)
         {
             var parameters = new Dictionary<string, object>();
-			if (!string.IsNullOrEmpty(fbToken)) {
-				parameters.Add("token", fbToken);
+			if (string.IsNullOrEmpty(fbToken)) {
+                parameters.Add("mobile_id", (string.IsNullOrEmpty(mobile_id) ? "new" : mobile_id));
 			}
-            parameters.Add("mobile_id", mobile_id);
-
+            else
+            {
+                parameters.Add("token", fbToken);
+                if (!string.IsNullOrEmpty(mobile_id) && mobile_id != "new")
+                {
+                    parameters.Add("mobile_id", mobile_id);
+                }
+            }
             Delegates.ServiceCallback<LoginRequestObject> requestCallback = (success, message, result) =>
             {
                 if (result != null && !string.IsNullOrEmpty(result.hexaclash))
