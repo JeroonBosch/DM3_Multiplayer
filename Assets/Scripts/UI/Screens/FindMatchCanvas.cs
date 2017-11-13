@@ -112,7 +112,8 @@ namespace Com.Hypester.DM3
                 // These stats should never be null objects or empty strings, because if they were, they would not have been added to the hashtable in the first place.
                 if (stats.ContainsKey(PlayerProperty.ProfileImageUrl))
                 {
-                    MainController.ServiceAsset.StartCoroutine(MainController.ServiceAsset.ImageFromURL((string)stats[PlayerProperty.ProfileImageUrl], OnLoadRemotePlayerProfileImage));
+                    Debug.Log("OPPONENT PROFILE IMAGE URL RECEIVED: " + (string)stats[PlayerProperty.ProfileImageUrl]);
+                    MainController.ServiceAsset.StartCoroutine(MainController.ServiceAsset.ImageFromURL(playerId, (string)stats[PlayerProperty.ProfileImageUrl], OnLoadRemotePlayerProfileImage));
                 }
                 if (stats.ContainsKey(PlayerProperty.XpLevel))
                 {
@@ -198,7 +199,7 @@ namespace Com.Hypester.DM3
             SetRemotePlayerXpText(opponent.XPlevel.ToString());
             if (!string.IsNullOrEmpty(opponent.pic)) {
                 Debug.Log("opponent img url: " + opponent.pic);
-                MainController.ServiceAsset.StartCoroutine(MainController.ServiceAsset.ImageFromURL(opponent.pic, OnLoadRemotePlayerProfileImage));
+                MainController.ServiceAsset.StartCoroutine(MainController.ServiceAsset.ImageFromURL(remotePlayer.ID, opponent.pic, OnLoadRemotePlayerProfileImage));
             }
 
             factory.startingGame.gameId = result.game.id;
@@ -264,7 +265,7 @@ namespace Com.Hypester.DM3
 
         private void RefreshLocalPlayerData()
         {
-            MainController.ServiceAsset.StartCoroutine(MainController.ServiceAsset.ImageFromURL(MainController.Instance.playerData.pictureURL, OnLoadLocalPlayerProfileImage));
+            MainController.ServiceAsset.StartCoroutine(MainController.ServiceAsset.ImageFromURL(PhotonNetwork.player.ID, MainController.Instance.playerData.pictureURL, OnLoadLocalPlayerProfileImage));
             SetLocalPlayerName(MainController.Instance.playerData.profileName);
             SetLocalPlayerXpText(MainController.Instance.playerData.xp.ToString());
         }
@@ -276,14 +277,17 @@ namespace Com.Hypester.DM3
             SetRemotePlayerName("");
             SetRemotePlayerXpText("");
         }
-        private void OnLoadLocalPlayerProfileImage(Sprite playerSprite)
+        private void OnLoadLocalPlayerProfileImage(Sprite playerSprite, int playerId)
         {
             localPlayerAvatarImage.sprite = playerSprite;
 
         }
-        private void OnLoadRemotePlayerProfileImage(Sprite playerSprite)
+        private void OnLoadRemotePlayerProfileImage(Sprite playerSprite, int playerId)
         {
+            if (playerSprite == null) { Debug.LogWarning("playerSprite is null! Returning"); return; }
             remotePlayerAvatarImage.sprite = playerSprite;
+            Player remote = PlayerManager.instance.GetPlayerById(playerId);
+            if (remote != null) { remote.profilePicSprite = playerSprite; }
         }
 
         private void SetInfoText(string msg)

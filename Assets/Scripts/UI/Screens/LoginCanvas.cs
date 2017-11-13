@@ -9,9 +9,6 @@ namespace Com.Hypester.DM3
 {
     public class LoginCanvas : BaseMenuCanvas
     {
-        //This class passes on the 'nickname' to Photon.
-        [SerializeField] InputField nameFieldText;
-
         [SerializeField] Text loggingInText;
 
         private bool connectingToPhoton;
@@ -29,7 +26,6 @@ namespace Com.Hypester.DM3
         {
             base.Start();
             
-            nameFieldText.text = "Guest" + UnityEngine.Random.Range(1000, 9999).ToString();
             loggingInText.enabled = false;
         }
 
@@ -83,7 +79,7 @@ namespace Com.Hypester.DM3
             
             SetLoginText("Logging in...");
             string mobile_id = string.IsNullOrEmpty(MainController.settingsService.mobileId) ? "new" : MainController.settingsService.mobileId;
-            MainController.ServicePlayer.Login("", mobile_id, OnPlayerLogin);
+            MainController.ServicePlayer.Login(null, mobile_id, OnPlayerLogin);
         }
 
         public void LoginFB()
@@ -94,7 +90,7 @@ namespace Com.Hypester.DM3
             //MainController.ServicePlayer.Ping(OnInitConnect);
 
             SetLoginText("Initializing FaceBook...");
-            if (FB.IsInitialized) { Debug.LogError("Already initialized"); InitCallback(); } else { Debug.LogError("Not initialized"); FB.Init(InitCallback, MainController.Instance.OnHideUnity); }
+            if (FB.IsInitialized) { Debug.LogWarning("Already initialized"); InitCallback(); } else { Debug.Log("Not initialized"); FB.Init(InitCallback, MainController.Instance.OnHideUnity); }
 
         }
         private void OnInitConnect(bool isSuccess, string message, PlayerService.PingRequestObject pingObject)
@@ -137,13 +133,13 @@ namespace Com.Hypester.DM3
 
         private void InitCallback()
         {
-            Debug.LogError("FB.Init callback");
+            Debug.Log("FB.Init callback");
             if (FB.IsInitialized)
             {
-                Debug.LogError("FB.IsInitialized");
+                Debug.Log("FB.IsInitialized");
                 FB.ActivateApp();
                 var perms = new List<string>() { "public_profile", "user_friends" };
-                SetLoginText("Logging in...");
+                SetLoginText("Logging to Facebook...");
                 FB.LogInWithReadPermissions(perms, AuthCallback);
             }
             else
@@ -157,9 +153,10 @@ namespace Com.Hypester.DM3
 
         private void AuthCallback(ILoginResult result)
         {
-            Debug.LogError("AuthCallback");
+            Debug.Log("AuthCallback");
             if (FB.IsLoggedIn)
             {
+                SetLoginText("Logging to Server...");
                 Debug.Log("IsLoggedIn");
                 var aToken = AccessToken.CurrentAccessToken;
                 Debug.Log("Facebook TOKEN: " + aToken.UserId);

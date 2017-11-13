@@ -59,10 +59,16 @@ namespace Com.Hypester.DM3
         }
 
         // NETWORKED PLAYER (PHOTON)
+        public delegate void PlayerIdAction(int playerId);
         public delegate void PlayerStatsAction(int playerId, Hashtable stats);
 
+        public static event PlayerIdAction OnPlayerWantsRematch;
         public static event PlayerStatsAction OnPlayerStatsUpdate;
 
+        public static void PlayerWantsRematch(int playerId)
+        {
+            if (null != OnPlayerWantsRematch) OnPlayerWantsRematch(playerId);
+        }
         public static void PlayerStatsUpdate(int playerId, Hashtable stats)
         {
             if (null != OnPlayerStatsUpdate) OnPlayerStatsUpdate(playerId, stats);

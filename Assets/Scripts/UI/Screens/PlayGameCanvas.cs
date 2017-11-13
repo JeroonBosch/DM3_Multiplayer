@@ -12,6 +12,8 @@ namespace Com.Hypester.DM3
         //The canvas has a 'Graphic Raycaster' required for selecting tiles.
         //Thus, this class also implements all the touch controls and actually calls RPC's of the GameHandler.
 
+        [SerializeField] EndScreenCanvas endScreenCanvas;
+        
         List<Vector2> _selectedTiles;
         LeanFinger _finger;
 
@@ -29,7 +31,8 @@ namespace Com.Hypester.DM3
 
             if (_finger != null)
             {
-                if (!GameObject.FindGameObjectWithTag("ActiveFireball") && !GameObject.FindGameObjectWithTag("ActiveTrap"))
+                GameObject activeTrap = GameObject.FindGameObjectWithTag("ActiveTrap");
+                if (!activeTrap)
                 {
                     if (_selectedTiles.Count > 0)
                     {
@@ -52,35 +55,26 @@ namespace Com.Hypester.DM3
                         }
                     }
 
-                    if (GameObject.Find("FingerTracker"))
+                    GameObject fingerTracker = GameObject.Find("FingerTracker");
+                    if (fingerTracker)
                     {
-                        Transform tf = GameObject.Find("FingerTracker").transform;
+                        Transform tf = fingerTracker.transform;
                         tf.position = _finger.GetWorldPosition(1f);
                         tf.localPosition = new Vector2(-tf.localPosition.x, -tf.localPosition.y);
                     }
-                } else 
+                }
+                else 
                 {
-                    if (GameObject.FindGameObjectWithTag("ActiveFireball"))
+                    Transform trap = activeTrap.transform;
+                    if (trap.GetComponent<TrapPower>().isPickedUp)
                     {
-                        Transform fb = GameObject.FindGameObjectWithTag("ActiveFireball").transform;
-                        if (!fb.GetComponent<YellowPower>().isFlying && fb.GetComponent<YellowPower>().isPickedUp)
+                        Vector2 vec = FindNearestTileToFinger();
+                        TileView trapTile = PhotonController.Instance.GameController.TileViewAtPos(vec);
+                        if (trapTile != null)
                         {
-                            fb.position = _finger.GetWorldPosition(1f);
-                            fb.GetComponent<YellowPower>().position = fb.localPosition;
+                            trap.GetComponent<TrapPower>().overBasetile = trapTile;
                         }
-                    } else
-                    {
-                        Transform trap = GameObject.FindGameObjectWithTag("ActiveTrap").transform;
-                        if (trap.GetComponent<TrapPower>().isPickedUp)
-                        {
-                            Vector2 vec = FindNearestTileToFinger();
-                            TileView trapTile = PhotonController.Instance.GameController.TileViewAtPos(vec);
-                            if (trapTile != null)
-                            {
-                                trap.GetComponent<TrapPower>().overBasetile = trapTile;
-                            }
-                            trap.position = _finger.GetWorldPosition(1f);
-                        }
+                        trap.position = _finger.GetWorldPosition(1f);
                     }
                 }
             }
@@ -112,7 +106,8 @@ namespace Com.Hypester.DM3
         {
             if (finger.Index == 0 && PhotonController.Instance.GameController.IsMyTurn())
             {
-                if (!GameObject.FindGameObjectWithTag("ActiveTrap"))
+                GameObject activeTrap = GameObject.FindGameObjectWithTag("ActiveTrap");
+                if (!activeTrap)
                 {
                     GameObject interactionObject = null;
 
@@ -147,7 +142,7 @@ namespace Com.Hypester.DM3
                     }
                 } else
                 {
-                    TrapPower trap = GameObject.FindGameObjectWithTag("ActiveTrap").GetComponent<TrapPower>();
+                    TrapPower trap = activeTrap.GetComponent<TrapPower>();
                     trap.PickUp();
                     _finger = finger;
                 }
@@ -158,7 +153,8 @@ namespace Com.Hypester.DM3
         {
             if (finger.Index == 0 && PhotonController.Instance.GameController.IsMyTurn())
             {
-                if (!GameObject.FindGameObjectWithTag("ActiveTrap")) { 
+                GameObject activeTrap = GameObject.FindGameObjectWithTag("ActiveTrap");
+                if (!activeTrap) { 
                     if (_selectedTiles.Count > 2) {
                         InitiateCombo();
                     } else
@@ -168,7 +164,7 @@ namespace Com.Hypester.DM3
                     _selectedTiles.Clear();
                 } else
                 {
-                    TrapPower trap = GameObject.FindGameObjectWithTag("ActiveTrap").GetComponent<TrapPower>();
+                    TrapPower trap = activeTrap.GetComponent<TrapPower>();
                     trap.GetComponent<TrapPower>().Place();
                 }
                 _finger = null;
@@ -252,8 +248,9 @@ namespace Com.Hypester.DM3
 
         public void EndGame (int winnerPlayer)
         {
-            GoToScreen(FindObjectOfType<EndScreenCanvas>());
-            FindObjectOfType<EndScreenCanvas>().winnerPlayer = winnerPlayer;
+            endScreenCanvas.SetWinner(winnerPlayer);
+
+            GoToScreen(endScreenCanvas);
             enabled = false;
         }
 

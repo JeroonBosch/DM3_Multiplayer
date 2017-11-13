@@ -61,8 +61,6 @@ namespace Com.Hypester.DM3
             base.Update();
 
             Player[] players = FindObjectsOfType<Player>();
-            foreach (Player player in players)
-                player.UpdateLabels();
 
             if (players.Length == 2)
             {

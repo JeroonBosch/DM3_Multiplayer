@@ -9,6 +9,9 @@ namespace Com.Hypester.DM3
         public Sprite guestAvatar;
         public Sprite randomAvatarSheet;
 
+        [Header("AvatarBorders")]
+        public Sprite winnerAvatarBorder;
+
         [Header("Icons")]
         public Sprite thumbsUp;
         public Sprite thumbsDown;

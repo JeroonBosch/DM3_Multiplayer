@@ -12,6 +12,7 @@ namespace Com.Hypester.DM3
         public Type type;
 
         [SerializeField] GameObject stageEntryPrefab;
+        [SerializeField] float carouselSpeed = 40f;
         private int _selectedIndex = 0;
         private int _highestIndex;
         private Coroutine _moveCoroutine;
@@ -41,7 +42,7 @@ namespace Com.Hypester.DM3
             while (t <= 1.0)
             {
                 t += Time.deltaTime / seconds;
-                transform.localPosition = Vector2.Lerp(startpos, endpos, Mathf.SmoothStep(0.0f, 1.0f, t));
+                transform.localPosition = Vector2.Lerp(startpos, endpos, Mathf.SmoothStep(0.0f, 1.0f, t) * carouselSpeed);
                 yield return null;
             }
             _moveCoroutine = null;
@@ -116,7 +117,33 @@ namespace Com.Hypester.DM3
 
         public void InitializeCarousel()
         {
-            MainController.ServiceEconomy.LoadStages(OnStagesLoaded);
+            // MainController.ServiceEconomy.LoadStages(OnStagesLoaded);
+
+            int positionCounter = 0;
+            foreach (PlayerService.Stage stage in MainController.Data.temporary.stages)
+            {
+                StageEntry entry = Instantiate(stageEntryPrefab, transform, false).GetComponent<StageEntry>();
+
+                entry.transform.localPosition = new Vector2(1000f * positionCounter, 0f); ;
+                entry.playButton.onClick.RemoveAllListeners();
+                entry.playButton.onClick.AddListener(() => canvas.SetReady(entry));
+
+                int coinReward = type == Type.Normal ? int.Parse(stage.reward) : int.Parse(stage.tourna_reward);
+                int coinCost = type == Type.Normal ? int.Parse(stage.buyin) : int.Parse(stage.tourna_buyin);
+                entry.SetId(stage.id);
+                entry.SetSyscode(stage.syscode);
+                entry.SetCoinPrize(coinReward);
+                entry.SetCoinCost(coinCost);
+                entry.SetSpecialRule("");
+                StageArt stageArt = MainController.Data.sprites.GetStageArt(stage.syscode);
+                entry.SetBackground(stageArt.splash);
+
+                stageEntries.Add(entry.gameObject);
+                positionCounter++;
+            }
+
+            _highestIndex = MainController.Data.temporary.stages.Count - 1;
+            ButtonColorCheck();
 
             /*
             List<StageEntryInfoDB> entries = new List<StageEntryInfoDB>();

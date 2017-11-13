@@ -151,10 +151,6 @@ namespace Com.Hypester.DM3
                     transform.rotation = new Quaternion(0f, 0f, 0f, transform.rotation.w);
                 }
                 PlayerInterface[] interfaces = FindObjectsOfType<PlayerInterface>();
-                foreach (PlayerInterface playerInterface in interfaces)
-                {
-                    playerInterface.SetAvatars();
-                }
 
                 _myPlayer.Reset();
                 _enemyPlayer.Reset();
@@ -893,7 +889,7 @@ namespace Com.Hypester.DM3
                         else
                             targetPlayerHealth = healthPlayerTwo;
 
-                        float damage = (_selectedTiles.Count * _selectedTiles.Count - 2) + _baseTiles.FindAll(item => item.collateral == true).Count * Constants.BoosterCollateralDamage;
+                        float damage = (_selectedTiles.Count * 4) + _baseTiles.FindAll(item => item.collateral == true).Count * Constants.BoosterCollateralDamage;
                         float calculatedDamage = targetPlayerHealth - damage;
                         player.FindInterface().SetHitpoints(calculatedDamage);
                     }
@@ -1344,7 +1340,6 @@ namespace Com.Hypester.DM3
             YellowPower fireball = Instantiate(fireballPrefab, startingPos, Quaternion.identity).GetComponent<YellowPower>();
 
             fireball.ownerPlayer = fireballOwner;
-            fireball.gameID = GameID;
             fireball.name = "Fireball" + fireballOwner.localID;
             fireball.transform.position = startingPos;
             fireball.target = enemyAvatarTransform;
@@ -1540,9 +1535,9 @@ namespace Com.Hypester.DM3
                 GameObject effect = Instantiate(Resources.Load("ParticleEffects/ShieldEffect")) as GameObject;
                 Vector2 effectPosition = new Vector2();
                 if (_myPlayer.localID == targetPlayer)
-                    effectPosition = GameObject.Find("MyAvatar").GetComponent<RectTransform>().position;
+                    effectPosition = MyPlayer.playerInterface.avatarGameObject.transform.position;
                 else
-                    effectPosition = GameObject.Find("OpponentAvatar").GetComponent<RectTransform>().position;
+                    effectPosition = EnemyPlayer.playerInterface.avatarGameObject.transform.position;
                 effect.transform.position = effectPosition;
             }
         }
@@ -1556,7 +1551,7 @@ namespace Com.Hypester.DM3
                 {
                     GameObject effect = Instantiate(Resources.Load("ParticleEffects/ShieldActivated")) as GameObject;
                     Vector2 effectPosition = new Vector2();
-                    effectPosition = GameObject.Find("MyAvatar").GetComponent<RectTransform>().position;
+                    effectPosition = MyPlayer.playerInterface.avatarGameObject.transform.position;
                     effect.transform.position = effectPosition;
 
                     _gameContext.ShowText("Shield is now active. Next damage is blocked.");
@@ -1576,7 +1571,7 @@ namespace Com.Hypester.DM3
                 {
                     _gameContext.ShowText("You healed for " + Constants.HealPower + "!");
 
-                    effectPosition = GameObject.Find("MyAvatar").GetComponent<RectTransform>().position;
+                    effectPosition = MyPlayer.playerInterface.avatarGameObject.transform.position;
                 }
                 else
                 {

@@ -44,7 +44,6 @@ namespace Com.Hypester.DM3
             Player myPlayer = null;
             Player[] players = FindObjectsOfType<Player>();
             foreach (Player player in players) {
-                player.UpdateLabels();
                 if (player.photonView.isMine)
                     myPlayer = player;
             }

@@ -9,15 +9,15 @@
         public const int MaxSkillLevel = 6;
         
         //Game variables
-        public const int PlayerStartHP = 800;
+        public const int PlayerStartHP = 500;
         public const int BluePowerReq = 12;
         public const int GreenPowerReq = 9;
         public const int RedPowerReq = 9;
         public const int YellowPowerReq = 12;
 
-        public const float BoosterCollateralDamage = 4f;
+        public const float BoosterCollateralDamage = 3f;
         public const int HealPower = 50;
-        public const int FireballPower = 100;
+        public const int FireballPower = 60;
 
         //Grid settings
         public const int gridXsize = 10;

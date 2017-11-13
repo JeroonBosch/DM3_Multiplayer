@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using System;
 
 namespace Com.Hypester.DM3
 {
@@ -10,7 +11,8 @@ namespace Com.Hypester.DM3
         public Owner owner;
 
         //public string avatarString;
-
+        public Image playerAvatarImage;
+        public Image playerBorderImage;
         public GameObject avatarGameObject;
         [SerializeField] GameObject _health;
         [SerializeField] GameObject _shadowHealth;
@@ -24,11 +26,30 @@ namespace Com.Hypester.DM3
         private void Start()
         {
             InitSkillButtonsDict();
-            SetAvatars();
 
             Player localPlayer = PlayerManager.instance.GetPlayerById(PhotonNetwork.player.ID);
-            if (owner == Owner.Local) { localPlayer.playerInterface = this; }
-            else { localPlayer.opponent.playerInterface = this; }
+            if (owner == Owner.Local) {
+                localPlayer.playerInterface = this;
+                if (localPlayer.profilePicSprite != null) { playerAvatarImage.sprite = localPlayer.profilePicSprite; }
+                else if (!string.IsNullOrEmpty(localPlayer.profilePicURL))
+                {
+                    MainController.ServiceAsset.StartCoroutine(MainController.ServiceAsset.ImageFromURL(localPlayer.GetPlayerId(), localPlayer.profilePicURL, OnLoadPlayerProfileImage));
+                }
+            }
+            else {
+                localPlayer.opponent.playerInterface = this;
+                if (localPlayer.opponent.profilePicSprite != null) { playerAvatarImage.sprite = localPlayer.opponent.profilePicSprite; }
+                else if (!string.IsNullOrEmpty(localPlayer.opponent.profilePicURL))
+                {
+                    MainController.ServiceAsset.StartCoroutine(MainController.ServiceAsset.ImageFromURL(localPlayer.opponent.GetPlayerId(), localPlayer.opponent.profilePicURL, OnLoadPlayerProfileImage));
+                }
+            }
+        }
+
+        private void OnLoadPlayerProfileImage(Sprite img, int playerId)
+        {
+            if (img == null) { Debug.LogWarning("PlayerInterface(): Failed to load player profile image"); return; }
+            playerAvatarImage.sprite = img;
         }
 
         private void Update()
@@ -91,16 +112,6 @@ namespace Com.Hypester.DM3
         public SkillButton GetSkillButtonBySkillColor(SkillColor skillColor)
         {
             return skillButtonsDict[skillColor];
-        }
-
-        public void SetAvatars ()
-        {
-            //TODO Placeholders.
-            if (!PhotonNetwork.isMasterClient)
-            {
-                GameObject.Find("MyAvatar").GetComponent<Image>().sprite = MainController.Data.sprites.guestAvatar;
-                GameObject.Find("OpponentAvatar").GetComponent<Image>().sprite = MainController.Data.sprites.guestAvatar; ;
-            }
         }
 
         public void SetHitpoints(float hitpoints)

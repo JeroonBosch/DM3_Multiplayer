@@ -6,6 +6,7 @@ namespace Com.Hypester.DM3
     {
         public SoundDatabase sounds;
         public SpriteDatabase sprites;
+        public TemporaryDatabase temporary;
 
         private void Awake()
         {   // Ensure that these are referenced

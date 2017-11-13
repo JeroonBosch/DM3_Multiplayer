@@ -203,6 +203,8 @@ namespace Com.Hypester.DM3
 
         void PlayerLogin(LoginType loginType, PlayerService.LoginRequestObject loginObject)
         {
+            Data.temporary.stages = loginObject.stages;
+
             List<PlayerStatsInfo> randomPsi = new List<PlayerStatsInfo>();
             PlayerStatsInfo psi1 = new PlayerStatsInfo(Random.Range(1, 4), Random.Range(10, 3000), Random.Range(1, 30), Random.Range(0, 2), Random.Range(0, 2), Random.Range(0, 2), Random.Range(0, 2));
             PlayerStatsInfo psi2 = new PlayerStatsInfo(Random.Range(5, 11), Random.Range(300, 200), Random.Range(11, 90), Random.Range(0, 3), Random.Range(0, 3), Random.Range(0, 3), Random.Range(0, 3));
@@ -219,6 +221,7 @@ namespace Com.Hypester.DM3
 
             PlayerService.User user = loginObject.user;
 
+            playerData.SetProfileName(loginObject.user.first_name + " " + loginObject.user.last_name);
             playerData.SetUserId(loginObject.user_id);
             playerData.SetCoins(loginObject.coins);
             playerData.SetXp(loginObject.XPlevel);

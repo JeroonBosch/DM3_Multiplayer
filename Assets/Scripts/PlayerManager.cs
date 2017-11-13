@@ -43,8 +43,6 @@ namespace Com.Hypester.DM3
             player.SetPlayerId(PhotonNetwork.player.ID);
             player.joinNumber = PhotonNetwork.room.PlayerCount;
             player.localID = PhotonNetwork.isMasterClient || player.joinNumber == 3 ? 0 : 1;
-
-            player.UpdateLabels();
         }
 
         public Player GetPlayerById(int playerId) { Player player = null; if (players.ContainsKey(playerId)) { player = players[playerId]; } return player; }
@@ -57,7 +55,7 @@ namespace Com.Hypester.DM3
             }
             return id;
         }
-
+        public Dictionary<int, Player> GetAllPlayers() { return players; }
         public void AddPlayer(int playerId, Player player) { if (!players.ContainsKey(playerId)) { players.Add(playerId, player); } }
         public void RemovePlayer(int playerId) { if (players.ContainsKey(playerId)) { players.Remove(playerId); } }
         public void RemovePlayer(PhotonPlayer photonPlayer) { if (players.ContainsKey(photonPlayer.ID)) { players.Remove(photonPlayer.ID); } }

@@ -1,122 +1,82 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using System.Collections.Generic;
+using System;
 
 namespace Com.Hypester.DM3
 {
     public class EndScreenCanvas : BaseMenuCanvas
     {
-        private Transform _myPlayer;
-        private Transform _enemyPlayer;
+        public PlayerInfoMatchEnd localPlayerInfo; 
+        public PlayerInfoMatchEnd remotePlayerInfo;
 
-        private Image _myRematchBubble;
-        private Image _enemyRematchBubble;
-        private Image _myRematchButton;
-        private Image _enemyRematchButton;
+        protected override void OnEnable()
+        {
+            PlayerEvent.OnPlayerWantsRematch += OnPlayerWantsRematch;
+        }
 
-        private int _winnerPlayer;
-        public int winnerPlayer { set { SetWinnerPlayer(value); } }
+        protected override void OnDisable()
+        {
+            PlayerEvent.OnPlayerWantsRematch -= OnPlayerWantsRematch;
+        }
 
         protected override void Start()
         {
             base.Start();
             Hide();
-
-            if (PhotonNetwork.isMasterClient)
-            {
-                _myPlayer = GameObject.Find("Player1_EndInterface").transform;
-                _enemyPlayer = GameObject.Find("Player2_EndInterface").transform;
-            }
-            else
-            {
-                _myPlayer = GameObject.Find("Player2_EndInterface").transform;
-                _enemyPlayer = GameObject.Find("Player1_EndInterface").transform;
-            }
-
-            _myRematchBubble = _myPlayer.Find("RematchBubble").GetComponent<Image>();
-            _myRematchButton = _myPlayer.Find("RematchButton").GetComponent<Image>();
-            _enemyRematchBubble = _enemyPlayer.Find("RematchBubble").GetComponent<Image>();
-            _enemyRematchButton = _enemyPlayer.Find("RematchButton").GetComponent<Image>();
-
-            _myRematchBubble.enabled = false;
-            _enemyRematchBubble.enabled = false;
-            _myRematchButton.enabled = true;
-            _enemyRematchButton.enabled = false;
-
-            Destroy(_enemyPlayer.Find("Reward").gameObject);
-
-            foreach (GameObject go in GameObject.FindGameObjectsWithTag("Player"))
-            {
-                go.transform.Find("FingerTracker").GetComponent<Image>().enabled = false;
-            }
         }
 
         public override void Show()
         {
             base.Show();
 
-            foreach (GameObject nameObject in GameObject.FindGameObjectsWithTag("Player_1_Name"))
-            {
-                Text nameText = nameObject.GetComponent<Text>();
-                if (PhotonNetwork.isMasterClient)
-                    nameText.text = PhotonController.Instance.GameController.MyPlayer.profileName;
-                else
-                    nameText.text = PhotonController.Instance.GameController.EnemyPlayer.profileName;
-            }
-            foreach (GameObject nameObject in GameObject.FindGameObjectsWithTag("Player_2_Name"))
-            {
-                Text nameText = nameObject.GetComponent<Text>();
-                if (!PhotonNetwork.isMasterClient)
-                    nameText.text = PhotonController.Instance.GameController.MyPlayer.profileName;
-                else
-                    nameText.text = PhotonController.Instance.GameController.EnemyPlayer.profileName;
+            foreach (KeyValuePair<int, Player> kvp in PlayerManager.instance.GetAllPlayers()) {
+                Player player = kvp.Value;
+                PlayerInfoMatchEnd playerInfo = player.IsLocal() ? localPlayerInfo : remotePlayerInfo;
+
+                player.ToggleFingerTracker(false);
+
+                playerInfo.SetCurrentXpLevelText(player.currentXpLevel);
+                if (!string.IsNullOrEmpty(player.profileName)) { playerInfo.SetPlayerNameText(player.profileName); }
+                if (player.profilePicSprite != null) { playerInfo.SetAvatarImage(player.profilePicSprite); }
+                else if (!string.IsNullOrEmpty(player.profilePicURL))
+                {
+                    MainController.ServiceAsset.StartCoroutine(MainController.ServiceAsset.ImageFromURL(player.GetPlayerId(), player.profilePicURL, OnLoadPlayerProfileImage));
+                }
+                // TODO: Add gains here when connected to CMS.
             }
         }
 
-        private void SetWinnerPlayer (int winnerPlayer)
+        private void OnLoadPlayerProfileImage(Sprite obj, int playerId)
         {
-            _winnerPlayer = winnerPlayer;
-            if (_winnerPlayer == 0)
+            if (obj == null) { Debug.LogWarning("EndScreenCanvas(): Failed to load player profile image"); return; }
+            if (playerId == PhotonNetwork.player.ID) { localPlayerInfo.SetAvatarImage(obj); } // Local
+            else { remotePlayerInfo.SetAvatarImage(obj); } // Remote
+        }
+
+        private void OnPlayerWantsRematch(int playerId)
+        {
+            if (playerId == PhotonNetwork.player.ID) // Local player
             {
-                if (PhotonNetwork.isMasterClient)
-                    Destroy(_enemyPlayer.Find("AvatarWinnerBorder").gameObject);
-                else
-                    Destroy(_myPlayer.Find("AvatarWinnerBorder").gameObject);
-            }
-            else
+                localPlayerInfo.ToggleRematchImage(true);
+            } else { remotePlayerInfo.ToggleRematchImage(true); } // Remote player
+
+            if (localPlayerInfo.wantsRematch && remotePlayerInfo.wantsRematch)
             {
-                if (PhotonNetwork.isMasterClient)
-                    Destroy(_myPlayer.Find("AvatarWinnerBorder").gameObject);
-                else
-                    Destroy(_enemyPlayer.Find("AvatarWinnerBorder").gameObject);
+                localPlayerInfo.ToggleRematchImage(false);
+                remotePlayerInfo.ToggleRematchImage(false);
+                PhotonController.Instance.Rematch();
             }
         }
 
-        protected override void Update()
+        public void SetWinner(int winnerPlayer)
         {
-            base.Update();
+            bool localPlayerWon = (winnerPlayer == 0 && PhotonNetwork.isMasterClient) || (winnerPlayer == 1 && !PhotonNetwork.isMasterClient); // 0 = master client
 
-            if (PhotonController.Instance.GameController != null && PhotonController.Instance.GameController.EnemyPlayer != null)
-            {
-                if (PhotonController.Instance.GameController.EnemyPlayer.wantsRematch && _enemyRematchBubble.enabled == false)
-                {
-                    _enemyRematchBubble.enabled = true;
-                }
+            PlayerInfoMatchEnd winnerPlayerInfo = localPlayerWon ? localPlayerInfo : remotePlayerInfo;
 
-                if (PhotonController.Instance.GameController.MyPlayer.wantsRematch && _myRematchBubble.enabled == false)
-                {
-                    _myRematchBubble.enabled = true;
-                    _myRematchButton.enabled = false;
-                }
-
-                if (PhotonController.Instance.GameController.MyPlayer.wantsRematch && PhotonController.Instance.GameController.EnemyPlayer.wantsRematch && PhotonNetwork.isMasterClient)
-                {
-                    PhotonController.Instance.Rematch();
-                    PhotonController.Instance.GameController.MyPlayer.wantsRematch = false;
-                    PhotonController.Instance.GameController.EnemyPlayer.wantsRematch = false;
-                }
-
-
-            }
+            winnerPlayerInfo.ToggleWinnerText(true);
+            winnerPlayerInfo.SetBorderImage(MainController.Data.sprites.winnerAvatarBorder);
         }
 
         public void BackToMenu ()
@@ -133,8 +93,7 @@ namespace Com.Hypester.DM3
 
         public void RequestRematch()
         {
-            PhotonController.Instance.GameController.MyPlayer.photonView.RPC("RPC_RequestRematch", PhotonTargets.Others);
-            PhotonController.Instance.GameController.MyPlayer.wantsRematch = true;
+            PhotonController.Instance.GameController.MyPlayer.photonView.RPC("RPC_RequestRematch", PhotonTargets.AllViaServer, PhotonNetwork.player.ID); // Only the local player calls this.
         }
     }
 }

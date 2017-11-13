@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class AssetService : MonoBehaviour
 {
-    internal IEnumerator ImageFromURL(string pictureURL, Action<Sprite> onLoadLocalPlayerProfileImage)
+    internal IEnumerator ImageFromURL(int playerId, string pictureURL, Action<Sprite, int> onLoadLocalPlayerProfileImage)
     {
         WWW www = new WWW(pictureURL);
         yield return www;
@@ -16,7 +16,7 @@ public class AssetService : MonoBehaviour
             Sprite resultImageSprite = Sprite.Create(www.texture, new Rect(0, 0, www.texture.width, www.texture.height), new Vector2(0, 0));
             if (onLoadLocalPlayerProfileImage != null && resultImageSprite != null)
             {
-                onLoadLocalPlayerProfileImage(resultImageSprite);
+                onLoadLocalPlayerProfileImage(resultImageSprite, playerId);
             }
         }
     }

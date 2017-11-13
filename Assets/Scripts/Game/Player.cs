@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using System;
 
 namespace Com.Hypester.DM3
 {
@@ -8,13 +9,16 @@ namespace Com.Hypester.DM3
     //Class name could be changed to represent it being a photon view with client-control rather than master-client control
     public class Player : Photon.MonoBehaviour
     {
+        [Header("Identification")]
         private int playerId;
-
         public int localID;
         public int joinNumber; //only for tournaments
+
+        [Header("Data")]
         public string profileName;
         public string profilePicURL;
-        public bool wantsRematch;
+        public Sprite profilePicSprite;
+        public int currentXpLevel;
 
         public PlayerInterface playerInterface;
         public Player opponent;
@@ -28,15 +32,20 @@ namespace Com.Hypester.DM3
             DontDestroyOnLoad(gameObject);
             playerCanvas.worldCamera = Camera.main;
 
-            if (photonView.isMine) {
+            if (photonView.isMine && PhotonNetwork.player.ID == GetPlayerId()) {
                 profileName = MainController.Instance.playerData.profileName;
                 profilePicURL = MainController.Instance.playerData.pictureURL;
                 ToggleFingerTracker(false);
             }
+        }
 
-            wantsRematch = false;
-
-            UpdateLabels();
+        protected void OnEnable()
+        {
+            PlayerEvent.OnPlayerStatsUpdate += OnPlayerStatsUpdate;
+        }
+        protected void OnDisable()
+        {
+            PlayerEvent.OnPlayerStatsUpdate -= OnPlayerStatsUpdate;
         }
 
         private void Update()
@@ -49,6 +58,25 @@ namespace Com.Hypester.DM3
                 else if (!photonView.isMine && PhotonController.Instance.GameController.Active) { ToggleFingerTracker(true); }
             }
             playerCanvas.worldCamera = Camera.main;
+        }
+
+        private void OnPlayerStatsUpdate(int playerId, ExitGames.Client.Photon.Hashtable stats)
+        {
+            if (playerId != GetPlayerId()) { return; }
+
+            if (stats.ContainsKey(PlayerProperty.ProfileImageUrl) && !string.IsNullOrEmpty(((string)stats[PlayerProperty.ProfileImageUrl])))
+            {
+                MainController.ServiceAsset.StartCoroutine(MainController.ServiceAsset.ImageFromURL(playerId, (string)stats[PlayerProperty.ProfileImageUrl], OnLoadPlayerProfileImage));
+            }
+            if (stats.ContainsKey(PlayerProperty.XpLevel))
+            {
+                currentXpLevel = (int)stats[PlayerProperty.XpLevel];
+            }
+        }
+
+        private void OnLoadPlayerProfileImage(Sprite newImage, int playerId)
+        {
+            if (newImage != null) { profilePicSprite = newImage; }
         }
 
         void OnPhotonInstantiate(PhotonMessageInfo info)
@@ -74,8 +102,6 @@ namespace Com.Hypester.DM3
                 localID = (int)stream.ReceiveNext();
                 joinNumber = (int)stream.ReceiveNext();
             }
-
-            UpdateLabels();
         }
 
         public int GetRequestedGameID ()
@@ -118,58 +144,7 @@ namespace Com.Hypester.DM3
             return false;
         }
 
-        public void UpdateLabels()
-        {
-            if (joinNumber == 1)
-                SetTextToProfileName("Player_1_Name");
-            else if (joinNumber == 2)
-                SetTextToProfileName("Player_2_Name");
-            else if (joinNumber == 3)
-                SetTextToProfileName("Player_3_Name");
-            else
-                SetTextToProfileName("Player_4_Name");
-
-            if (photonView.isMine)
-                SetTextToProfileName("MyPlayer_Name");
-            else
-                if (IsRelevantPlayer())
-                    SetTextToProfileName("OpponentPlayer_Name");
-
-
-            if (profilePicURL != "") { 
-                //Avatars
-                if (joinNumber == 1)
-                    SetImageToProfilePic("Player_1_Avatar");
-                else if (joinNumber == 2)
-                    SetImageToProfilePic("Player_2_Avatar");
-                else if (joinNumber == 3)
-                    SetImageToProfilePic("Player_3_Avatar");
-                else
-                    SetImageToProfilePic("Player_4_Avatar");
-
-                if (photonView.isMine)
-                    SetImageToProfilePic("MyPlayer_Avatar");
-                else
-                    if (IsRelevantPlayer())
-                        SetImageToProfilePic("OpponentPlayer_Avatar");
-            }
-        }
-
-        private void SetTextToProfileName(string tag)
-        {
-            foreach (GameObject name in GameObject.FindGameObjectsWithTag(tag))
-            {
-                name.GetComponent<Text>().text = profileName;
-            }
-        }
-
-        private void SetImageToProfilePic(string tag)
-        {
-            foreach (GameObject avatar in GameObject.FindGameObjectsWithTag(tag))
-            {
-                StartCoroutine(ImageFromURL(avatar.GetComponent<Image>()));
-            }
-        }
+        public bool IsLocal() { return (PhotonNetwork.player.ID == playerId); }
 
         public void ToggleFingerTracker(bool turnOn)  { fingerTrackerImage.enabled = turnOn; }
 
@@ -215,16 +190,15 @@ namespace Com.Hypester.DM3
         public void SetPlayerId(int id) { playerId = id; }
 
         [PunRPC]
-        public void RPC_RequestRematch()
+        public void RPC_RequestRematch(int playerId)
         {
-            wantsRematch = true;
+            PlayerEvent.PlayerWantsRematch(playerId);
         }
 
         [PunRPC]
         public void RPC_SendName(string profName)
         {
             profileName = profName;
-            UpdateLabels();
         }
     }
 }
