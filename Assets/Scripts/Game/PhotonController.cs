@@ -183,6 +183,7 @@ namespace Com.Hypester.DM3
             PlayerData playerData = MainController.Instance.playerData;
             Hashtable playerProps = new Hashtable();
 
+            playerProps.Add(PlayerProperty.AvatarBorderSyscode, playerData.avatarBorderSyscode);
             playerProps.Add(PlayerProperty.UserId, playerData.userId);
             playerProps.Add(PlayerProperty.XpLevel, playerData.xp);
             playerProps.Add(PlayerProperty.BlueSkillLevel, playerData.blueSkill);
@@ -204,7 +205,7 @@ namespace Com.Hypester.DM3
             if (PhotonNetwork.inRoom && SceneManager.GetActiveScene().name != "Menu")
             {
                 //instead, should set health to 0?
-                PhotonNetwork.LoadLevel("test");
+                PhotonNetwork.LoadLevel("Menu");
                 PhotonNetwork.LeaveRoom();
                 Debug.Log("Menu loaded because a player left the match.");
             }
@@ -256,6 +257,14 @@ namespace Com.Hypester.DM3
                 string userId = (string) props[PlayerProperty.UserId];
                 if (!string.IsNullOrEmpty(userId)) {
                     statUpdate.Add(PlayerProperty.UserId, userId);
+                }
+            }
+            if (props.ContainsKey(PlayerProperty.AvatarBorderSyscode) && props[PlayerProperty.AvatarBorderSyscode] != null)
+            {
+                string avatarBorderSyscode = (string)props[PlayerProperty.AvatarBorderSyscode];
+                if (!string.IsNullOrEmpty(avatarBorderSyscode))
+                {
+                    statUpdate.Add(PlayerProperty.AvatarBorderSyscode, avatarBorderSyscode);
                 }
             }
             if (props.ContainsKey(PlayerProperty.ProfileImageUrl) && props[PlayerProperty.ProfileImageUrl] != null)

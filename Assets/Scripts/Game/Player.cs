@@ -15,6 +15,7 @@ namespace Com.Hypester.DM3
         public int joinNumber; //only for tournaments
 
         [Header("Data")]
+        public string avatarBorderSyscode;
         public string profileName;
         public string profilePicURL;
         public Sprite profilePicSprite;
@@ -64,6 +65,10 @@ namespace Com.Hypester.DM3
         {
             if (playerId != GetPlayerId()) { return; }
 
+            if (stats.ContainsKey(PlayerProperty.AvatarBorderSyscode) && !string.IsNullOrEmpty((string)stats[PlayerProperty.AvatarBorderSyscode]))
+            {
+                avatarBorderSyscode = (string)stats[PlayerProperty.AvatarBorderSyscode];
+            }
             if (stats.ContainsKey(PlayerProperty.ProfileImageUrl) && !string.IsNullOrEmpty(((string)stats[PlayerProperty.ProfileImageUrl])))
             {
                 MainController.ServiceAsset.StartCoroutine(MainController.ServiceAsset.ImageFromURL(playerId, (string)stats[PlayerProperty.ProfileImageUrl], OnLoadPlayerProfileImage));

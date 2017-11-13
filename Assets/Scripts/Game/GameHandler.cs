@@ -889,7 +889,7 @@ namespace Com.Hypester.DM3
                         else
                             targetPlayerHealth = healthPlayerTwo;
 
-                        float damage = (_selectedTiles.Count * 4) + _baseTiles.FindAll(item => item.collateral == true).Count * Constants.BoosterCollateralDamage;
+                        float damage = (_selectedTiles.Count * 5) + _baseTiles.FindAll(item => item.collateral == true).Count * Constants.BoosterCollateralDamage;
                         float calculatedDamage = targetPlayerHealth - damage;
                         player.FindInterface().SetHitpoints(calculatedDamage);
                     }
@@ -1032,7 +1032,7 @@ namespace Com.Hypester.DM3
             {
                 GameObject boosterFiller = Instantiate(Resources.Load("ParticleEffects/BoosterFiller")) as GameObject;
                 boosterFiller.transform.position = baseTile.transform.position;
-                boosterFiller.GetComponent<BoosterFiller>().Init(targetPlayer, count, baseTile.color);
+                boosterFiller.GetComponent<BoosterFiller>().Init(targetPlayer.opponent, count, baseTile.color);
             }
 
             //Explosion effect
@@ -1354,12 +1354,14 @@ namespace Com.Hypester.DM3
         [PunRPC]
         public void RPC_FireballHit(int fireballOwnerId) //should be both master-client side and guest-side
         {
+            Debug.Log("Fireball Hit!");
             Player fireballOwnerPlayer = PlayerManager.instance.GetPlayerById(fireballOwnerId);
 
             if (fireballOwnerPlayer == null) { Debug.Log("Fireball owner left. Never mind"); return; }
 
             if (IsGameRelevant())
             {
+                Debug.Log("Game is relevant!");
                 GameObject explosion = Instantiate(Resources.Load("ParticleEffects/FireballHit")) as GameObject;
                 explosion.transform.position = fireballOwnerPlayer.opponent.playerInterface.avatarGameObject.transform.position;
             }

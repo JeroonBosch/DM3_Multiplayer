@@ -30,19 +30,23 @@ namespace Com.Hypester.DM3
             Player localPlayer = PlayerManager.instance.GetPlayerById(PhotonNetwork.player.ID);
             if (owner == Owner.Local) {
                 localPlayer.playerInterface = this;
+
                 if (localPlayer.profilePicSprite != null) { playerAvatarImage.sprite = localPlayer.profilePicSprite; }
                 else if (!string.IsNullOrEmpty(localPlayer.profilePicURL))
                 {
                     MainController.ServiceAsset.StartCoroutine(MainController.ServiceAsset.ImageFromURL(localPlayer.GetPlayerId(), localPlayer.profilePicURL, OnLoadPlayerProfileImage));
                 }
+                if (!string.IsNullOrEmpty(localPlayer.avatarBorderSyscode)) { playerBorderImage.sprite = MainController.Data.sprites.GetAvatarBorderEntry(localPlayer.avatarBorderSyscode).normal; }
             }
             else {
                 localPlayer.opponent.playerInterface = this;
+
                 if (localPlayer.opponent.profilePicSprite != null) { playerAvatarImage.sprite = localPlayer.opponent.profilePicSprite; }
                 else if (!string.IsNullOrEmpty(localPlayer.opponent.profilePicURL))
                 {
                     MainController.ServiceAsset.StartCoroutine(MainController.ServiceAsset.ImageFromURL(localPlayer.opponent.GetPlayerId(), localPlayer.opponent.profilePicURL, OnLoadPlayerProfileImage));
                 }
+                if (!string.IsNullOrEmpty(localPlayer.opponent.avatarBorderSyscode)) { playerBorderImage.sprite = MainController.Data.sprites.GetAvatarBorderEntry(localPlayer.opponent.avatarBorderSyscode).normal; }
             }
         }
 

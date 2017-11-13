@@ -109,15 +109,20 @@ namespace Com.Hypester.DM3
         {
             if (playerId != PhotonNetwork.player.ID) // remote player
             {
+                Debug.LogError("OnPlayerStatsUpdate(" + stats.Count.ToString() + ")");
                 // These stats should never be null objects or empty strings, because if they were, they would not have been added to the hashtable in the first place.
                 if (stats.ContainsKey(PlayerProperty.ProfileImageUrl))
                 {
-                    Debug.Log("OPPONENT PROFILE IMAGE URL RECEIVED: " + (string)stats[PlayerProperty.ProfileImageUrl]);
                     MainController.ServiceAsset.StartCoroutine(MainController.ServiceAsset.ImageFromURL(playerId, (string)stats[PlayerProperty.ProfileImageUrl], OnLoadRemotePlayerProfileImage));
                 }
                 if (stats.ContainsKey(PlayerProperty.XpLevel))
                 {
                     SetRemotePlayerXpText(((int)stats[PlayerProperty.XpLevel]).ToString());
+                }
+                if (stats.ContainsKey(PlayerProperty.AvatarBorderSyscode))
+                {
+                    Debug.LogError("ContaisKey AvatarSys: " + (string)stats[PlayerProperty.AvatarBorderSyscode]);
+                    SetRemotePlayerAvatarBorder((string) stats[PlayerProperty.AvatarBorderSyscode]);
                 }
             }
         }
@@ -155,6 +160,13 @@ namespace Com.Hypester.DM3
             if (remotePlayer != null && remotePlayer.CustomProperties[PlayerProperty.UserId] != null)
             {
                 string remotePlayerUserId = (string) remotePlayer.CustomProperties[PlayerProperty.UserId];
+                if (remotePlayer.CustomProperties.ContainsKey(PlayerProperty.AvatarBorderSyscode) && !string.IsNullOrEmpty((string) remotePlayer.CustomProperties[PlayerProperty.AvatarBorderSyscode]))
+                {
+                    string avatarBorderSyscode = (string)remotePlayer.CustomProperties[PlayerProperty.AvatarBorderSyscode];
+                    Player remote = PlayerManager.instance.GetPlayerById(remotePlayer.ID);
+                    if (remote != null) { remote.avatarBorderSyscode = avatarBorderSyscode; }
+                    SetRemotePlayerAvatarBorder(avatarBorderSyscode);
+                }
                 factory.gettingGameInfo.remotePlayerUserId = remotePlayerUserId;
                 state = factory.gettingGameInfo;
             }
@@ -266,12 +278,15 @@ namespace Com.Hypester.DM3
         private void RefreshLocalPlayerData()
         {
             MainController.ServiceAsset.StartCoroutine(MainController.ServiceAsset.ImageFromURL(PhotonNetwork.player.ID, MainController.Instance.playerData.pictureURL, OnLoadLocalPlayerProfileImage));
+            SetLocalPlayerAvatarBorder(MainController.Instance.playerData.avatarBorderSyscode);
             SetLocalPlayerName(MainController.Instance.playerData.profileName);
             SetLocalPlayerXpText(MainController.Instance.playerData.xp.ToString());
         }
         private void ResetRemotePlayerData()
         {
+            Debug.LogError("Resetting remote");
             remotePlayerAvatarImage.sprite = MainController.Data.sprites.randomAvatarSheet;
+            remotePlayerBorderImage.sprite = MainController.Data.sprites.defaultNormalAvatarBorder;
             // remotePlayerBorderImage; TODO: Reset border
             SetRemotePlayerFlag("");
             SetRemotePlayerName("");
@@ -293,6 +308,14 @@ namespace Com.Hypester.DM3
         private void SetInfoText(string msg)
         {
             infoText.text = msg;
+        }
+        private void SetLocalPlayerAvatarBorder(string syscode)
+        {
+            localPlayerBorderImage.sprite = MainController.Data.sprites.GetAvatarBorderEntry(syscode).normal;
+        }
+        private void SetRemotePlayerAvatarBorder(string syscode)
+        {
+            remotePlayerBorderImage.sprite = MainController.Data.sprites.GetAvatarBorderEntry(syscode).normal;
         }
         private void SetLocalPlayerFlag(string countryCode)
         {

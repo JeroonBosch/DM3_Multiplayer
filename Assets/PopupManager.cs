@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using System;
 
 namespace Com.Hypester.DM3
 {
@@ -19,6 +20,9 @@ namespace Com.Hypester.DM3
         [SerializeField] GameObject upgradeSkillNextLevelPrefab;
         [SerializeField] GameObject upgradeSkillLockedPrefab;
         [SerializeField] GameObject upgradeSkillSuccessPrefab;
+
+        [Header("Game")]
+        [SerializeField] GameObject surrenderPrefab;
 
         Queue<GameObject> popupQueue = new Queue<GameObject>();
         GameObject activePopup;
@@ -40,6 +44,8 @@ namespace Com.Hypester.DM3
 
             UIEvent.OnPopupClose += PopupClose;
             UIEvent.OnInfo += Info;
+
+            UIEvent.OnSurrender += OnSurrender;
         }
 
         private void OnDisable()
@@ -53,6 +59,8 @@ namespace Com.Hypester.DM3
 
             UIEvent.OnPopupClose -= PopupClose;
             UIEvent.OnInfo -= Info;
+
+            UIEvent.OnSurrender -= OnSurrender;
         }
 
         private void Update()
@@ -171,6 +179,12 @@ namespace Com.Hypester.DM3
             }
 
             AddPopupToQueue(csps.gameObject);
+        }
+
+        private void OnSurrender()
+        {
+            GameObject sp = Instantiate(surrenderPrefab);
+            AddPopupToQueue(sp);
         }
 
         void PopupClose(IPopup popup)

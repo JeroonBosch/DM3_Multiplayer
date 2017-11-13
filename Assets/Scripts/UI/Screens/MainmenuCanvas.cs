@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace Com.Hypester.DM3
@@ -6,6 +7,7 @@ namespace Com.Hypester.DM3
     public class MainmenuCanvas : BaseMenuCanvas
     {
         [SerializeField] Image profileImage;
+        [SerializeField] Image avatarBorderImage;
         [SerializeField] Text profileNameText;
         [SerializeField] Text xpText;
         [SerializeField] Text unspentSkillPointText;
@@ -13,6 +15,7 @@ namespace Com.Hypester.DM3
         protected override void OnEnable()
         {
             PlayerEvent.OnProfileImageChange += SetProfileImage;
+            PlayerEvent.OnAvatarBorderChange += OnAvatarBorderChange;
             PlayerEvent.OnProfileNameChange += SetProfileName;
             PlayerEvent.OnXpAmountChange += XpAmountChange;
             PlayerEvent.OnUnspentSkillPointAmountChange += UnspentSkillPointAmountChange;
@@ -23,6 +26,7 @@ namespace Com.Hypester.DM3
         protected override void OnDisable()
         {
             PlayerEvent.OnProfileImageChange -= SetProfileImage;
+            PlayerEvent.OnAvatarBorderChange -= OnAvatarBorderChange;
             PlayerEvent.OnProfileNameChange -= SetProfileName;
             PlayerEvent.OnXpAmountChange -= XpAmountChange;
             PlayerEvent.OnUnspentSkillPointAmountChange -= UnspentSkillPointAmountChange;
@@ -33,6 +37,10 @@ namespace Com.Hypester.DM3
         public void SetProfileImage(Texture2D newImage)
         {
             profileImage.sprite = Sprite.Create(newImage, new Rect(0, 0, newImage.width, newImage.height), new Vector2(0, 0));
+        }
+        private void OnAvatarBorderChange(Sprite newSprite)
+        {
+            avatarBorderImage.sprite = newSprite;
         }
         public void SetProfileName(string newName)
         {

@@ -244,14 +244,16 @@ namespace Com.Hypester.DM3
         }
         #endregion
 
-
-
         public void EndGame (int winnerPlayer)
         {
-            endScreenCanvas.SetWinner(winnerPlayer);
-
             GoToScreen(endScreenCanvas);
+            endScreenCanvas.SetWinner(winnerPlayer);
             enabled = false;
+        }
+
+        public void Surrender()
+        {
+            UIEvent.Surrender();
         }
 
         #region SpriteRendering

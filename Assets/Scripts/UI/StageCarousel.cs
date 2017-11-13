@@ -26,6 +26,11 @@ namespace Com.Hypester.DM3
 
         List<GameObject> stageEntries = new List<GameObject>();
 
+        private void Start()
+        {
+            transform.localPosition = new Vector2(transform.localPosition.x, 0);
+        }
+
         private void OnEnable()
         {
             LeanTouch.OnFingerSwipe += OnFingerSwipe;
@@ -120,8 +125,10 @@ namespace Com.Hypester.DM3
             // MainController.ServiceEconomy.LoadStages(OnStagesLoaded);
 
             int positionCounter = 0;
-            foreach (PlayerService.Stage stage in MainController.Data.temporary.stages)
+            for (int i = 0; i < MainController.Data.temporary.stages.Count; i++)
             {
+                if (i > 2) { break; }
+                PlayerService.Stage stage = MainController.Data.temporary.stages[i];
                 StageEntry entry = Instantiate(stageEntryPrefab, transform, false).GetComponent<StageEntry>();
 
                 entry.transform.localPosition = new Vector2(1000f * positionCounter, 0f); ;
@@ -142,7 +149,7 @@ namespace Com.Hypester.DM3
                 positionCounter++;
             }
 
-            _highestIndex = MainController.Data.temporary.stages.Count - 1;
+            _highestIndex = MainController.Data.temporary.stages.Count - 3;
             ButtonColorCheck();
 
             /*

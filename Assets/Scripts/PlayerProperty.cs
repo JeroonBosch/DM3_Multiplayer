@@ -4,8 +4,9 @@
     {
         public const string UserId = "a";
         public const string ProfileImageUrl = "b";
-        public const string XpLevel = "c";
-        public const string State = "d";
+        public const string AvatarBorderSyscode = "c";
+        public const string XpLevel = "d";
+        public const string State = "e";
 
         public const string BlueSkillLevel = "s0";
         public const string GreenSkillLevel = "s1";

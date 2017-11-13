@@ -31,7 +31,7 @@ namespace Com.Hypester.DM3
             _targetPlayer = targetPlayer;
 
             SkillColor skillColor = ColorUtility.IntToSkillColor(color);
-            PlayerInterface targetPlayerInterface = PlayerManager.instance.GetPlayerById(_targetPlayer.GetPlayerId()).playerInterface;
+            PlayerInterface targetPlayerInterface = targetPlayer.playerInterface;
             powerObject = targetPlayerInterface.GetSkillButtonBySkillColor(skillColor).gameObject;
             _color = ColorUtility.GetUnityColorBySkillColor(skillColor);
 

@@ -10,7 +10,9 @@ namespace Com.Hypester.DM3
         public Sprite randomAvatarSheet;
 
         [Header("AvatarBorders")]
-        public Sprite winnerAvatarBorder;
+        [SerializeField] List<AvatarBorderEntry> avatarBorders;
+        public Sprite defaultNormalAvatarBorder;
+        public Sprite defaultWinnerAvatarBorder;
 
         [Header("Icons")]
         public Sprite thumbsUp;
@@ -59,6 +61,16 @@ namespace Com.Hypester.DM3
             return (coinPiles.Count == 0 ? null : coinPiles[level]);
         }
 
+        public AvatarBorderEntry GetAvatarBorderEntry(string syscode)
+        {
+            AvatarBorderEntry avatarBorderEntry = new AvatarBorderEntry();
+            foreach (AvatarBorderEntry abe in avatarBorders)
+            {
+                if (string.Equals(abe.syscode, syscode)) { avatarBorderEntry = abe; break; }
+            }
+            return avatarBorderEntry;
+        }
+
         public StageArt GetStageArt(string syscode)
         {
             StageArt stageArt = new StageArt();
@@ -84,4 +96,7 @@ namespace Com.Hypester.DM3
     public struct StageArtEntry { public string syscode; public StageArt stageArt; }
     [System.Serializable]
     public struct PopupArtEntry { public PopupType type; public Sprite bg; }
+    [System.Serializable]
+    public struct AvatarBorderEntry { public string syscode; public Sprite normal; public Sprite winner; }
+
 }

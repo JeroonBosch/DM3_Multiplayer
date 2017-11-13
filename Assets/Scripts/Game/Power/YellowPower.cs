@@ -7,7 +7,7 @@ namespace Com.Hypester.DM3
         public Player ownerPlayer;
         public Transform target;
 
-        private float _speed = 4f;
+        private float _speed = 12f;
         int targetRetries = 20;
 
         private void Update()

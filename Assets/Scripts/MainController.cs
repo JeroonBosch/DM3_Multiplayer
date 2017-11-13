@@ -221,6 +221,8 @@ namespace Com.Hypester.DM3
 
             PlayerService.User user = loginObject.user;
 
+            playerData.avatarBorderSyscode = "frame0" + (Random.Range(1, 7)).ToString();
+            playerData.SetAvatarBorder((Data.sprites.GetAvatarBorderEntry(playerData.avatarBorderSyscode)).normal);
             playerData.SetProfileName(loginObject.user.first_name + " " + loginObject.user.last_name);
             playerData.SetUserId(loginObject.user_id);
             playerData.SetCoins(loginObject.coins);
@@ -241,6 +243,8 @@ namespace Com.Hypester.DM3
         public string pictureURL = "";
         public Texture2D profilePicture { get; private set; }
         public Sprite profilePictureSprite;
+        public Sprite AvatarBorder { get; private set; }
+        public string avatarBorderSyscode;
 
         public int coins { get; private set; }
         public int trophies { get; private set; }
@@ -304,6 +308,11 @@ namespace Com.Hypester.DM3
         {
             profilePicture = newImage;
             PlayerEvent.ProfileImageChange(profilePicture);
+        }
+        public void SetAvatarBorder(Sprite value)
+        {
+            AvatarBorder = value;
+            PlayerEvent.AvatarBorderChange(AvatarBorder);
         }
         public void SetCoins(int value)
         {

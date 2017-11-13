@@ -6,7 +6,7 @@ namespace Com.Hypester.DM3
     public class PlayerProfileCanvas : BaseMenuCanvas
     {
         [SerializeField] Image playerAvatarIcon;
-        [SerializeField] Image playerAvatarBorder;
+        [SerializeField] Image avatarBorderImage;
 
         [SerializeField] Text playerNameText;
         [SerializeField] Text playerXpLevelText;
@@ -31,6 +31,8 @@ namespace Com.Hypester.DM3
 
         protected override void OnEnable()
         {
+            PlayerEvent.OnProfileImageChange += OnProfileImageChange;
+            PlayerEvent.OnAvatarBorderChange += SetPlayerAvatarBorder;
             PlayerEvent.OnProfileNameChange += SetProfileName;
             PlayerEvent.OnXpAmountChange += XpAmountChange;
             PlayerEvent.OnUnspentSkillPointAmountChange += UnspentSkillPointAmountChange;
@@ -41,6 +43,8 @@ namespace Com.Hypester.DM3
 
         protected override void OnDisable()
         {
+            PlayerEvent.OnProfileImageChange -= OnProfileImageChange;
+            PlayerEvent.OnAvatarBorderChange -= SetPlayerAvatarBorder;
             PlayerEvent.OnProfileNameChange -= SetProfileName;
             PlayerEvent.OnXpAmountChange -= XpAmountChange;
             PlayerEvent.OnUnspentSkillPointAmountChange -= UnspentSkillPointAmountChange;
@@ -71,13 +75,17 @@ namespace Com.Hypester.DM3
             SetRankText(7451);
         }
 
+        public void OnProfileImageChange(Texture2D newImage)
+        {
+            SetPlayerAvatar(Sprite.Create(newImage, new Rect(0, 0, newImage.width, newImage.height), new Vector2(0, 0)));
+        }
         public void SetPlayerAvatar(Sprite playerAvatar)
         {
             playerAvatarIcon.sprite = playerAvatar;
         }
         public void SetPlayerAvatarBorder(Sprite border)
         {
-            playerAvatarBorder.sprite = border;
+            avatarBorderImage.sprite = border;
         }
 
         public void SetProfileName(string newName)

@@ -38,6 +38,7 @@ namespace Com.Hypester.DM3
 
                 playerInfo.SetCurrentXpLevelText(player.currentXpLevel);
                 if (!string.IsNullOrEmpty(player.profileName)) { playerInfo.SetPlayerNameText(player.profileName); }
+                if (!string.IsNullOrEmpty(player.avatarBorderSyscode)) { playerInfo.SetBorderImage(MainController.Data.sprites.GetAvatarBorderEntry(player.avatarBorderSyscode).normal); }
                 if (player.profilePicSprite != null) { playerInfo.SetAvatarImage(player.profilePicSprite); }
                 else if (!string.IsNullOrEmpty(player.profilePicURL))
                 {
@@ -63,8 +64,8 @@ namespace Com.Hypester.DM3
 
             if (localPlayerInfo.wantsRematch && remotePlayerInfo.wantsRematch)
             {
-                localPlayerInfo.ToggleRematchImage(false);
-                remotePlayerInfo.ToggleRematchImage(false);
+                // localPlayerInfo.ToggleRematchImage(false);
+                // remotePlayerInfo.ToggleRematchImage(false);
                 PhotonController.Instance.Rematch();
             }
         }
@@ -76,7 +77,8 @@ namespace Com.Hypester.DM3
             PlayerInfoMatchEnd winnerPlayerInfo = localPlayerWon ? localPlayerInfo : remotePlayerInfo;
 
             winnerPlayerInfo.ToggleWinnerText(true);
-            winnerPlayerInfo.SetBorderImage(MainController.Data.sprites.winnerAvatarBorder);
+            int wonPlayerPhotonId = localPlayerWon ? PhotonNetwork.player.ID : PhotonNetwork.otherPlayers[0].ID; // TODO: foolproof this here
+            winnerPlayerInfo.SetBorderImage(MainController.Data.sprites.GetAvatarBorderEntry(PlayerManager.instance.GetPlayerById(wonPlayerPhotonId).avatarBorderSyscode).winner);
         }
 
         public void BackToMenu ()

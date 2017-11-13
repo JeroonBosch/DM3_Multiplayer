@@ -15,6 +15,8 @@ namespace Com.Hypester.DM3
         public delegate void PopupAction(IPopup popup);
         public delegate void PopupInfoAction(string msg, PopupType type);
 
+        public delegate void PopupSurrenderAction();
+
         // CURRENCY
         public static event PopupCoinPurchaseSuccessAction OnCoinPurchaseSuccess;
         public static event PopupInsufficientCurrency OnInsufficientCurrency;
@@ -57,6 +59,14 @@ namespace Com.Hypester.DM3
         public static void Info(string msg, PopupType type)
         {
             if (OnInfo != null) { OnInfo(msg, type); }
+        }
+
+        // GAME
+        public static event PopupSurrenderAction OnSurrender;
+
+        public static void Surrender()
+        {
+            if (OnSurrender != null) { OnSurrender(); }
         }
     }
 }

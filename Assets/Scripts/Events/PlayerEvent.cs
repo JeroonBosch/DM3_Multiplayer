@@ -1,5 +1,6 @@
-﻿using ExitGames.Client.Photon;
-using UnityEngine;
+﻿using UnityEngine;
+using UnityEngine.UI;
+using ExitGames.Client.Photon;
 
 namespace Com.Hypester.DM3
 {
@@ -14,12 +15,14 @@ namespace Com.Hypester.DM3
             if (OnPlayerLogin != null) OnPlayerLogin(loginType, loginObject);
         }
 
-        public delegate void ProfileImageAction(Texture2D newImage);
+        public delegate void ProfileSpriteAction(Sprite newSprite);
+        public delegate void ProfileTexture2DAction(Texture2D newTexture);
         public delegate void ProfileNameAction(string value);
         public delegate void StatAction(int amount);
         public delegate void SkillStatAction(string skillColor, int amount);
 
-        public static event ProfileImageAction OnProfileImageChange;
+        public static event ProfileSpriteAction OnAvatarBorderChange;
+        public static event ProfileTexture2DAction OnProfileImageChange;
         public static event ProfileNameAction OnProfileNameChange;
 
         public static event StatAction OnCoinAmountChange;
@@ -29,6 +32,10 @@ namespace Com.Hypester.DM3
 
         public static event SkillStatAction OnSkillLevelChange;
 
+        public static void AvatarBorderChange(Sprite newBorder)
+        {
+            if (OnAvatarBorderChange != null) OnAvatarBorderChange(newBorder);
+        }
         public static void ProfileImageChange(Texture2D newImage)
         {
             if (OnProfileImageChange != null) OnProfileImageChange(newImage);
