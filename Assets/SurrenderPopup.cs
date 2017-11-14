@@ -10,11 +10,13 @@ namespace Com.Hypester.DM3
         {
             if (PhotonNetwork.inRoom)
             {
+                Debug.Log("PhotonNetwork.inRoom");
                 PhotonNetwork.LeaveRoom();
                 PhotonNetwork.LoadLevel("Menu");
             }
             else
             {
+                Debug.Log("!PhotonNetwork.inRoom");
                 PhotonNetwork.LoadLevel("Menu");
             }
         }

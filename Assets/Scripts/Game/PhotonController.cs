@@ -75,6 +75,7 @@ namespace Com.Hypester.DM3
 
         public void MatchPlayers(StageEntry se)
         {
+            Debug.Log("Match Players");
             // we check if we are connected or not, we join if we are , else we initiate the connection to the server.
             if (PhotonNetwork.connected)
             {
@@ -202,11 +203,11 @@ namespace Com.Hypester.DM3
             {//TODO maybe not needed / move to when leaving room
                 Destroy(player.gameObject);
             }
-            if (PhotonNetwork.inRoom && SceneManager.GetActiveScene().name != "Menu")
+            if (SceneManager.GetActiveScene().name != "Menu")
             {
+                Debug.Log("PhotonNetwork.inRoom && SceneManager.GetActiveScene().name != Menu");
                 //instead, should set health to 0?
                 PhotonNetwork.LoadLevel("Menu");
-                PhotonNetwork.LeaveRoom();
                 Debug.Log("Menu loaded because a player left the match.");
             }
         }

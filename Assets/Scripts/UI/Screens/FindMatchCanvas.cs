@@ -100,6 +100,7 @@ namespace Com.Hypester.DM3
         }
         private void PhotonPlayerDisconnected(PhotonPlayer otherPlayer)
         {
+            Debug.Log("FindMatchCanvas() PhotonPlayerDisconnected");
             if (PhotonNetwork.otherPlayers.Length < 2)
             {
                 state = factory.searchingOpponent;
