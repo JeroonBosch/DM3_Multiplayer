@@ -6,6 +6,15 @@ namespace Com.Hypester.DM3
 {
     public class TileView : MonoBehaviour
     {
+        [SerializeField] Image tileImage;
+
+        [SerializeField] GameObject booster1;
+        [SerializeField] GameObject booster2;
+        [SerializeField] GameObject booster3;
+        [SerializeField] GameObject boosterTrap;
+        [SerializeField] GameObject boosterTrapHover;
+
+
         //Purely visualized version of the 'Tile' class, in Grid.cs. None of this data is transferred.
         public Vector2 position { get; set; }
 
@@ -36,6 +45,8 @@ namespace Com.Hypester.DM3
             _startPos = new Vector2();
             _endPos = new Vector2();
             _animating = false;
+
+            if (tileImage == null) { tileImage = GetComponent<Image>(); }
         }
 
         protected virtual void Update()
@@ -50,9 +61,9 @@ namespace Com.Hypester.DM3
         protected void ColorChange ()
         {
             if (_color < Constants.AmountOfColors)
-                GetComponent<Image>().sprite = HexSprite(TileTypes.EColor.yellow + _color);
+                tileImage.sprite = HexSprite(TileTypes.EColor.yellow + _color);
             else
-                GetComponent<Image>().enabled = false;
+                tileImage.enabled = false;
         }
 
         protected void BoosterChange()
@@ -63,38 +74,36 @@ namespace Com.Hypester.DM3
                 _boosterObj = null;
             }
 
-            if (_boosterLevel == 1)
+            GameObject boosterPrefab = null;
+            switch (_boosterLevel)
             {
-                _boosterObj = Instantiate(Resources.Load("Tiles/Modifications/Booster1")) as GameObject;
-                _boosterObj.transform.SetParent(transform, false);
-                _boosterObj.transform.rotation = new Quaternion(0f, 0f, 0f, _boosterObj.transform.rotation.w);
-            } else if (_boosterLevel == 2)
-            {
-                _boosterObj = Instantiate(Resources.Load("Tiles/Modifications/Booster2")) as GameObject;
-                _boosterObj.transform.SetParent(transform, false);
-                _boosterObj.transform.rotation = new Quaternion(0f, 0f, 0f, _boosterObj.transform.rotation.w);
-            } else if  (_boosterLevel == 3)
-            {
-                _boosterObj = Instantiate(Resources.Load("Tiles/Modifications/Booster3")) as GameObject;
-                _boosterObj.transform.SetParent(transform, false);
-                _boosterObj.transform.rotation = new Quaternion(0f, 0f, 0f, _boosterObj.transform.rotation.w);
+                case 1:
+                    boosterPrefab = booster1;
+                    break;
+                case 2:
+                    boosterPrefab = booster2;
+                    break;
+                case 3:
+                    boosterPrefab = booster3;
+                    break;
+                case 4:
+                case 5:
+                    boosterPrefab = boosterTrap;
+                    break;
             }
-            else if (_boosterLevel == 4 || _boosterLevel == 5)
-            {
-                _boosterObj = Instantiate(Resources.Load("Tiles/Modifications/BoosterTrap")) as GameObject;
-                _boosterObj.transform.SetParent(transform, false);
-                _boosterObj.transform.rotation = new Quaternion(0f, 0f, 0f, _boosterObj.transform.rotation.w);
 
-                if (_boosterLevel == 4)
-                    _boosterObj.GetComponent<TrapBooster>().ownerPlayer = 0;
-                else
-                    _boosterObj.GetComponent<TrapBooster>().ownerPlayer = 1;
-            }
+            if (boosterPrefab == null) { return; }
+            _boosterObj = Instantiate(boosterPrefab);
+            _boosterObj.transform.SetParent(transform, false);
+            _boosterObj.transform.rotation = Quaternion.identity;
+
+            if (_boosterLevel == 4) { _boosterObj.GetComponent<TrapBooster>().ownerPlayer = 0; }
+            else if (_boosterLevel == 5) { _boosterObj.GetComponent<TrapBooster>().ownerPlayer = 1; }
         }
 
         public void TrapHovered ()
         {
-            _trapHover = Instantiate(Resources.Load("Tiles/Modifications/BoosterTrapHover")) as GameObject;
+            _trapHover = Instantiate(boosterTrapHover) as GameObject;
             _trapHover.transform.SetParent(transform, false);
             _trapHover.transform.rotation = new Quaternion(0f, 0f, 0f, _trapHover.transform.rotation.w);
         }
@@ -111,19 +120,19 @@ namespace Com.Hypester.DM3
         protected void SelectionChange()
         {
             if (_selected)
-                GetComponent<Image>().sprite = HexSpriteSelected(TileTypes.EColor.yellow + _color);
-            else 
-                GetComponent<Image>().sprite = HexSprite(TileTypes.EColor.yellow + _color);
+                tileImage.sprite = HexSpriteSelected(TileTypes.EColor.yellow + _color);
+            else
+                tileImage.sprite = HexSprite(TileTypes.EColor.yellow + _color);
         }
 
         protected void CollateralChange ()
         {
             if (!_selected && _collateral)
-                GetComponent<Image>().sprite = HexSpriteCollateral(TileTypes.EColor.yellow + _color);
+                tileImage.sprite = HexSpriteCollateral(TileTypes.EColor.yellow + _color);
             else if (_selected)
-                GetComponent<Image>().sprite = HexSpriteSelected(TileTypes.EColor.yellow + _color);
+                tileImage.sprite = HexSpriteSelected(TileTypes.EColor.yellow + _color);
             else
-                GetComponent<Image>().sprite = HexSprite(TileTypes.EColor.yellow + _color);
+                tileImage.sprite = HexSprite(TileTypes.EColor.yellow + _color);
         }
 
         public void Animate (float distance)
@@ -142,7 +151,7 @@ namespace Com.Hypester.DM3
             //GameHandler grid = GameObject.FindWithTag("GameController").GetComponent<GameHandler>();
             List<TileView> toDestroy = new List<TileView>();
 
-            if (_boosterLevel == 1) { 
+            if (_boosterLevel == 1) {
                 List<TileView> adjacentInRadius = grid.FindAdjacentTiles(position, radius);
                 foreach (TileView tile in adjacentInRadius)
                 {
@@ -153,19 +162,23 @@ namespace Com.Hypester.DM3
             }
             else if (_boosterLevel == 2)
             {
+                Debug.Log("boosterLevel == 2 (" + position.ToString() + ")");
                 List<Vector2> positions = new List<Vector2>();
+                for (int i = -Constants.BoosterLevel2Vertical; i < (Constants.BoosterLevel2Vertical + 1); i++) //Vertical
+                {
+                    Debug.Log("i: " + i);
+                    float px = position.x;
+                    float py = position.y + i;
+                    if (Exists(px, py)) { positions.Add(new Vector2(px, py)); }
+                }
 
                 bool odd = (position.x % 2 == 1);
                 float oddx = odd ? 1f : 0;
-                for (int i = 0; i < Constants.gridYsize; i++) //Vertical
-                {
-                    float px = position.x;
-                    float py = i;
-                    positions.Add(new Vector2(px, py));
-                }
+
                 float diag1Start = Mathf.Floor((position.y + position.x * 0.5f) - 0.5f * oddx);
                 for (int i = 0; i < Constants.gridXsize; i++) //Diag.1 direction: \ topleft to bottomright
                 {
+                    if (Mathf.Abs(i - position.x) > Constants.BoosterLevel2Vertical) { continue; }
                     float px = i;
                     float py = Mathf.Floor(diag1Start + 0.5f - i * 0.5f);
                     if (Exists(px, py))
@@ -174,42 +187,48 @@ namespace Com.Hypester.DM3
                 float diag2Start = Mathf.Floor((position.y - position.x * 0.5f) - 0.5f * oddx);
                 for (int i = 0; i < Constants.gridXsize; i++) //Diag.2 direction: / bottomleft to topright
                 {
+                    if (Mathf.Abs(i - position.x) > Constants.BoosterLevel2Vertical) { continue; }
                     float px = i;
                     float py = Mathf.Floor(diag2Start + 0.5f + i * 0.5f);
                     if (Exists(px, py))
                         positions.Add(new Vector2(px, py));
                 }
-
-
+                
                 for (int i = 0; i < positions.Count; i++)
                 {
                     TileView baseTile = grid.TileViewAtPos(positions[i]);
                     if (baseTile)// && !baseTile.isBeingDestroyed)
                         toDestroy.Add(baseTile);
                 }
-
-                List<TileView> adjacentInRadius = grid.FindAdjacentTiles(new Vector2(position.x, position.y), radius);
-                foreach (TileView tile in adjacentInRadius)
-                {
-                    if (tile)// && !tile.isBeingDestroyed)
-                        if (!toDestroy.Contains(tile) && !(tile.position.x == position.x && tile.position.y == position.y))
-                            toDestroy.Add(tile);
-                }
             }
             else if (_boosterLevel == 3)
             {
                 List<Vector2> positions = new List<Vector2>();
-                bool odd = (position.x % 2 == 1);
-                float oddx = odd ? 1f : 0;
+
+                /*
                 for (int i = 0; i < Constants.gridXsize; i++) //Horizontal
                 {
                     float px = position.x;
                     float py = i;
                     positions.Add(new Vector2(px, py));
                 }
+                */
+
+                for (int i = -Constants.BoosterLevel2Vertical; i < (Constants.BoosterLevel2Vertical + 1); i++) //Vertical
+                {
+                    Debug.Log("i: " + i);
+                    float px = position.x;
+                    float py = position.y + i;
+                    if (Exists(px, py)) { positions.Add(new Vector2(px, py)); }
+                }
+
+                bool odd = (position.x % 2 == 1);
+                float oddx = odd ? 1f : 0;
+
                 float diag1Start = Mathf.Floor((position.y + position.x * 0.5f) - 0.5f * oddx);
                 for (int i = 0; i < Constants.gridXsize; i++) //Diag.1 direction: \ topleft to bottomright
                 {
+                    if (Mathf.Abs(i - position.x) > Constants.BoosterLevel2Vertical) { continue; }
                     float px = i;
                     float py = Mathf.Floor(diag1Start + 0.5f - i * 0.5f);
                     if (Exists(px, py))
@@ -218,6 +237,7 @@ namespace Com.Hypester.DM3
                 float diag2Start = Mathf.Floor((position.y - position.x * 0.5f) - 0.5f * oddx);
                 for (int i = 0; i < Constants.gridXsize; i++) //Diag.2 direction: / bottomleft to topright
                 {
+                    if (Mathf.Abs(i - position.x) > Constants.BoosterLevel2Vertical) { continue; }
                     float px = i;
                     float py = Mathf.Floor(diag2Start + 0.5f + i * 0.5f);
                     if (Exists(px, py))
@@ -277,35 +297,17 @@ namespace Com.Hypester.DM3
         #region SpriteRendering
         public Sprite HexSprite(TileTypes.EColor color)
         {
-            if (color == TileTypes.EColor.blue)
-                return Resources.LoadAll<Sprite>("Tiles/TilesHexa128x128")[1];
-            else if (color == TileTypes.EColor.green)
-                return Resources.LoadAll<Sprite>("Tiles/TilesHexa128x128")[2];
-            else if (color == TileTypes.EColor.red)
-                return Resources.LoadAll<Sprite>("Tiles/TilesHexa128x128")[3];
-            return Resources.LoadAll<Sprite>("Tiles/TilesHexa128x128")[0]; //Yellow
+            return MainController.Data.sprites.GetNormalSprite(color);
         }
 
         public Sprite HexSpriteSelected(TileTypes.EColor color)
         {
-            if (color == TileTypes.EColor.blue)
-                return Resources.LoadAll<Sprite>("Tiles/TilesHexaSelected128x128")[1];
-            else if (color == TileTypes.EColor.green)
-                return Resources.LoadAll<Sprite>("Tiles/TilesHexaSelected128x128")[2];
-            else if (color == TileTypes.EColor.red)
-                return Resources.LoadAll<Sprite>("Tiles/TilesHexaSelected128x128")[3];
-            return Resources.LoadAll<Sprite>("Tiles/TilesHexaSelected128x128")[0]; //Yellow
+            return MainController.Data.sprites.GetSelectedSprite(color);
         }
 
         public Sprite HexSpriteCollateral(TileTypes.EColor color)
         {
-            if (color == TileTypes.EColor.blue)
-                return Resources.LoadAll<Sprite>("Tiles/TilesHexaExplode128x128")[1];
-            else if (color == TileTypes.EColor.green)
-                return Resources.LoadAll<Sprite>("Tiles/TilesHexaExplode128x128")[2];
-            else if (color == TileTypes.EColor.red)
-                return Resources.LoadAll<Sprite>("Tiles/TilesHexaExplode128x128")[3];
-            return Resources.LoadAll<Sprite>("Tiles/TilesHexaExplode128x128")[0]; //Yellow
+            return MainController.Data.sprites.GetCollateralSprite(color);
         }
         #endregion
     }

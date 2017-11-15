@@ -2158,7 +2158,7 @@ public static class PhotonNetwork
             }
             return networkingPeer.OpLeave();
         }
-
+        
         return true;
     }
 

@@ -2,6 +2,8 @@
 
 public class ColorUtility : MonoBehaviour {
 
+    public static string[] skillColors = new string[4] { "red", "green", "blue", "yellow" };
+
 	public static SkillColor GetSkillColorBySyscode(string syscode)
     {
         SkillColor skillColor = SkillColor.Neutral;

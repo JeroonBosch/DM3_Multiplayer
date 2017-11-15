@@ -83,14 +83,7 @@ namespace Com.Hypester.DM3
 
         public void BackToMenu ()
         {
-            if (PhotonNetwork.inRoom)
-            {
-                PhotonNetwork.LeaveRoom();
-                PhotonNetwork.LoadLevel("Menu");
-            } else
-            {
-                PhotonNetwork.LoadLevel("Menu");
-            }
+            PhotonController.Instance.StopMultiplayer();
         }
 
         public void RequestRematch()

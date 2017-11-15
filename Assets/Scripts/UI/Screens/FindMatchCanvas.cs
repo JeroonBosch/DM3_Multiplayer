@@ -101,7 +101,7 @@ namespace Com.Hypester.DM3
         private void PhotonPlayerDisconnected(PhotonPlayer otherPlayer)
         {
             Debug.Log("FindMatchCanvas() PhotonPlayerDisconnected");
-            if (PhotonNetwork.otherPlayers.Length < 2)
+            if (PhotonNetwork.otherPlayers.Length < 1 && PhotonNetwork.connected)
             {
                 state = factory.searchingOpponent;
             }
@@ -223,7 +223,7 @@ namespace Com.Hypester.DM3
         protected void StartingGameStart()
         {
             _timer = 0;
-            _starting = false;
+            _starting = true;
             _started = false;
         }
         protected void StartingGameUpdate()
@@ -234,33 +234,36 @@ namespace Com.Hypester.DM3
                 Debug.Log("We lost our remote. Fookin a!"); state = factory.searchingOpponent;
                 return;
             }
-            _timer += Time.deltaTime;
-
-            if (!_starting && _timer > _timeUntilStart)
-            {
-                _starting = true;
-                SetInfoText("Game Starting");
-                MainController.ServiceGame.StartGame(factory.startingGame.gameId, OnStartGame);
-            } else { if (!_started) { SetInfoText("Game starts in..." + ((int)_timeUntilStart - (int)_timer).ToString()); } }
 
             if (_starting)
             {
-                if (PhotonNetwork.player.CustomProperties[PlayerProperty.State] != null && ((PlayerState)PhotonNetwork.player.CustomProperties[PlayerProperty.State] == PlayerState.StartingGameWaitForOther))
+                _timer += Time.deltaTime;
+                SetInfoText("Game starts in..." + ((int)_timeUntilStart - (int)_timer).ToString());
+                if (_timer > _timeUntilStart)
                 {
-                    if (remotePlayer.CustomProperties[PlayerProperty.State] != null && ((PlayerState)remotePlayer.CustomProperties[PlayerProperty.State] == PlayerState.StartingGameWaitForOther)) // Both players got the info. Go!
-                    {
-                        Player localPlayer = PlayerManager.instance.GetPlayerById(PhotonNetwork.player.ID);
-                        localPlayer.opponent = PlayerManager.instance.GetPlayerById(PhotonNetwork.otherPlayers[0].ID);
-                        localPlayer.opponent.opponent = localPlayer;
-                        Debug.Log("Both players have started their game (startGame)");
-                        _started = true;
-                        PhotonNetwork.LoadLevel("Match");
-                        enabled = false;
-                    }
+                    SetInfoText("Game Starting");
+                    _starting = false;
+                    MainController.ServiceGame.StartGame(factory.startingGame.gameId, OnStartGame);
+                }
+                return;
+            }
+
+            if (PhotonNetwork.player.CustomProperties[PlayerProperty.State] != null && ((PlayerState)PhotonNetwork.player.CustomProperties[PlayerProperty.State] == PlayerState.StartingGameWaitForOther))
+            {
+                if (remotePlayer.CustomProperties[PlayerProperty.State] != null && ((PlayerState)remotePlayer.CustomProperties[PlayerProperty.State] == PlayerState.StartingGameWaitForOther)) // Both players got the info. Go!
+                {
+                    Player localPlayer = PlayerManager.instance.GetPlayerById(PhotonNetwork.player.ID);
+                    localPlayer.opponent = PlayerManager.instance.GetPlayerById(PhotonNetwork.otherPlayers[0].ID);
+                    localPlayer.opponent.opponent = localPlayer;
+
+                    Debug.Log("Both players have started their game (startGame)");
+                    _started = true;
+                    PhotonNetwork.LoadLevel("Match");
+                    enabled = false;
                 }
             }
         }
-
+            
         private void OnStartGame(bool success, string errorMessage, GameService.StartGameRequestObject result)
         {
             Debug.Log("Got the start info");
@@ -285,7 +288,7 @@ namespace Com.Hypester.DM3
         }
         private void ResetRemotePlayerData()
         {
-            Debug.LogError("Resetting remote");
+            Debug.Log("Resetting remote");
             remotePlayerAvatarImage.sprite = MainController.Data.sprites.randomAvatarSheet;
             remotePlayerBorderImage.sprite = MainController.Data.sprites.defaultNormalAvatarBorder;
             // remotePlayerBorderImage; TODO: Reset border
@@ -347,8 +350,7 @@ namespace Com.Hypester.DM3
 
         public void PreviousScreen()
         {
-            if (PhotonNetwork.inRoom) { PhotonNetwork.LeaveRoom(); }
-            else { SceneManager.LoadScene("Menu"); }
+            if (PhotonNetwork.inRoom) { PhotonController.Instance.StopMultiplayer(); }
         }
     }
 }

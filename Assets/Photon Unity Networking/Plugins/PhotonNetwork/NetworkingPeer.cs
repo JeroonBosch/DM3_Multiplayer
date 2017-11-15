@@ -961,7 +961,7 @@ internal class NetworkingPeer : LoadBalancingPeer, IPhotonPeerListener
             Debug.LogWarning("Not sending leave operation. State is not 'Joined': " + this.State);
             return false;
         }
-
+        
         return this.OpCustom((byte)OperationCode.Leave, null, true, 0);
     }
 

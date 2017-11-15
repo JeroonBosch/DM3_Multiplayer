@@ -31,6 +31,8 @@
         public const int BoosterTwoThreshhold = 8;
         public const int BoosterThreeThreshhold = 10;
 
+        public const int BoosterLevel2Vertical = 3;
+
         //Timing
         public const float TurnTime = 14f;
         public const float TimeBetweenTurns = 2f;

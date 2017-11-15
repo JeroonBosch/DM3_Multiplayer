@@ -35,6 +35,18 @@ namespace Com.Hypester.DM3
         [Header("Popups")]
         [SerializeField] List<PopupArtEntry> popups;
 
+        [Header("Tiles")]
+        [SerializeField] TileArt normalTiles;
+        [SerializeField] TileArt selectedTiles;
+        [SerializeField] TileArt collateralTiles;
+
+        public void Init()
+        {
+            normalTiles.Init();
+            selectedTiles.Init();
+            collateralTiles.Init();
+        }
+        
         public Sprite GetSkillSprite(string syscode, int level)
         {
             Sprite skillSprite = null;
@@ -90,6 +102,10 @@ namespace Com.Hypester.DM3
             }
             return popupBg;
         }
+
+        public Sprite GetNormalSprite(TileTypes.EColor color) { return normalTiles.GetSprite(color); }
+        public Sprite GetSelectedSprite(TileTypes.EColor color) { return selectedTiles.GetSprite(color); }
+        public Sprite GetCollateralSprite(TileTypes.EColor color) { return collateralTiles.GetSprite(color); }
     }
 
     [System.Serializable]

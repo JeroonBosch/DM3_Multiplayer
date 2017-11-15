@@ -110,6 +110,11 @@ namespace Com.Hypester.DM3
             base.OnDisconnectedFromPhoton();
             Debug.Log("OnDisconnectedFromPhoton");
 
+            if (SceneManager.GetActiveScene().buildIndex != 0)
+            {
+                SceneManager.LoadScene(0);
+            }
+
             NetworkEvent.PhotonDisconnected();
         }
 
@@ -196,22 +201,6 @@ namespace Com.Hypester.DM3
             PhotonNetwork.player.SetCustomProperties(playerProps);
         }
 
-        public override void OnLeftRoom()
-        {
-            Debug.Log("OnLeftRoom; inRoom(" + (PhotonNetwork.inRoom).ToString() + "), SceneManager.GetActiveScene().name != Menu("+ (SceneManager.GetActiveScene().name != "Menu").ToString() + ")");
-            foreach (Player player in FindObjectsOfType<Player>())
-            {//TODO maybe not needed / move to when leaving room
-                Destroy(player.gameObject);
-            }
-            if (SceneManager.GetActiveScene().name != "Menu")
-            {
-                Debug.Log("PhotonNetwork.inRoom && SceneManager.GetActiveScene().name != Menu");
-                //instead, should set health to 0?
-                PhotonNetwork.LoadLevel("Menu");
-                Debug.Log("Menu loaded because a player left the match.");
-            }
-        }
-
         public override void OnJoinedLobby()
         {
             base.OnJoinedLobby();
@@ -221,8 +210,6 @@ namespace Com.Hypester.DM3
         public override void OnPhotonPlayerConnected(PhotonPlayer newPlayer)
         {
             base.OnPhotonPlayerConnected(newPlayer);
-
-
         }
 
         public override void OnPhotonPlayerDisconnected(PhotonPlayer otherPlayer)
@@ -230,19 +217,10 @@ namespace Com.Hypester.DM3
             //TODO needs changes! it just goes to menu whenever ANYONE disconnects
             base.OnPhotonPlayerDisconnected(otherPlayer);
 
-            NetworkEvent.PhotonPlayerDisconnected(otherPlayer);
+            StopMultiplayer();
 
-            if (PhotonNetwork.inRoom && PhotonNetwork.room.MaxPlayers == 2 && SceneManager.GetActiveScene().name != "Menu")
-            {
-                //instead, should set health to 0?
-                PhotonNetwork.LoadLevel("Menu");
-                PhotonNetwork.LeaveRoom();
-                Debug.Log("Menu loaded because a player left the match.");
-            } else
-            {
-                PhotonNetwork.LoadLevel("Menu");
-                Debug.Log("Menu loaded because reasons.");
-            }
+            UIEvent.Info("Other player disconnected", PopupType.Info);
+            NetworkEvent.PhotonPlayerDisconnected(otherPlayer);
         }
 
         public override void OnPhotonPlayerPropertiesChanged(object[] playerAndUpdatedprops)
@@ -283,7 +261,7 @@ namespace Com.Hypester.DM3
             }
             if (props.ContainsKey(PlayerProperty.State) && props[PlayerProperty.State] != null)
             {
-                Debug.Log("props (" + props[PlayerProperty.State] + ")" );
+                Debug.Log("props (" + (PlayerState) props[PlayerProperty.State] + ")" );
                 PlayerState playerState = (PlayerState) props[PlayerProperty.State];
                 statUpdate.Add(PlayerProperty.State, playerState);
             }
@@ -341,6 +319,14 @@ namespace Com.Hypester.DM3
             }
 
             tournamentMode = true;
+        }
+
+        public void StopMultiplayer()
+        {
+            if (PhotonNetwork.connecting || PhotonNetwork.connected)
+            {
+                PhotonNetwork.Disconnect();
+            }
         }
     }
 }

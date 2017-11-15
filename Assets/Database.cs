@@ -8,10 +8,13 @@ namespace Com.Hypester.DM3
         public SpriteDatabase sprites;
         public TemporaryDatabase temporary;
 
-        private void Awake()
-        {   // Ensure that these are referenced
+        public void Init()
+        {
             sounds = GetComponent<SoundDatabase>();
             sprites = GetComponent<SpriteDatabase>();
+            temporary = GetComponent<TemporaryDatabase>();
+
+            sprites.Init();
         }
     }
 }

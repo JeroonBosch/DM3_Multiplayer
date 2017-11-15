@@ -9,7 +9,7 @@ public class AssetService : MonoBehaviour
         WWW www = new WWW(pictureURL);
         yield return www;
 
-        if (!string.IsNullOrEmpty(www.error)) { Debug.LogError("Could not load image (" + www.error + ")"); }
+        if (!string.IsNullOrEmpty(www.error)) { Debug.LogWarning("Could not load image (" + www.error + ")"); }
         else
         {
             Debug.Log("Image loaded without errors.");

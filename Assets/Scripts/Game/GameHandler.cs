@@ -12,6 +12,7 @@ namespace Com.Hypester.DM3
         private bool _isActive;
         public bool Active { get { return _isActive; } }
 
+        [SerializeField] GameObject tilePrefab;
         private Grid _grid;
         private int _curPlayer;
         private List<TileView> _baseTiles;
@@ -414,11 +415,12 @@ namespace Com.Hypester.DM3
             {
                 for (int y = 0; y < Constants.gridYsize; y++)
                 {
-                    GameObject tile = Instantiate(Resources.Load("Tiles/Tile")) as GameObject;
+                    GameObject tile = Instantiate(tilePrefab);
                     tile.name = "Tile (" + x + "," + y + ")";
                     tile.transform.SetParent(transform, false);
-                    tile.GetComponent<TileView>().position = new Vector2(x, y);
-                    _baseTiles.Add(tile.GetComponent<TileView>());
+                    TileView tileView = tile.GetComponent<TileView>();
+                    tileView.position = new Vector2(x, y);
+                    _baseTiles.Add(tileView);
                     if (x % 2 == 0)
                         tile.transform.localPosition = new Vector3((-Constants.gridXsize / 2 + x) * Constants.tileWidth + Constants.tileWidth / 2, (-Constants.gridYsize / 2 + y) * Constants.tileHeight + (Constants.tileHeight * .75f), 0f);
                     else
@@ -427,8 +429,8 @@ namespace Com.Hypester.DM3
                     if (_grid.data[x, y].color < Constants.AmountOfColors)
                     {
                         tile.GetComponent<Image>().enabled = true;
-                        tile.GetComponent<TileView>().color = _grid.data[x, y].color;
-                        tile.GetComponent<TileView>().SetSelected = false;
+                        tileView.color = _grid.data[x, y].color;
+                        tileView.SetSelected = false;
 
                         //tile.GetComponent<Image>().sprite = HexSprite(TileTypes.EColor.yellow + _grid.data[x, y].color);
                     }
@@ -762,10 +764,6 @@ namespace Com.Hypester.DM3
             turnTimer = 0f;
             SetGameState(GameStates.EGameState.interim);
 
-            if (GameObject.FindGameObjectWithTag("ActiveFireball"))
-            {
-                Destroy(GameObject.FindGameObjectWithTag("ActiveFireball"));
-            }
             if (GameObject.FindGameObjectWithTag("ActiveTrap"))
             {
                 Destroy(GameObject.FindGameObjectWithTag("ActiveTrap"));

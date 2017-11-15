@@ -11,6 +11,7 @@ namespace Com.Hypester.DM3
     {
         [SerializeField] Text loggingInText;
 
+        private bool alreadyConnected;
         private bool connectingToPhoton;
         private float _loginTimer;
 
@@ -27,6 +28,22 @@ namespace Com.Hypester.DM3
             base.Start();
             
             loggingInText.enabled = false;
+            alreadyConnected = false;
+
+            if (((MainController.settingsService.lastLoginType == LoginType.FACEBOOK && FB.IsInitialized && FB.IsLoggedIn) || MainController.settingsService.lastLoginType == LoginType.DEVICE) && !string.IsNullOrEmpty(MainController.settingsService.hexaClash))
+            {
+                alreadyConnected = true;
+                if (PhotonNetwork.connected) { ConnectedToPhoton(); }
+                else
+                {
+                    SetLoginText("Connecting to Photon..."); // Photon is only required for playing against other opponents.
+                    connectingToPhoton = true;
+                    PhotonController.Instance.EnsureConnection();
+                }
+                return;
+            }
+
+            ShowLoginFields();
         }
 
         protected override void OnEnable()
@@ -165,7 +182,7 @@ namespace Com.Hypester.DM3
             }
             else
             {
-                Debug.LogError("User cancelled login");
+                Debug.Log("User cancelled login");
                 if (!string.IsNullOrEmpty(result.Error))
                 {
                     UIEvent.Info(result.Error, PopupType.Error);
@@ -176,7 +193,9 @@ namespace Com.Hypester.DM3
 
         private void OnPlayerLogin(bool isSuccess, string message, PlayerService.LoginRequestObject loginObject)
         {
-            Debug.Log("OnPlayerLogin");
+            SetLoginText("Login finished");
+            Debug.LogError("OnPlayerLogin");
+            Debug.LogError(message);
 			if (!isSuccess || !string.IsNullOrEmpty(message))
             {
 				Debug.LogError ("Failed to login to the server.");
@@ -204,6 +223,11 @@ namespace Com.Hypester.DM3
                 MainController.settingsService.mobileId = "";
             } else { MainController.settingsService.mobileId = loginObject.mobile_id; }
 
+            if (MainController.settingsService.lastLoginType == LoginType.FACEBOOK && !string.IsNullOrEmpty(loginObject.user_id))
+            {
+                MainController.settingsService.mobileId = "";
+            }
+
             PlayerEvent.PlayerLogin(MainController.settingsService.lastLoginType, loginObject); // Player has logged in already. We have the info from the server.
 
             if (PhotonNetwork.connected) { ConnectedToPhoton(); }
@@ -217,6 +241,7 @@ namespace Com.Hypester.DM3
 
         private void ConnectedToPhoton()
         {
+            if (alreadyConnected) { MainController.Instance.playerData.Broadcast(); }
             GoToScreen(FindObjectOfType<MainmenuCanvas>());
             connectingToPhoton = false;
             enabled = false;

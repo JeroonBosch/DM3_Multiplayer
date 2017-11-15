@@ -49,6 +49,7 @@ namespace Com.Hypester.DM3
                 if (data == null)
                 {
                     data = ((GameObject)Instantiate(Resources.Load("Data"), Instance.transform)).GetComponent<Database>();
+                    data.Init();
                 }
                 return data;
             }
@@ -151,8 +152,8 @@ namespace Com.Hypester.DM3
             if (FB.IsLoggedIn && !_gotFacebookData)
             {
                 _gotFacebookData = true;
-                FB.API("me?fields=name", HttpMethod.GET, GetFacebookName);
-                //FB.API("me?fields=picture", HttpMethod.GET, GetFacebookPicture); 
+                // FB.API("me?fields=name", HttpMethod.GET, GetFacebookName);
+                // FB.API("me?fields=picture", HttpMethod.GET, GetFacebookPicture); 
                 FB.API("me/picture?type=square&height=128&width=128", HttpMethod.GET, GetFacebookPicture);
                 FB.API("me?fields=picture.type(large)", HttpMethod.GET, GetFacebookPictureURL);
             }
@@ -223,7 +224,7 @@ namespace Com.Hypester.DM3
 
             playerData.avatarBorderSyscode = "frame0" + (Random.Range(1, 7)).ToString();
             playerData.SetAvatarBorder((Data.sprites.GetAvatarBorderEntry(playerData.avatarBorderSyscode)).normal);
-            if (loginObject.user != null) { playerData.SetProfileName(loginObject.user.first_name + " " + loginObject.user.last_name); }
+            if (loginObject.user != null) { playerData.SetProfileName(loginObject.user.first_name); }
             playerData.SetUserId(loginObject.user_id);
             playerData.SetCoins(loginObject.coins);
             playerData.SetXp(loginObject.XPlevel);
@@ -321,18 +322,18 @@ namespace Com.Hypester.DM3
         }
         public void SetTrophies(int value)
         {
-            PlayerEvent.TrophyAmountChange(value);
             trophies = value;
+            PlayerEvent.TrophyAmountChange(value);
         }
         public void SetXp(int value)
         {
-            PlayerEvent.XpAmountChange(value);
             xp = value;
+            PlayerEvent.XpAmountChange(value);
         }
         public void SetUnspentSkill(int value)
         {
-            PlayerEvent.UnspentSkillPointAmountChange(value);
             unspentSkill = value;
+            PlayerEvent.UnspentSkillPointAmountChange(value);
         }
 
         public void AddCoins(int value)
@@ -344,6 +345,21 @@ namespace Com.Hypester.DM3
         {
             unspentSkill += value;
             PlayerEvent.UnspentSkillPointAmountChange(unspentSkill);
+        }
+
+        public void Broadcast()
+        {
+            SetProfileName(profileName);
+            SetProfilePicture(profilePicture);
+            SetAvatarBorder(AvatarBorder);
+            SetCoins(coins);
+            SetTrophies(trophies);
+            SetXp(xp);
+            SetUnspentSkill(unspentSkill);
+            SetSkillLevel("red", redSkill);
+            SetSkillLevel("green", greenSkill);
+            SetSkillLevel("blue", blueSkill);
+            SetSkillLevel("yellow", yellowSkill);
         }
     }
 

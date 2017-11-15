@@ -77,6 +77,7 @@ namespace Com.Hypester.DM3
 
         public void OnProfileImageChange(Texture2D newImage)
         {
+            if (newImage == null) { return; }
             SetPlayerAvatar(Sprite.Create(newImage, new Rect(0, 0, newImage.width, newImage.height), new Vector2(0, 0)));
         }
         public void SetPlayerAvatar(Sprite playerAvatar)

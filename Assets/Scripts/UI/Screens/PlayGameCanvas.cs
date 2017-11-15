@@ -255,29 +255,5 @@ namespace Com.Hypester.DM3
         {
             UIEvent.Surrender();
         }
-
-        #region SpriteRendering
-        public Sprite HexSprite(TileTypes.EColor color)
-        {
-            if (color == TileTypes.EColor.blue)
-                return Resources.LoadAll<Sprite>("Tiles/TilesHexa128x128")[1];
-            else if (color == TileTypes.EColor.green)
-                return Resources.LoadAll<Sprite>("Tiles/TilesHexa128x128")[2];
-            else if (color == TileTypes.EColor.red)
-                return Resources.LoadAll<Sprite>("Tiles/TilesHexa128x128")[3];
-            return Resources.LoadAll<Sprite>("Tiles/TilesHexa128x128")[0]; //Yellow
-        }
-
-        public Sprite HexSpriteSelected(TileTypes.EColor color)
-        {
-            if (color == TileTypes.EColor.blue)
-                return Resources.LoadAll<Sprite>("Tiles/TilesHexaSelected128x128")[1];
-            else if (color == TileTypes.EColor.green)
-                return Resources.LoadAll<Sprite>("Tiles/TilesHexaSelected128x128")[2];
-            else if (color == TileTypes.EColor.red)
-                return Resources.LoadAll<Sprite>("Tiles/TilesHexaSelected128x128")[3];
-            return Resources.LoadAll<Sprite>("Tiles/TilesHexaSelected128x128")[0]; //Yellow
-        }
-        #endregion
     }
 }

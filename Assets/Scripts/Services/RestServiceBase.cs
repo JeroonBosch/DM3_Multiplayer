@@ -102,7 +102,7 @@ namespace Com.Hypester.DM3
         public static string EncodeBody(string dataString)
         {
 
-            if (MainController.settingsService == null) // Means that do not have MahjongGame.gameInfo.mahjong
+            if (MainController.settingsService == null)
             {
                 return EncodeData(dataString);
             }
