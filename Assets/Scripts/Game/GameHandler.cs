@@ -242,6 +242,7 @@ namespace Com.Hypester.DM3
                 if (turnTimer > Constants.TurnTime)
                 {
                     EndTurn();
+                    _selectedTiles.Clear();
 
                     if (GetPlayerByID(_curPlayer) == MyPlayer)
                         _gameContext.ShowText("You ran out of time! Turn skipped.");
@@ -1184,7 +1185,7 @@ namespace Com.Hypester.DM3
             if (_myPlayer == null)
                 return false;
 
-            if (_myPlayer.localID == _curPlayer)
+            if (_myPlayer.localID == _curPlayer && gameState.State != GameStates.EGameState.interim)
                 return true;
             return false;
         }

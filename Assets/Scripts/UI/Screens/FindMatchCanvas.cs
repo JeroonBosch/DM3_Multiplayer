@@ -30,6 +30,8 @@ namespace Com.Hypester.DM3
         [SerializeField] Text potSizeValueText;
         [SerializeField] Image potSizeValueIcon;
 
+        [SerializeField] GameObject backButton;
+
         PhotonPlayer remotePlayer;
         private float _timer = 0f;
         private float _timeUntilStart = 3f;
@@ -130,6 +132,8 @@ namespace Com.Hypester.DM3
 
         protected void SearchOpponentStart()
         {
+            backButton.SetActive(true);
+
             PhotonNetwork.player.SetCustomProperties(new Hashtable() { { PlayerProperty.State, null } });
 
             remotePlayer = null;
@@ -151,6 +155,7 @@ namespace Com.Hypester.DM3
 
         protected void GatherOpponentDataStart()
         {
+            backButton.SetActive(false);
             SetInfoText("Gathering opponent info...");
             opponentSearchAnimator.enabled = false;
         }

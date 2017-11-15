@@ -34,7 +34,7 @@ namespace Com.Hypester.DM3
                 GameObject activeTrap = GameObject.FindGameObjectWithTag("ActiveTrap");
                 if (!activeTrap)
                 {
-                    if (_selectedTiles.Count > 0)
+                    if (_selectedTiles.Count > 0 && PhotonController.Instance.GameController.IsMyTurn())
                     {
                         Vector2 vec = FindNearestTileToFinger();
                         //Select new tile.
@@ -53,6 +53,10 @@ namespace Com.Hypester.DM3
                                 _selectedTiles.RemoveAt(i);
                             }
                         }
+                    } else if (_selectedTiles.Count > 0 && !PhotonController.Instance.GameController.IsMyTurn())
+                    {
+                        RemoveAllSelections();
+                        _selectedTiles.Clear();
                     }
 
                     GameObject fingerTracker = GameObject.Find("FingerTracker");
@@ -117,17 +121,11 @@ namespace Com.Hypester.DM3
                     List<RaycastResult> results = new List<RaycastResult>();
                     gRaycast.Raycast(ped, results);
 
-                    if (results != null && results.Count > 0)
+                    if (results.Count > 0)
                     {
-                        bool resultFound = false;
-                        for (int i = 0; i < results.Count; i++)
+                        foreach (RaycastResult result in results)
                         {
-                            if (!resultFound)
-                                if (results[i].gameObject.tag == "Tile")
-                                {
-                                    interactionObject = results[i].gameObject;
-                                    resultFound = true;
-                                }
+                            if (result.gameObject.tag == "Tile") { interactionObject = result.gameObject; break; }
                         }
                     }
 
@@ -168,6 +166,11 @@ namespace Com.Hypester.DM3
                     trap.GetComponent<TrapPower>().Place();
                 }
                 _finger = null;
+            }
+            if (!PhotonController.Instance.GameController.IsMyTurn())
+            {
+                RemoveAllSelections();
+                _selectedTiles.Clear();
             }
         }
 
