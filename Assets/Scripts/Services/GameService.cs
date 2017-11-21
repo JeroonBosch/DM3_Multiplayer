@@ -31,6 +31,8 @@ namespace Com.Hypester.DM3
             var parameters = new Dictionary<string, object>();
             parameters.Add("game_id", game_id);
 
+            Debug.Log("game_id: " + game_id);
+
             Delegates.ServiceCallback<StartGameRequestObject> requestCallback = (success, message, result) =>
             {
                 if (loadCallback != null)

@@ -223,6 +223,8 @@ namespace Com.Hypester.DM3
                 MainController.settingsService.mobileId = "";
             } else { MainController.settingsService.mobileId = loginObject.mobile_id; }
 
+            if (!string.IsNullOrEmpty(loginObject.user_id)) { DevConsole.userId = loginObject.user_id; }
+
             if (MainController.settingsService.lastLoginType == LoginType.FACEBOOK && !string.IsNullOrEmpty(loginObject.user_id))
             {
                 MainController.settingsService.mobileId = "";

@@ -220,6 +220,7 @@ namespace Com.Hypester.DM3
                 MainController.ServiceAsset.StartCoroutine(MainController.ServiceAsset.ImageFromURL(remotePlayer.ID, opponent.pic, OnLoadRemotePlayerProfileImage));
             }
 
+            DevConsole.gameId = result.game.id.ToString();
             factory.startingGame.gameId = result.game.id;
             Hashtable props = new Hashtable();
             props.Add(PlayerProperty.State, PlayerState.GettingGameInfoWaitForOther);

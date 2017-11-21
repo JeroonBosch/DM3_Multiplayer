@@ -69,6 +69,8 @@ namespace Com.Hypester.DM3
 
             MainController.ServiceNetwork.MakeRequest(url, Encoding.UTF8.GetBytes(postDataString), headers, contentType == CONTENT_TYPE_JSON, requestCallback, maxRetrys, isCritical);
             headers.Clear();
+
+            Debug.LogError("data: " + dataString);
         }
 
         /// <summary>
@@ -104,20 +106,27 @@ namespace Com.Hypester.DM3
 
             if (MainController.settingsService == null)
             {
+                Debug.LogError("settings == null");
                 return EncodeData(dataString);
             }
             if (string.IsNullOrEmpty(dataString))
             {
+                Debug.LogError("dataString empty or null");
                 dataString = "{}";
             }
 
+            Debug.LogError("dataString: " + dataString);
+
             string checksum = (dataString + MainController.settingsService.hexaClash).GetMd5();
             string requestString = "";
+
+            Debug.LogError("checksum: " + checksum);
 
             IDictionary dataDict = JsonConvert.DeserializeObject<IDictionary>(dataString);
             dataDict.Add("chk", checksum);
 
             requestString = JsonConvert.SerializeObject(dataDict);
+
 
             //DebugLog.Log("DATA + mahjong: " + dataString + MahjongGame.gameInfo.mahjong + "\n(DATA + mahjong).MD5: " + checksum + "\nDATA: " + requestString);
 

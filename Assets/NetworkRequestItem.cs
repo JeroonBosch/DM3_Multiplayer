@@ -203,6 +203,7 @@ namespace Com.Hypester.DM3
             queryParameters.Add("rnd", UnityEngine.Random.Range(0, int.MaxValue).ToString(CultureInfo.InvariantCulture));
             // queryParameters.Add("v", Configuration.buildVersion + "." + Configuration.buildSubVersion);
             queryParameters.Add("counter", (retryCount + 1).ToString());
+            if (!string.IsNullOrEmpty(DevConsole.gameId)) { queryParameters.Add("game_id", DevConsole.gameId); }
             // if (session != null && !string.IsNullOrEmpty(session.sessionId)) { queryParameters.Add("sid", session.sessionId); }
 
             return queryParameters;
