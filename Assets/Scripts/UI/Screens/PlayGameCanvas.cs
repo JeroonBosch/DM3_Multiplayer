@@ -13,16 +13,16 @@ namespace Com.Hypester.DM3
         //Thus, this class also implements all the touch controls and actually calls RPC's of the GameHandler.
 
         [SerializeField] EndScreenCanvas endScreenCanvas;
-        
-        List<Vector2> _selectedTiles;
+
+        TileView startingTile = null;
+        Dictionary<Vector2, TileView> _selectedTiles;
         LeanFinger _finger;
 
         protected override void Start()
         {
             base.Start();
 
-            
-            _selectedTiles = new List<Vector2>();
+            _selectedTiles = new Dictionary<Vector2, TileView>();
         }
 
         protected override void Update()
@@ -34,29 +34,34 @@ namespace Com.Hypester.DM3
                 GameObject activeTrap = GameObject.FindGameObjectWithTag("ActiveTrap");
                 if (!activeTrap)
                 {
-                    if (_selectedTiles.Count > 0 && PhotonController.Instance.GameController.IsMyTurn())
+                    if (PhotonController.Instance.GameController.IsMyTurn())
                     {
-                        Vector2 vec = FindNearestTileToFinger();
-                        //Select new tile.
-                        if (!_selectedTiles.Contains(vec) && PhotonController.Instance.GameController.TileAtPos(new Vector2(vec.x, vec.y)).color == PhotonController.Instance.GameController.TileAtPos(new Vector2(_selectedTiles[0].x, _selectedTiles[0].y)).color && IsAdjacentPosition(vec, _selectedTiles[_selectedTiles.Count - 1]))
+                        TileView nearestTileToFinger = FindNearestTileToFinger();
+                        
+                        // False if selection was made, the color is same and exists in selected tiles. True if no selection was made or if (select was made but color is different or nearest not in selection)
+                        if (!(startingTile != null && _selectedTiles.Count > 0 && nearestTileToFinger.color == startingTile.color && _selectedTiles.ContainsKey(nearestTileToFinger.position)))
                         {
-                            _selectedTiles.Add(vec);
-                            NewSelectedTile(vec);
-                        }
-                        //Remove if already selected, plus remove all previously selected ones.
-                        else if (_selectedTiles.Contains(vec) && _selectedTiles[_selectedTiles.Count - 1] != vec && IsAdjacentPosition(vec, _selectedTiles[_selectedTiles.Count - 1]))
-                        {
-                            int index = _selectedTiles.IndexOf(vec);
-                            for (int i = index + 1; i < _selectedTiles.Count; i++)
+                            TileView.areaList.Add(nearestTileToFinger);
+                            nearestTileToFinger.GetArea();
+                            if (TileView.areaList.Count > 2)
                             {
-                                RemoveSelectedTile(_selectedTiles[i]);
-                                _selectedTiles.RemoveAt(i);
+                                RemoveAllSelections();
+                                startingTile = nearestTileToFinger;
+                                _selectedTiles.Clear();
+                                _selectedTiles.Add(nearestTileToFinger.position, nearestTileToFinger);
+                                foreach (TileView t in TileView.areaList)
+                                {
+                                    if (!_selectedTiles.ContainsKey(t.position)) { _selectedTiles.Add(t.position, t); } // TODO: The key should not be in there. Optimize.
+                                }
+                                StartNewSelection(nearestTileToFinger.position);
                             }
+                            TileView.areaList.Clear();
                         }
                     } else if (_selectedTiles.Count > 0 && !PhotonController.Instance.GameController.IsMyTurn())
                     {
                         RemoveAllSelections();
                         _selectedTiles.Clear();
+                        startingTile = null;
                     }
 
                     GameObject fingerTracker = GameObject.Find("FingerTracker");
@@ -72,8 +77,8 @@ namespace Com.Hypester.DM3
                     Transform trap = activeTrap.transform;
                     if (trap.GetComponent<TrapPower>().isPickedUp)
                     {
-                        Vector2 vec = FindNearestTileToFinger();
-                        TileView trapTile = PhotonController.Instance.GameController.TileViewAtPos(vec);
+                        TileView nearestTile = FindNearestTileToFinger();
+                        TileView trapTile = PhotonController.Instance.GameController.TileViewAtPos(nearestTile.position);
                         if (trapTile != null)
                         {
                             trap.GetComponent<TrapPower>().overBasetile = trapTile;
@@ -133,9 +138,21 @@ namespace Com.Hypester.DM3
                     {
                         if (interactionObject.tag == "Tile")
                         {
-                            _selectedTiles.Add(interactionObject.GetComponent<TileView>().position);
+                            TileView tv = interactionObject.GetComponent<TileView>();
+                            TileView.areaList.Add(tv);
+                            tv.GetArea();
+                            if (TileView.areaList.Count > 2)
+                            {
+                                startingTile = tv;
+                                _selectedTiles.Add(tv.position, tv);
+                                foreach (TileView t in TileView.areaList)
+                                {
+                                    if (!_selectedTiles.ContainsKey(t.position)) { _selectedTiles.Add(t.position, t); } // TODO: The key should not be in there. Optimize this.
+                                }
+                                StartNewSelection(tv.position);
+                            }
+                            TileView.areaList.Clear();
                             _finger = finger;
-                            StartNewSelection();
                         }
                     }
                 } else
@@ -159,6 +176,7 @@ namespace Com.Hypester.DM3
                     {
                         RemoveAllSelections();
                     }
+                    startingTile = null;
                     _selectedTiles.Clear();
                 } else
                 {
@@ -171,12 +189,13 @@ namespace Com.Hypester.DM3
             {
                 RemoveAllSelections();
                 _selectedTiles.Clear();
+                startingTile = null;
             }
         }
 
-        private Vector2 FindNearestTileToFinger()
+        private TileView FindNearestTileToFinger()
         {
-            Vector2 tilePos = new Vector2();
+            TileView nearestTile = null;
 
             float minDist = Mathf.Infinity;
             Vector3 currentPos = _finger.GetWorldPosition(1f);
@@ -185,12 +204,12 @@ namespace Com.Hypester.DM3
                 float dist = Vector3.Distance(tile.transform.position, currentPos);
                 if (dist < minDist)
                 {
-                    tilePos = tile.position;
+                    nearestTile = tile;
                     minDist = dist;
                 }
             }
 
-            return tilePos;
+            return nearestTile;
         }
 
         private float DistanceBetweenPos(Vector2 position, Vector2 position2)
@@ -212,11 +231,11 @@ namespace Com.Hypester.DM3
 
         #region selections
         //All local selections, to be applied to my GameController.
-        void StartNewSelection ()
+        void StartNewSelection (Vector2 startingTilePos)
         {
             //PhotonController.Instance.GameController.MyPlayer.NewSelection(_selectedTiles[0]);
             iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.SelectionChange);
-            PhotonController.Instance.GameController.photonView.RPC("RPC_AddToSelection", PhotonTargets.All, _selectedTiles[0]);
+            PhotonController.Instance.GameController.photonView.RPC("RPC_AddToSelection", PhotonTargets.All, startingTilePos);
         }
 
         void NewSelectedTile (Vector2 position)

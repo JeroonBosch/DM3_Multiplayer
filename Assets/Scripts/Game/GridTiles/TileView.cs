@@ -14,6 +14,7 @@ namespace Com.Hypester.DM3
         [SerializeField] GameObject boosterTrap;
         [SerializeField] GameObject boosterTrapHover;
 
+        public static List<TileView> areaList = new List<TileView>();
 
         //Purely visualized version of the 'Tile' class, in Grid.cs. None of this data is transferred.
         public Vector2 position { get; set; }
@@ -35,7 +36,7 @@ namespace Com.Hypester.DM3
         public bool SetSelected { set { _selected = value; SelectionChange(); } }
 
         private bool _collateral;
-        public bool collateral { get { return _collateral; } set { _collateral = value; CollateralChange(); } }
+        public bool collateral { get { return _collateral; } set { _collateral = value; PhotonController.Instance.GameController.UpdateCollateral(this); CollateralChange(); } }
 
         private bool _isBeingDestroyed;
         public bool isBeingDestroyed { get { return _isBeingDestroyed; } set { _isBeingDestroyed = value;} }
@@ -146,6 +147,19 @@ namespace Com.Hypester.DM3
             }
         }
 
+        public void GetArea()
+        {
+            List<TileView> adjacentTiles = PhotonController.Instance.GameController.FindAdjacentTiles(position, 1);
+            foreach (TileView tv in adjacentTiles)
+            {
+                if (tv != this && tv.color == color && !areaList.Contains(tv))
+                {
+                    areaList.Add(tv);
+                    tv.GetArea();
+                }
+            }
+        }
+
         public List<TileView> ListCollateralDamage (GameHandler grid, float radius)
         {
             //GameHandler grid = GameObject.FindWithTag("GameController").GetComponent<GameHandler>();
@@ -162,11 +176,9 @@ namespace Com.Hypester.DM3
             }
             else if (_boosterLevel == 2)
             {
-                Debug.Log("boosterLevel == 2 (" + position.ToString() + ")");
                 List<Vector2> positions = new List<Vector2>();
                 for (int i = -Constants.BoosterLevel2Vertical; i < (Constants.BoosterLevel2Vertical + 1); i++) //Vertical
                 {
-                    Debug.Log("i: " + i);
                     float px = position.x;
                     float py = position.y + i;
                     if (Exists(px, py)) { positions.Add(new Vector2(px, py)); }
@@ -216,7 +228,6 @@ namespace Com.Hypester.DM3
 
                 for (int i = -Constants.BoosterLevel2Vertical; i < (Constants.BoosterLevel2Vertical + 1); i++) //Vertical
                 {
-                    Debug.Log("i: " + i);
                     float px = position.x;
                     float py = position.y + i;
                     if (Exists(px, py)) { positions.Add(new Vector2(px, py)); }

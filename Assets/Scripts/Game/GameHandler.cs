@@ -15,11 +15,11 @@ namespace Com.Hypester.DM3
         [SerializeField] GameObject tilePrefab;
         private Grid _grid;
         private int _curPlayer;
-        private List<TileView> _baseTiles;
+        private Dictionary<Vector2, TileView> _baseTiles;
         private Player _myPlayer;
         private Player _enemyPlayer;
         private List<Vector2> _selectedTiles;
-        private List<Vector2> _collateralTiles;
+        public Dictionary<Vector2, TileView> _collateralTiles = new Dictionary<Vector2, TileView>();
 
         private bool _gridReceived = false;
         private bool _gridVisualized = false;
@@ -97,7 +97,7 @@ namespace Com.Hypester.DM3
             _isActive = false;
             _gameDone = false;
             _selectedTiles = new List<Vector2>();
-            _baseTiles = new List<TileView>();
+            _baseTiles = new Dictionary<Vector2, TileView>();
             _curPlayer = 0;
 
             turnTimer = 0;
@@ -243,6 +243,7 @@ namespace Com.Hypester.DM3
                 {
                     EndTurn();
                     _selectedTiles.Clear();
+                    TileView.areaList.Clear();
 
                     if (GetPlayerByID(_curPlayer) == MyPlayer)
                         _gameContext.ShowText("You ran out of time! Turn skipped.");
@@ -385,7 +386,7 @@ namespace Com.Hypester.DM3
         void GenerateGrid()
         {
             _gridReceived = true;
-            Debug.Log("Grid generated (by master client)");
+            Debug.Log("Generating grid");
 
             _grid.data = new Tile[Constants.gridXsize, Constants.gridYsize];
 
@@ -400,6 +401,8 @@ namespace Com.Hypester.DM3
                     _grid.data[x, y].y = y;
                 }
             }
+
+            Debug.Log("Grid generated (by master client)");
         }
 
         void VisualizeGrid()
@@ -410,7 +413,8 @@ namespace Com.Hypester.DM3
             foreach (Transform child in transform)
                 Destroy(child.gameObject);
 
-            _baseTiles = new List<TileView>();
+            _baseTiles.Clear();
+            _collateralTiles.Clear();
 
             for (int x = 0; x < Constants.gridXsize; x++)
             {
@@ -421,7 +425,7 @@ namespace Com.Hypester.DM3
                     tile.transform.SetParent(transform, false);
                     TileView tileView = tile.GetComponent<TileView>();
                     tileView.position = new Vector2(x, y);
-                    _baseTiles.Add(tileView);
+                    _baseTiles.Add(tileView.position, tileView);
                     if (x % 2 == 0)
                         tile.transform.localPosition = new Vector3((-Constants.gridXsize / 2 + x) * Constants.tileWidth + Constants.tileWidth / 2, (-Constants.gridYsize / 2 + y) * Constants.tileHeight + (Constants.tileHeight * .75f), 0f);
                     else
@@ -733,7 +737,9 @@ namespace Com.Hypester.DM3
 
         public TileView TileViewAtPos(Vector2 position)
         {
-            return _baseTiles.Find(item => item.position.x == position.x && item.position.y == position.y); ;
+            TileView tv = null;
+            _baseTiles.TryGetValue(position, out tv);
+            return tv;
         }
 
         [PunRPC]
@@ -795,11 +801,24 @@ namespace Com.Hypester.DM3
         public void RPC_AddToSelection(Vector2 pos) //master-client and guest side, both.
         {
             //Debug.Log("Tile added to selection. My player subscribed to Game#" + MyPlayer.GetRequestedGameID() + " and this is " + GameID);
-            _selectedTiles.Add(pos);
-            TileViewAtPos(pos).SetSelected = true;
+            TileView tile = TileViewAtPos(pos);
+            if (tile == null) { return; }
+            tile.SetSelected = true;
 
-            RecalculateCollateral();
-            RecalculateDamage();
+            TileView.areaList.Add(tile);
+            tile.GetArea();
+            if (TileView.areaList.Count > 2)
+            {
+                _selectedTiles.Add(tile.position);
+                foreach (TileView t in TileView.areaList)
+                {
+                    _selectedTiles.Add(t.position);
+                    t.SetSelected = true;
+                }
+                RecalculateCollateral();
+                RecalculateDamage();
+            }
+            TileView.areaList.Clear();
         }
 
         [PunRPC]
@@ -816,12 +835,12 @@ namespace Com.Hypester.DM3
         [PunRPC]
         public void RPC_RemoveSelections() //master-client and guest side, both.
         {
-            _selectedTiles.Clear();
-            foreach (TileView tile in FindObjectsOfType<TileView>())
+            foreach (KeyValuePair<Vector2, TileView> kvp in _baseTiles)
             {
-                tile.SetSelected = false;
-                tile.collateral = false;
+                kvp.Value.SetSelected = false;
+                kvp.Value.collateral = false;
             }
+            _selectedTiles.Clear();
 
             RecalculateCollateral();
         }
@@ -888,7 +907,7 @@ namespace Com.Hypester.DM3
                         else
                             targetPlayerHealth = healthPlayerTwo;
 
-                        float damage = (_selectedTiles.Count * 5) + _baseTiles.FindAll(item => item.collateral == true).Count * Constants.BoosterCollateralDamage;
+                        float damage = (_selectedTiles.Count * 5) + _collateralTiles.Count * Constants.BoosterCollateralDamage;
                         float calculatedDamage = targetPlayerHealth - damage;
                         player.FindInterface().SetHitpoints(calculatedDamage);
                     }
@@ -898,13 +917,14 @@ namespace Com.Hypester.DM3
 
         public List<TileView> FindAdjacentTiles(Vector2 position, float radius)
         {
-            List<TileView> allTiles = _baseTiles;
-            TileView centerTile = allTiles.Find(item => item.position.x == position.x && item.position.y == position.y);
+            TileView centerTile = _baseTiles[position];
             List<TileView> targetTiles = new List<TileView>();
-            foreach (TileView tile in allTiles)
+            if (!centerTile) { return targetTiles; }
+
+            foreach (KeyValuePair<Vector2, TileView> kvp in _baseTiles)
             {
-                if (centerTile.DistanceToTile(tile) <= Constants.DistanceBetweenTiles * radius)
-                    targetTiles.Add(tile);
+                if (kvp.Key == position) { continue; }
+                if (centerTile.DistanceToTile(kvp.Value) <= Constants.DistanceBetweenTiles * radius) { targetTiles.Add(kvp.Value); }
             }
 
             return targetTiles;
@@ -961,10 +981,9 @@ namespace Com.Hypester.DM3
                         highestCount = count;
                 }
 
-                foreach (TileView tile in _baseTiles.FindAll(item => item.collateral == true))
+                foreach (KeyValuePair<Vector2, TileView> kvp in _baseTiles)
                 {
-                    if (!tile.isBeingDestroyed)
-                        CreateTileAttackPlayerEffect(tile.position, highestCount, true, trapped);
+                    if (kvp.Value != null && kvp.Value.collateral && !kvp.Value.isBeingDestroyed) { CreateTileAttackPlayerEffect(kvp.Key, highestCount, true, trapped); }
                 }
             }
 
@@ -980,27 +999,28 @@ namespace Com.Hypester.DM3
                         trapped = true;
                 }
 
-                foreach (TileView tile in _baseTiles.FindAll(item => item.collateral == true))
+                foreach (KeyValuePair<Vector2, TileView> kvp in _collateralTiles)
                 {
-                    DestroyTileAtPosition(tile.position);
+                    DestroyTileAtPosition(kvp.Key);
                 }
 
                 CreateBooster(_selectedTiles[_selectedTiles.Count - 1], _selectedTiles.Count, color);
 
                 if ((_curPlayer == 0 && !trapped) || (_curPlayer == 1 && trapped))
                 {
-                    DamagePlayerWithCombo(1, _selectedTiles.Count, _baseTiles.FindAll(item => item.collateral == true).Count * Constants.BoosterCollateralDamage);
+                    DamagePlayerWithCombo(1, _selectedTiles.Count, _collateralTiles.Count * Constants.BoosterCollateralDamage);
                     FillPowerBar(0, color, _selectedTiles.Count);
                 }
                 else
                 {
-                    DamagePlayerWithCombo(0, _selectedTiles.Count, _baseTiles.FindAll(item => item.collateral == true).Count * Constants.BoosterCollateralDamage);
+                    DamagePlayerWithCombo(0, _selectedTiles.Count, _collateralTiles.Count * Constants.BoosterCollateralDamage);
                     FillPowerBar(1, color, _selectedTiles.Count);
                 }
             }
 
             EndTurn();
             _selectedTiles.Clear();
+            TileView.areaList.Clear();
         }
 
         private void CreateTileAttackPlayerEffect(Vector2 pos, int count, bool trapped)
@@ -1167,6 +1187,8 @@ namespace Com.Hypester.DM3
             {
                 _gameDone = true;
                 EndTurn(); //Fireball should end the game.
+                _selectedTiles.Clear();
+                TileView.areaList.Clear();
             }
         }
 
@@ -1811,6 +1833,12 @@ namespace Com.Hypester.DM3
                     break;
             }
             return chargeAmount;
+        }
+
+        public void UpdateCollateral(TileView tile)
+        {
+            if (tile.collateral) { if (!_collateralTiles.ContainsKey(tile.position)) { _collateralTiles.Add(tile.position, tile); } }
+            else { if (_collateralTiles.ContainsKey(tile.position)) { _collateralTiles.Remove(tile.position); } }
         }
     }
 }
