@@ -194,8 +194,8 @@ namespace Com.Hypester.DM3
         private void OnPlayerLogin(bool isSuccess, string message, PlayerService.LoginRequestObject loginObject)
         {
             SetLoginText("Login finished");
-            Debug.LogError("OnPlayerLogin");
-            Debug.LogError(message);
+            Debug.Log("OnPlayerLogin");
+            Debug.Log(message);
 			if (!isSuccess || !string.IsNullOrEmpty(message))
             {
 				Debug.LogError ("Failed to login to the server.");

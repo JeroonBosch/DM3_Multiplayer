@@ -124,7 +124,7 @@ namespace Com.Hypester.DM3
                 }
                 if (stats.ContainsKey(PlayerProperty.AvatarBorderSyscode))
                 {
-                    Debug.LogError("ContaisKey AvatarSys: " + (string)stats[PlayerProperty.AvatarBorderSyscode]);
+                    Debug.LogError("ContainsKey AvatarSys: " + (string)stats[PlayerProperty.AvatarBorderSyscode]);
                     SetRemotePlayerAvatarBorder((string) stats[PlayerProperty.AvatarBorderSyscode]);
                 }
             }
@@ -213,7 +213,7 @@ namespace Com.Hypester.DM3
             if (result.game.stage == null) { UIEvent.Info("Failed to get game info (stage).", PopupType.Error); state = factory.searchingOpponent; return; }
 
             GameService.Opponent opponent = result.game.opponent;
-            SetRemotePlayerName(opponent.first_name + " " + opponent.last_name);
+            SetRemotePlayerName(opponent.first_name);
             SetRemotePlayerXpText(opponent.XPlevel.ToString());
             if (!string.IsNullOrEmpty(opponent.pic)) {
                 Debug.Log("opponent img url: " + opponent.pic);
@@ -298,7 +298,7 @@ namespace Com.Hypester.DM3
             remotePlayerAvatarImage.sprite = MainController.Data.sprites.randomAvatarSheet;
             remotePlayerBorderImage.sprite = MainController.Data.sprites.defaultNormalAvatarBorder;
             // remotePlayerBorderImage; TODO: Reset border
-            SetRemotePlayerFlag("");
+            // SetRemotePlayerFlag("");
             SetRemotePlayerName("");
             SetRemotePlayerXpText("");
         }

@@ -11,14 +11,13 @@ namespace Com.Hypester.DM3
         #region private variables
         private bool _isActive;
         public bool Active { get { return _isActive; } }
-
-        [SerializeField] GameObject tilePrefab;
+        
         private Grid _grid;
         private int _curPlayer;
         private Dictionary<Vector2, TileView> _baseTiles;
         private Player _myPlayer;
         private Player _enemyPlayer;
-        private List<Vector2> _selectedTiles;
+        private Dictionary<Vector2, TileView> _selectedTiles;
         public Dictionary<Vector2, TileView> _collateralTiles = new Dictionary<Vector2, TileView>();
 
         private bool _gridReceived = false;
@@ -60,10 +59,25 @@ namespace Com.Hypester.DM3
         public bool P1_ShieldActive = false;
         public bool P2_ShieldActive = false;
 
-        [SerializeField] GameObject fireballPrefab;
+        
 
         private bool _MC_endTurnDelay; //Master Client only.
         private float _MC_endTurnDelayTimer; //Master Client only.
+        #endregion
+
+        #region prefabs
+        [Header("Prefabs")]
+        [SerializeField] GameObject tilePrefab;
+        [SerializeField] GameObject tileDebrisPrefab;
+        [SerializeField] GameObject tileDestroyedTimerPrefab;
+
+        [SerializeField] GameObject boosterFillerPrefab;
+        [SerializeField] GameObject boosterExplosion1Prefab;
+        [SerializeField] GameObject boosterExplosion2Prefab;
+        [SerializeField] GameObject boosterExplosion3Prefab;
+        [SerializeField] GameObject boosterExplosionTrapPrefab;
+
+        [SerializeField] GameObject fireballPrefab;
         #endregion
 
         public delegate byte[] SerializeMethod(object customObject);
@@ -96,7 +110,7 @@ namespace Com.Hypester.DM3
 
             _isActive = false;
             _gameDone = false;
-            _selectedTiles = new List<Vector2>();
+            _selectedTiles = new Dictionary<Vector2, TileView>();
             _baseTiles = new Dictionary<Vector2, TileView>();
             _curPlayer = 0;
 
@@ -326,7 +340,7 @@ namespace Com.Hypester.DM3
 
         private Player GetNextPlayer(int number)
         {
-            foreach (Player player in FindObjectsOfType<Player>())
+            foreach (Player player in PlayerManager.instance.GetAllPlayers().Values)
             {
                 if (player.localID != number)
                     return player;
@@ -809,10 +823,10 @@ namespace Com.Hypester.DM3
             tile.GetArea();
             if (TileView.areaList.Count > 2)
             {
-                _selectedTiles.Add(tile.position);
+                if (!_selectedTiles.ContainsKey(tile.position)) { _selectedTiles.Add(tile.position, tile); }
                 foreach (TileView t in TileView.areaList)
                 {
-                    _selectedTiles.Add(t.position);
+                    if (!_selectedTiles.ContainsKey(t.position)) { _selectedTiles.Add(t.position, t); }
                     t.SetSelected = true;
                 }
                 RecalculateCollateral();
@@ -856,9 +870,9 @@ namespace Com.Hypester.DM3
                 tile.collateral = false;
             }
 
-            foreach (Vector2 pos in _selectedTiles)
+            foreach (KeyValuePair<Vector2, TileView> kvp in _selectedTiles)
             {
-                foreach (TileView tile in TileViewAtPos(pos).ListCollateralDamage(this, 1f))
+                foreach (TileView tile in TileViewAtPos(kvp.Key).ListCollateralDamage(this, 1f))
                 {
                     collateral.Add(tile);
                     tile.collateral = true;
@@ -931,7 +945,7 @@ namespace Com.Hypester.DM3
         }
 
         [PunRPC]
-        public void RPC_InitiateCombo()
+        public void RPC_InitiateCombo(Vector2 startingPos)
         {
             bool trapped = false;
             //Both host and client execute this command.
@@ -939,15 +953,15 @@ namespace Com.Hypester.DM3
             {
                 Player targetPlayer = GetNextPlayer(_curPlayer);
                 if (targetPlayer.localID == 0)
-                    targetPlayer.FindInterface().SetHitpoints(healthPlayerOne);
+                    targetPlayer.playerInterface.SetHitpoints(healthPlayerOne);
                 else
-                    targetPlayer.FindInterface().SetHitpoints(healthPlayerTwo);
+                    targetPlayer.playerInterface.SetHitpoints(healthPlayerTwo);
 
 
                 trapped = false;
-                foreach (Vector2 pos in _selectedTiles)
+                foreach (KeyValuePair<Vector2, TileView> kvp in _selectedTiles)
                 {
-                    if (TileViewAtPos(pos).boosterLevel >= 4)
+                    if (TileViewAtPos(kvp.Key).boosterLevel >= 4)
                         trapped = true;
                 }
 
@@ -958,10 +972,10 @@ namespace Com.Hypester.DM3
 
                 int count = 0;
                 int highestCount = 0;
-                foreach (Vector2 pos in _selectedTiles)
+                foreach (KeyValuePair<Vector2, TileView> kvp in _selectedTiles)
                 {
-                    CreateTileAttackPlayerEffect(pos, count, trapped);
-                    TileView baseTile = TileViewAtPos(pos);
+                    CreateTileAttackPlayerEffect(kvp.Key, count, trapped);
+                    TileView baseTile = TileViewAtPos(kvp.Key);
 
                     if (baseTile.boosterLevel > 0)
                     {
@@ -991,11 +1005,11 @@ namespace Com.Hypester.DM3
             {
                 trapped = false;
                 //Only master client will update the _grid and then sync it.
-                int color = TileViewAtPos(_selectedTiles[_selectedTiles.Count - 1]).color;
-                foreach (Vector2 pos in _selectedTiles)
+                int color = _selectedTiles[startingPos].color;
+                foreach (KeyValuePair<Vector2, TileView> kvp in _selectedTiles)
                 {
-                    DestroyTileAtPosition(pos);
-                    if (TileViewAtPos(pos).boosterLevel >= 4)
+                    DestroyTileAtPosition(kvp.Key);
+                    if (TileViewAtPos(kvp.Key).boosterLevel >= 4)
                         trapped = true;
                 }
 
@@ -1004,7 +1018,7 @@ namespace Com.Hypester.DM3
                     DestroyTileAtPosition(kvp.Key);
                 }
 
-                CreateBooster(_selectedTiles[_selectedTiles.Count - 1], _selectedTiles.Count, color);
+                CreateBooster(startingPos, _selectedTiles.Count, color);
 
                 if ((_curPlayer == 0 && !trapped) || (_curPlayer == 1 && trapped))
                 {
@@ -1030,10 +1044,9 @@ namespace Com.Hypester.DM3
 
         private void CreateTileAttackPlayerEffect(Vector2 pos, int count, bool collateral, bool trapped)
         {
-            GameObject go = Instantiate(Resources.Load("ParticleEffects/TileDebris")) as GameObject;
-            Player[] players = FindObjectsOfType<Player>();
+            GameObject go = Instantiate(tileDebrisPrefab);
             Player targetPlayer = null;
-            foreach (Player player in players)
+            foreach (Player player in PlayerManager.instance.GetAllPlayers().Values)
             {
                 if ((trapped && player.localID == _curPlayer) || (!trapped && player.localID != _curPlayer))
                 {
@@ -1049,7 +1062,7 @@ namespace Com.Hypester.DM3
 
             if (!collateral)
             {
-                GameObject boosterFiller = Instantiate(Resources.Load("ParticleEffects/BoosterFiller")) as GameObject;
+                GameObject boosterFiller = Instantiate(boosterFillerPrefab);
                 boosterFiller.transform.position = baseTile.transform.position;
                 boosterFiller.GetComponent<BoosterFiller>().Init(targetPlayer.opponent, count, baseTile.color);
             }
@@ -1057,15 +1070,15 @@ namespace Com.Hypester.DM3
             //Explosion effect
             GameObject expl = null;
             if (baseTile.boosterLevel == 1)
-                expl = Instantiate(Resources.Load("ParticleEffects/Booster_One_Explosion")) as GameObject;
+                expl = Instantiate(boosterExplosion1Prefab);
             else if (baseTile.boosterLevel == 2)
-                expl = Instantiate(Resources.Load("ParticleEffects/Booster_Two_Explosion")) as GameObject;
+                expl = Instantiate(boosterExplosion2Prefab);
             else if (baseTile.boosterLevel == 3)
-                expl = Instantiate(Resources.Load("ParticleEffects/Booster_Three_Explosion")) as GameObject;
+                expl = Instantiate(boosterExplosion3Prefab);
             else if (baseTile.boosterLevel >= 4)
-                expl = Instantiate(Resources.Load("ParticleEffects/Booster_Trap_Explosion")) as GameObject;
+                expl = Instantiate(boosterExplosionTrapPrefab);
 
-            GameObject timedEff = Instantiate(Resources.Load("ParticleEffects/TileDestroyedTimer")) as GameObject;
+            GameObject timedEff = Instantiate(tileDestroyedTimerPrefab) as GameObject;
             timedEff.GetComponent<TimedEffect>().createAfterTime = count * Constants.DelayAfterTileDestruction;
             timedEff.GetComponent<TimedEffect>().basetileToHide = baseTile;
 

@@ -86,6 +86,12 @@ namespace Com.Hypester.DM3
             Debug.Log(reqUrl);
 			Debug.Log (postData.Length);
 
+            Debug.LogError("HEADERS");
+            foreach (KeyValuePair<string, string> kvp in headers)
+            {
+                Debug.Log(kvp.Key + ": " + kvp.Value);
+            }
+            Debug.LogError("DONE");
             wwwReq = new WWW(reqUrl, postData, headers);
 
             yield return wwwReq;
@@ -204,7 +210,7 @@ namespace Com.Hypester.DM3
             // queryParameters.Add("v", Configuration.buildVersion + "." + Configuration.buildSubVersion);
             queryParameters.Add("counter", (retryCount + 1).ToString());
             if (!string.IsNullOrEmpty(DevConsole.gameId)) { queryParameters.Add("game_id", DevConsole.gameId); }
-            // if (session != null && !string.IsNullOrEmpty(session.sessionId)) { queryParameters.Add("sid", session.sessionId); }
+            if (session != null && !string.IsNullOrEmpty(session.sessionId)) { queryParameters.Add("sid", session.sessionId); }
 
             return queryParameters;
         }
@@ -394,8 +400,9 @@ namespace Com.Hypester.DM3
             Regex regex = new Regex(COOKIE_PHPSESSION + "=(.*?);");
             string sessionId = regex.Match(cookieString).Value;
             sessionId = sessionId.Replace(";", string.Empty);
+            string finalSessionId = sessionId.Substring(sessionId.Length - (sessionId.Length - COOKIE_PHPSESSION.Length) + 1);
 
-            return sessionId;
+            return finalSessionId;
         }
 
         public void KillRequest()

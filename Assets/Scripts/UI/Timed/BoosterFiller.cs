@@ -8,6 +8,8 @@ namespace Com.Hypester.DM3
 {
     public class BoosterFiller : MonoBehaviour
     {
+        [SerializeField] ParticleSystem particle;
+
         private Transform _rt;
         private Vector2 _startPosition;
         private Vector2 _endPosition;
@@ -63,9 +65,9 @@ namespace Com.Hypester.DM3
                 _delayTimer += Time.deltaTime; //time in seconds
             } else {
                 if (!_playing) {
-                    ParticleSystem.MainModule main = transform.Find("Particle").GetComponent<ParticleSystem>().main;
+                    ParticleSystem.MainModule main = particle.main;
                     main.startColor = new ParticleSystem.MinMaxGradient(_color);
-                    transform.Find("Particle").GetComponent<ParticleSystem>().Play();
+                    particle.Play();
                     _playing = true;
                 }
                 _travellingFor += Time.deltaTime; //time in seconds

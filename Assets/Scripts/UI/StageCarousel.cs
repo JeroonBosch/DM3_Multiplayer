@@ -16,6 +16,7 @@ namespace Com.Hypester.DM3
         private int _selectedIndex = 0;
         private int _highestIndex;
         private Coroutine _moveCoroutine;
+        private float stageEntryDistance = 900f;
 
         [SerializeField] SelectStageCanvas canvas;
         [SerializeField] private Image buttonPrevious;
@@ -77,7 +78,7 @@ namespace Com.Hypester.DM3
             if (_highestIndex >= (_selectedIndex + 1))
                 _selectedIndex++;
 
-            Vector2 wantedPosition = new Vector2(-1000f * _selectedIndex, 0f);
+            Vector2 wantedPosition = new Vector2(-stageEntryDistance * _selectedIndex, 0f);
             Vector2 startspot = transform.localPosition;
             _moveCoroutine = StartCoroutine(SmoothMove(startspot, wantedPosition, 1.0f));
 
@@ -93,7 +94,7 @@ namespace Com.Hypester.DM3
             if (0 <= (_selectedIndex - 1))
                 _selectedIndex--;
 
-            Vector2 wantedPosition = new Vector2(-1000f * _selectedIndex, 0f);
+            Vector2 wantedPosition = new Vector2(-stageEntryDistance * _selectedIndex, 0f);
             Vector2 startspot = transform.localPosition;
             _moveCoroutine = StartCoroutine(SmoothMove(startspot, wantedPosition, 1.0f));
 
@@ -102,6 +103,7 @@ namespace Com.Hypester.DM3
 
         void ButtonColorCheck()
         {
+            /*
             if (_highestIndex >= (_selectedIndex + 1)) {
                 buttonNext.color = fullColor;
                 buttonNext.GetComponent<Button>().interactable = true;
@@ -118,6 +120,7 @@ namespace Com.Hypester.DM3
                 buttonPrevious.color = fadedColor;
                 buttonPrevious.GetComponent<Button>().interactable = false;
             }
+            */
         }
 
         public void InitializeCarousel()
@@ -131,9 +134,11 @@ namespace Com.Hypester.DM3
                 PlayerService.Stage stage = MainController.Data.temporary.stages[i];
                 StageEntry entry = Instantiate(stageEntryPrefab, transform, false).GetComponent<StageEntry>();
 
-                entry.transform.localPosition = new Vector2(1000f * positionCounter, 0f); ;
+                entry.transform.localPosition = new Vector2(stageEntryDistance * positionCounter, 0f); ;
                 entry.playButton.onClick.RemoveAllListeners();
                 entry.playButton.onClick.AddListener(() => canvas.SetReady(entry));
+                entry.stageButton.onClick.RemoveAllListeners();
+                entry.stageButton.onClick.AddListener(() => canvas.SetReady(entry));
 
                 int coinReward = type == Type.Normal ? int.Parse(stage.reward) : int.Parse(stage.tourna_reward);
                 int coinCost = type == Type.Normal ? int.Parse(stage.buyin) : int.Parse(stage.tourna_buyin);
@@ -217,9 +222,11 @@ namespace Com.Hypester.DM3
             {
                 StageEntry entry = Instantiate(stageEntryPrefab, transform, false).GetComponent<StageEntry>();
 
-                entry.transform.localPosition = new Vector2(1000f * positionCounter, 0f); ;
+                entry.transform.localPosition = new Vector2(stageEntryDistance * positionCounter, 0f); ;
                 entry.playButton.onClick.RemoveAllListeners();
                 entry.playButton.onClick.AddListener(() => canvas.SetReady(entry));
+                entry.stageButton.onClick.RemoveAllListeners();
+                entry.stageButton.onClick.AddListener(() => canvas.SetReady(entry));
 
                 int coinReward = type == Type.Normal ? int.Parse(stage.reward) : int.Parse(stage.tourna_reward);
                 int coinCost = type == Type.Normal ? int.Parse(stage.buyin) : int.Parse(stage.tourna_buyin);

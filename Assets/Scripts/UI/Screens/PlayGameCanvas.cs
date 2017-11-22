@@ -170,7 +170,7 @@ namespace Com.Hypester.DM3
             {
                 GameObject activeTrap = GameObject.FindGameObjectWithTag("ActiveTrap");
                 if (!activeTrap) { 
-                    if (_selectedTiles.Count > 2) {
+                    if (_selectedTiles.Count > 2 && startingTile != null) {
                         InitiateCombo();
                     } else
                     {
@@ -262,7 +262,7 @@ namespace Com.Hypester.DM3
         {
             //PhotonController.Instance.GameController.MyPlayer.InitiateCombo();
             iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.ImpactLight);
-            PhotonController.Instance.GameController.photonView.RPC("RPC_InitiateCombo", PhotonTargets.All);
+            PhotonController.Instance.GameController.photonView.RPC("RPC_InitiateCombo", PhotonTargets.All, startingTile.position);
         }
         #endregion
 

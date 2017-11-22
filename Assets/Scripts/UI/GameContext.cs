@@ -6,6 +6,10 @@ namespace Com.Hypester.DM3
 {
     public class GameContext : MonoBehaviour
     {
+        [SerializeField] GameObject largeTextPrefab;
+        [SerializeField] GameObject myPlayerTextPrefab;
+        [SerializeField] GameObject enemyPlayerTextPrefab;
+
         private Text _text;
 
         private float _showTime;
@@ -55,21 +59,21 @@ namespace Com.Hypester.DM3
 
         public void ShowLargeText(string text)
         {
-            GameObject go = Instantiate(Resources.Load("UI/LargeText")) as GameObject;
+            GameObject go = Instantiate(largeTextPrefab) as GameObject;
             go.transform.SetParent(transform.parent, false);
             go.GetComponent<Text>().text = text;
         }
 
         public void ShowMyText(string text)
         {
-            GameObject go = Instantiate(Resources.Load("UI/MyPlayerText")) as GameObject;
+            GameObject go = Instantiate(myPlayerTextPrefab) as GameObject;
             go.transform.SetParent(transform.parent, false);
             go.GetComponent<Text>().text = text;
         }
 
         public void ShowEnemyText(string text)
         {
-            GameObject go = Instantiate(Resources.Load("UI/EnemyPlayerText")) as GameObject;
+            GameObject go = Instantiate(enemyPlayerTextPrefab) as GameObject;
             go.transform.SetParent(transform.parent, false);
             go.GetComponent<Text>().text = text;
         }

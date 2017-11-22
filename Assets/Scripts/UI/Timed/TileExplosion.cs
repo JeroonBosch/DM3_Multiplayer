@@ -8,6 +8,8 @@ namespace Com.Hypester.DM3
 {
     public class TileExplosion : MonoBehaviour
     {
+        [SerializeField] ParticleSystem particle;
+
         private Transform _rt;
         private Vector2 _startPosition;
         private Vector2 _endPosition;
@@ -54,8 +56,8 @@ namespace Com.Hypester.DM3
             {
                 _delayTimer += Time.deltaTime; //time in seconds
             } else {
-                if (!_playing) { 
-                    transform.Find("Particle").GetComponent<ParticleSystem>().Play();
+                if (!_playing) {
+                    particle.Play();
                     _playing = true;
                 }
                 _travellingFor += Time.deltaTime; //time in seconds

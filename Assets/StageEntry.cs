@@ -18,6 +18,7 @@ public class StageEntry : MonoBehaviour {
     [SerializeField] Text specialRuleTitleText;
     [SerializeField] Text specialRuleText;
     public Button playButton;
+    public Button stageButton;
 
 	void Update () {
         int playerCount = PhotonNetwork.connected ? PhotonNetwork.countOfPlayers : 0;

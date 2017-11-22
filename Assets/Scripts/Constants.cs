@@ -36,7 +36,7 @@
         //Timing
         public const float TurnTime = 14f;
         public const float TimeBetweenTurns = 2f;
-        public const float DelayAfterTileDestruction = .15f;
+        public const float DelayAfterTileDestruction = .5f;
         public const float TileDroppingSpeed = 1400f;
         public const float HealthDroppingSpeed = 100f;
         public const float MinimumTextTime = 3f; //3 seconds
