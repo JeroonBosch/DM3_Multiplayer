@@ -201,6 +201,7 @@ namespace Com.Hypester.DM3
         }
         void ActivatePopup(GameObject popup)
         {
+            if (popup == null) { return; }
             activePopup = popup;
             popup.SetActive(true);
         }

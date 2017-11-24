@@ -36,6 +36,7 @@ namespace Com.Hypester.DM3
 
         public void SetProfileImage(Texture2D newImage)
         {
+            if (newImage == null) { return; }
             profileImage.sprite = Sprite.Create(newImage, new Rect(0, 0, newImage.width, newImage.height), new Vector2(0, 0));
         }
         private void OnAvatarBorderChange(Sprite newSprite)

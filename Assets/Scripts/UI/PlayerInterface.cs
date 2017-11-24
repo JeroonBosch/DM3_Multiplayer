@@ -11,6 +11,8 @@ namespace Com.Hypester.DM3
         public Owner owner;
 
         //public string avatarString;
+        public GameObject shieldEffect;
+
         public Image playerAvatarImage;
         public Image playerBorderImage;
         public GameObject avatarGameObject;

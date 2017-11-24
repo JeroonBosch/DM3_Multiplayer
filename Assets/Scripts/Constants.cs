@@ -16,8 +16,8 @@
         public const int YellowPowerReq = 12;
 
         public const float BoosterCollateralDamage = 3f;
-        public const int HealPower = 50;
-        public const int FireballPower = 60;
+        public const int HealPower = 75;
+        public const int FireballPower = 90;
 
         //Grid settings
         public const int gridXsize = 10;
@@ -36,7 +36,7 @@
         //Timing
         public const float TurnTime = 14f;
         public const float TimeBetweenTurns = 2f;
-        public const float DelayAfterTileDestruction = .5f;
+        public const float DelayAfterTileDestruction = .05f;
         public const float TileDroppingSpeed = 1400f;
         public const float HealthDroppingSpeed = 100f;
         public const float MinimumTextTime = 3f; //3 seconds

@@ -305,13 +305,15 @@ namespace Com.Hypester.DM3
             }
         }
 
-        public void SetProfilePicture(Texture2D newImage)
+        public void SetProfilePicture(Texture2D value)
         {
-            profilePicture = newImage;
+            if (value == null) { return; }
+            profilePicture = value;
             PlayerEvent.ProfileImageChange(profilePicture);
         }
         public void SetAvatarBorder(Sprite value)
         {
+            if (value == null) { return; }
             AvatarBorder = value;
             PlayerEvent.AvatarBorderChange(AvatarBorder);
         }

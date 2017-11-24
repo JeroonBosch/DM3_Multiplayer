@@ -35,6 +35,22 @@ namespace Com.Hypester.DM3
         [Header("Popups")]
         [SerializeField] List<PopupArtEntry> popups;
 
+        [Header("TextPopups")]
+        public Sprite localTurn;
+        public Sprite opponentTurn;
+        public Sprite boom;
+        public Sprite bang;
+        public Sprite pow;
+        public Sprite great;
+        public Sprite super;
+        public Sprite fantastic;
+        public Sprite opponentPlacedTrap;
+        public Sprite trapTriggered;
+        public Sprite trapTriggeredOuch;
+        public Sprite shieldActivated;
+        public Sprite healed;
+        public Sprite notFull;
+
         [Header("Tiles")]
         [SerializeField] TileArt normalTiles;
         [SerializeField] TileArt selectedTiles;
@@ -106,6 +122,24 @@ namespace Com.Hypester.DM3
         public Sprite GetNormalSprite(TileTypes.EColor color) { return normalTiles.GetSprite(color); }
         public Sprite GetSelectedSprite(TileTypes.EColor color) { return selectedTiles.GetSprite(color); }
         public Sprite GetCollateralSprite(TileTypes.EColor color) { return collateralTiles.GetSprite(color); }
+
+        public Sprite GetBoosterSpriteByLevel(int boosterLevel)
+        {
+            Sprite boosterSprite = boom;
+            switch (boosterLevel)
+            {
+                case 1:
+                    boosterSprite = boom;
+                    break;
+                case 2:
+                    boosterSprite = bang;
+                    break;
+                case 3:
+                    boosterSprite = pow;
+                    break;
+            }
+            return boosterSprite;
+        }
     }
 
     [System.Serializable]

@@ -865,9 +865,9 @@ namespace Com.Hypester.DM3
             List<TileView> collateral = new List<TileView>();
 
             //Reset
-            foreach (TileView tile in FindObjectsOfType<TileView>())
+            foreach (KeyValuePair<Vector2, TileView> kvp in _baseTiles)
             {
-                tile.collateral = false;
+                kvp.Value.collateral = false;
             }
 
             foreach (KeyValuePair<Vector2, TileView> kvp in _selectedTiles)
@@ -959,19 +959,35 @@ namespace Com.Hypester.DM3
 
 
                 trapped = false;
+                List<Vector2> trapPos = new List<Vector2>();
                 foreach (KeyValuePair<Vector2, TileView> kvp in _selectedTiles)
                 {
-                    if (TileViewAtPos(kvp.Key).boosterLevel >= 4)
+                    if (TileViewAtPos(kvp.Key).boosterLevel >= 4) {
                         trapped = true;
+                        trapPos.Add(kvp.Value.transform.localPosition);
+                    }
                 }
 
-                if (trapped && EnemyPlayer == targetPlayer)
-                    _gameContext.ShowLargeText("Oops! It was trapped!");
-                else if (trapped && MyPlayer == targetPlayer)
-                    _gameContext.ShowLargeText("Nice trap!");
+                if (trapped && trapPos.Count > 0) // TODO: perhaps sending one event with the list of positions, instead of an event for every position, is faster
+                {
+                    if (EnemyPlayer == targetPlayer) {
+                        foreach (Vector2 pos in trapPos)
+                        {
+                            UIEvent.LocalTrapTrigger(pos);
+                        }
+                    } else if (MyPlayer == targetPlayer)
+                    {
+                        foreach (Vector2 pos in trapPos)
+                        {
+                            UIEvent.OpponentTrapTrigger(pos);
+                        }
+                    }
+                }
 
+                // int boosterCount = 0;
                 int count = 0;
                 int highestCount = 0;
+                Dictionary<Vector2, TileView> boostedTiles = new Dictionary<Vector2, TileView>();
                 foreach (KeyValuePair<Vector2, TileView> kvp in _selectedTiles)
                 {
                     CreateTileAttackPlayerEffect(kvp.Key, count, trapped);
@@ -979,9 +995,11 @@ namespace Com.Hypester.DM3
 
                     if (baseTile.boosterLevel > 0)
                     {
+                        // if (baseTile.boosterLevel < 4) { if (!boostedTiles.ContainsKey(baseTile.position)) { boosterCount++; Debug.Log("Adding to booster count"); } }
                         List<TileView> indivCollateral = baseTile.ListCollateralDamage(this, 1f);
                         foreach (TileView colTile in indivCollateral)
                         {
+                            // if (colTile.boosterLevel > 0 & colTile.boosterLevel < 4) { if (!boostedTiles.ContainsKey(colTile.position)) { boosterCount++; Debug.Log("Adding to booster count"); } }
                             CreateTileAttackPlayerEffect(colTile.position, count + Mathf.RoundToInt(colTile.DistanceToTile(baseTile) / Constants.DistanceBetweenTiles), true, trapped);
 
                             if (count + Mathf.RoundToInt(colTile.DistanceToTile(baseTile) / Constants.DistanceBetweenTiles) > highestCount)
@@ -994,6 +1012,17 @@ namespace Com.Hypester.DM3
                     if (count > highestCount)
                         highestCount = count;
                 }
+
+                /*
+                Debug.Log("boosterCount: " + boosterCount.ToString());
+                if (boosterCount > 0 && EnemyPlayer == targetPlayer)
+                {
+                    Debug.Log("Counter is bigger than 0 && EnemyPlayer == targetPlayer");
+                    if (boosterCount == 2) { UIEvent.BoosterTriggerDouble(); }
+                    else if (boosterCount == 3) { UIEvent.BoosterTriggerTriple(); }
+                    else if (boosterCount >= 4) { UIEvent.BoosterTriggerMulti(); }
+                }
+                */
 
                 foreach (KeyValuePair<Vector2, TileView> kvp in _baseTiles)
                 {
@@ -1069,12 +1098,17 @@ namespace Com.Hypester.DM3
 
             //Explosion effect
             GameObject expl = null;
-            if (baseTile.boosterLevel == 1)
+            if (baseTile.boosterLevel == 1) {
                 expl = Instantiate(boosterExplosion1Prefab);
+            }
             else if (baseTile.boosterLevel == 2)
+            {
                 expl = Instantiate(boosterExplosion2Prefab);
+            }
             else if (baseTile.boosterLevel == 3)
+            {
                 expl = Instantiate(boosterExplosion3Prefab);
+            }
             else if (baseTile.boosterLevel >= 4)
                 expl = Instantiate(boosterExplosionTrapPrefab);
 
@@ -1084,6 +1118,10 @@ namespace Com.Hypester.DM3
 
             if (expl != null)
             {
+                if (baseTile.boosterLevel < 4 && baseTile.boosterLevel > 0)
+                {
+                    UIEvent.BoosterTrigger(baseTile.transform.localPosition, baseTile.boosterLevel);
+                }
                 expl.transform.position = baseTile.transform.position;
             }
             timedEff.transform.position = baseTile.transform.position;
@@ -1281,43 +1319,61 @@ namespace Com.Hypester.DM3
         {
             if (IsGameMaster()) // Local player is master
             {
+                int skillRequirement = Constants.GetSkillActivationRequirement(color);
+
                 if (info.sender == PhotonNetwork.player) // Local player sent this
                 {
                     if (_curPlayer == 0)
                     {
-                        if (color == SkillColor.Blue && P1_PowerBlue >= Constants.BluePowerReq) //blue
+                        if (color == SkillColor.Blue) //blue
                         {
-                            P1_ShieldActive = true;
-                            photonView.RPC("RPC_ShieldActivated", PhotonTargets.All, 0);
-                            P1_PowerBlue = 0;
-                            photonView.RPC("RPC_EmptyPower", PhotonTargets.All, _curPlayer, color);
-                        }
-                        else if (color == SkillColor.Green && P1_PowerGreen >= Constants.GreenPowerReq) //green
-                        {
-                            healthPlayerOne += Constants.HealPower;
-                            photonView.RPC("RPC_HealEffect", PhotonTargets.All, 0);
-                            P1_PowerGreen = 0;
-                            photonView.RPC("RPC_EmptyPower", PhotonTargets.All, _curPlayer, color);
-
-                            photonView.RPC("RPC_UpdateHealth", PhotonTargets.All, _curPlayer, healthPlayerOne);
-                        }
-                        else if (color == SkillColor.Red && P1_PowerRed >= Constants.RedPowerReq) //red
-                        {
-                            photonView.RPC("RPC_CreateTrap", PhotonTargets.All, _curPlayer);
-                            P1_PowerRed = 0;
-                            photonView.RPC("RPC_EmptyPower", PhotonTargets.All, _curPlayer, color);
-
-                            if (IsGameRelevant())
+                            if (P1_PowerBlue >= skillRequirement)
                             {
-                                _gameContext.ShowText("You placed a trap. Don't trigger it yourself!");
-                                photonView.RPC("RPC_MessageTrap", PhotonTargets.Others);
+                                P1_ShieldActive = true;
+                                photonView.RPC("RPC_ShieldActivated", PhotonTargets.All, 0);
+                                P1_PowerBlue = 0;
+                                photonView.RPC("RPC_EmptyPower", PhotonTargets.All, _curPlayer, color);
                             }
+                            else { UIEvent.SkillNotFull(color); }
                         }
-                        else if (color == SkillColor.Yellow && P1_PowerYellow >= Constants.YellowPowerReq) //yellow
+                        else if (color == SkillColor.Green) //green
                         {
-                            photonView.RPC("RPC_Create_Fireball", PhotonTargets.All, info.sender.ID);
-                            P1_PowerYellow = 0;
-                            photonView.RPC("RPC_EmptyPower", PhotonTargets.All, _curPlayer, color);
+                            if (P1_PowerGreen >= skillRequirement)
+                            {
+                                healthPlayerOne += Constants.HealPower;
+                                photonView.RPC("RPC_HealEffect", PhotonTargets.All, 0);
+                                P1_PowerGreen = 0;
+                                photonView.RPC("RPC_EmptyPower", PhotonTargets.All, _curPlayer, color);
+
+                                photonView.RPC("RPC_UpdateHealth", PhotonTargets.All, _curPlayer, healthPlayerOne);
+                            }
+                            else { UIEvent.SkillNotFull(color); }
+                        }
+                        else if (color == SkillColor.Red) //red
+                        {
+                            if (P1_PowerRed >= skillRequirement)
+                            {
+                                photonView.RPC("RPC_CreateTrap", PhotonTargets.All, _curPlayer);
+                                P1_PowerRed = 0;
+                                photonView.RPC("RPC_EmptyPower", PhotonTargets.All, _curPlayer, color);
+
+                                if (IsGameRelevant())
+                                {
+                                    _gameContext.ShowText("You placed a trap. Don't trigger it yourself!");
+                                    photonView.RPC("RPC_MessageTrap", PhotonTargets.Others);
+                                }
+                            }
+                            else { UIEvent.SkillNotFull(color); }
+                        }
+                        else if (color == SkillColor.Yellow) //yellow
+                        {
+                            if (P1_PowerYellow >= skillRequirement)
+                            {
+                                photonView.RPC("RPC_Create_Fireball", PhotonTargets.All, info.sender.ID);
+                                P1_PowerYellow = 0;
+                                photonView.RPC("RPC_EmptyPower", PhotonTargets.All, _curPlayer, color);
+                            }
+                            else { UIEvent.SkillNotFull(color); }
                         }
                     }
                 }
@@ -1349,8 +1405,9 @@ namespace Com.Hypester.DM3
 
                             if (IsGameRelevant())
                             {
-                                _gameContext.ShowText("Opponent placed a trap. Be careful!");
-                                _gameContext.ShowLargeText("Trap placed, careful!");
+                                UIEvent.OpponentTrapPlaced();
+                                // _gameContext.ShowText("Opponent placed a trap. Be careful!");
+                                // _gameContext.ShowLargeText("Trap placed, careful!");
                                 iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.Warning);
                             }
                         }
@@ -1424,7 +1481,7 @@ namespace Com.Hypester.DM3
         {
             if (GetPlayerByID(playerNo) == MyPlayer) {
                 CreateTrap();
-                _gameContext.ShowText("You placed a trap. Don't trigger it yourself!");
+                // _gameContext.ShowText("You placed a trap. Don't trigger it yourself!");
             }
         }
 
@@ -1446,16 +1503,7 @@ namespace Com.Hypester.DM3
             {
                 if (_myPlayer != null)
                 {
-                    if (curPlayer == _myPlayer.localID) //Reversed
-                    {
-                        // _gameContext.ShowText("It is now your turn!");
-                        _gameContext.ShowLargeText("Your turn!");
-                    }
-                    else
-                    {
-                        // _gameContext.ShowText("Waiting for " + _enemyPlayer.GetName() + "'s turn...");
-                        _gameContext.ShowLargeText(_enemyPlayer.GetName() + "'s turn!");
-                    }
+                    UIEvent.TurnChange(curPlayer == _myPlayer.localID);
                 }
 
                 if (MyPlayer.localID == 0)
@@ -1490,6 +1538,7 @@ namespace Com.Hypester.DM3
         {
             if (IsGameRelevant())
             {
+                MyPlayer.playerInterface.shieldEffect.SetActive(false);
                 GameObject.Find("PlayScreen").GetComponent<PlayGameCanvas>().EndGame(winnerPlayer);
                 _gameDone = false;
                 _isActive = false;
@@ -1565,8 +1614,7 @@ namespace Com.Hypester.DM3
             if (IsGameRelevant())
             {
                 if (targetPlayer == MyPlayer.localID)
-                    foreach (GameObject activeShield in GameObject.FindGameObjectsWithTag("ActiveShield"))
-                        Destroy(activeShield);
+                    MyPlayer.playerInterface.shieldEffect.SetActive(false);
 
                 GameObject effect = Instantiate(Resources.Load("ParticleEffects/ShieldEffect")) as GameObject;
                 Vector2 effectPosition = new Vector2();
@@ -1585,12 +1633,9 @@ namespace Com.Hypester.DM3
             {
                 if (_myPlayer.localID == targetPlayer)
                 {
-                    GameObject effect = Instantiate(Resources.Load("ParticleEffects/ShieldActivated")) as GameObject;
-                    Vector2 effectPosition = new Vector2();
-                    effectPosition = MyPlayer.playerInterface.avatarGameObject.transform.position;
-                    effect.transform.position = effectPosition;
-
-                    _gameContext.ShowText("Shield is now active. Next damage is blocked.");
+                    MyPlayer.playerInterface.shieldEffect.SetActive(true);
+                    // _gameContext.ShowText("Shield is now active. Next damage is blocked.");
+                    UIEvent.Shield(true);
                 }
             }
         }
@@ -1603,15 +1648,19 @@ namespace Com.Hypester.DM3
                 GameObject effect = Instantiate(Resources.Load("ParticleEffects/HealEffect")) as GameObject;
                 Vector2 effectPosition = new Vector2();
 
-                if (_myPlayer.localID == targetPlayer)
+                bool isLocal = _myPlayer.localID == targetPlayer;
+
+                UIEvent.Heal(isLocal);
+
+                if (isLocal)
                 {
-                    _gameContext.ShowText("You healed for " + Constants.HealPower + "!");
+                    // _gameContext.ShowText("You healed for " + Constants.HealPower + "!");
 
                     effectPosition = MyPlayer.playerInterface.avatarGameObject.transform.position;
                 }
                 else
                 {
-                    _gameContext.ShowText("Opponent healed for " + Constants.HealPower + "!");
+                    // _gameContext.ShowText("Opponent healed for " + Constants.HealPower + "!");
 
                     effectPosition = GameObject.Find("OpponentAvatar").GetComponent<RectTransform>().position;
                 }
@@ -1696,8 +1745,9 @@ namespace Com.Hypester.DM3
         {
             if (IsGameRelevant())
             {
-                _gameContext.ShowText("Opponent placed a trap. Be careful!");
-                _gameContext.ShowLargeText("Trap placed, careful!");
+                UIEvent.OpponentTrapPlaced();
+                //_gameContext.ShowText("Opponent placed a trap. Be careful!");
+                //_gameContext.ShowLargeText("Trap placed, careful!");
                 iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.Warning);
             }
         }

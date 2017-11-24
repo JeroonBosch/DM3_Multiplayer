@@ -5,6 +5,7 @@ namespace Com.Hypester.DM3
 {
     public class LoadingScreenCanvas : BaseMenuCanvas
     {
+        [SerializeField] Image bgImage;
         private bool _playersReady;
 
         private float _timer = 0f;
@@ -13,6 +14,17 @@ namespace Com.Hypester.DM3
         private void Awake()
         {
             GoToScreen(this); //start screen.
+            if (PhotonNetwork.inRoom && PhotonNetwork.room.CustomProperties.ContainsKey(RoomProperty.StageSyscode))
+            {
+                object syscode = "";
+                if (PhotonNetwork.room.CustomProperties.TryGetValue(RoomProperty.StageSyscode, out syscode))
+                {
+                    if (!string.IsNullOrEmpty((string) syscode))
+                    {
+                        bgImage.sprite = MainController.Data.sprites.GetStageArt((string)syscode).bg;
+                    }
+                }
+            }
         }
 
         protected override void Start ()

@@ -17,6 +17,12 @@ namespace Com.Hypester.DM3
 
         public delegate void PopupSurrenderAction();
 
+        public delegate void PopupTextAction();
+        public delegate void PopupTextPlayerAction(bool localPlayer);
+        public delegate void PopupTextTileAction(Vector2 tilePos);
+        public delegate void PopupTextBoosterAction(Vector2 tilePos, int boosterLevel);
+        public delegate void PopupTextSkillAction(SkillColor color);
+
         // CURRENCY
         public static event PopupCoinPurchaseSuccessAction OnCoinPurchaseSuccess;
         public static event PopupInsufficientCurrency OnInsufficientCurrency;
@@ -64,9 +70,67 @@ namespace Com.Hypester.DM3
         // GAME
         public static event PopupSurrenderAction OnSurrender;
 
+        public static event PopupTextPlayerAction OnTurnChange;
+        public static event PopupTextBoosterAction OnBoosterTrigger;
+        public static event PopupTextAction OnBoosterTriggerDouble;
+        public static event PopupTextAction OnBoosterTriggerTriple;
+        public static event PopupTextAction OnBoosterTriggerMulti;
+        public static event PopupTextAction OnOpponentTrapPlaced;
+        public static event PopupTextTileAction OnOpponentTrapTrigger;
+        public static event PopupTextTileAction OnLocalTrapTrigger;
+        public static event PopupTextPlayerAction OnShield;
+        public static event PopupTextPlayerAction OnHeal;
+        public static event PopupTextSkillAction OnSkillNotFull;
+
+
         public static void Surrender()
         {
             if (OnSurrender != null) { OnSurrender(); }
+        }
+
+        public static void TurnChange(bool localPlayer)
+        {
+            if (OnTurnChange != null) { OnTurnChange(localPlayer); }
+        }
+        public static void BoosterTrigger(Vector2 tilePos, int boosterLevel)
+        {
+            if (OnBoosterTrigger != null) { OnBoosterTrigger(tilePos, boosterLevel); }
+        }
+        public static void BoosterTriggerDouble()
+        {
+            if (OnBoosterTriggerDouble != null) { OnBoosterTriggerDouble(); }
+        }
+        public static void BoosterTriggerTriple()
+        {
+            if (OnBoosterTriggerTriple != null) { OnBoosterTriggerTriple(); }
+        }
+        public static void BoosterTriggerMulti()
+        {
+            if (OnBoosterTriggerMulti != null) { OnBoosterTriggerMulti(); }
+        }
+        public static void OpponentTrapPlaced()
+        {
+            if (OnOpponentTrapPlaced != null) { OnOpponentTrapPlaced(); }
+        }
+        public static void OpponentTrapTrigger(Vector2 tilePos)
+        {
+            if (OnOpponentTrapTrigger != null) { OnOpponentTrapTrigger(tilePos); }
+        }
+        public static void LocalTrapTrigger(Vector2 tilePos)
+        {
+            if (OnLocalTrapTrigger != null) { OnLocalTrapTrigger(tilePos); }
+        }
+        public static void Shield(bool localPlayer)
+        {
+            if (OnShield != null) { OnShield(localPlayer); }
+        }
+        public static void Heal(bool localPlayer)
+        {
+            if (OnHeal != null) { OnHeal(localPlayer); }
+        }
+        public static void SkillNotFull(SkillColor color)
+        {
+            if (OnSkillNotFull != null) { OnSkillNotFull(color); }
         }
     }
 }

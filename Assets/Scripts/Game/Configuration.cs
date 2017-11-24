@@ -4,7 +4,7 @@
     {
         get
         {
-            return "https://clash.pedaste.com";
+            return "https://clash.hypester.com";
         }
     }
 }

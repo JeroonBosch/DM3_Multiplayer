@@ -181,7 +181,7 @@ namespace Com.Hypester.DM3
         protected void GettingGameInfoStart()
         {
             SetInfoText("Getting game info...");
-            MainController.ServiceGame.GetGame((string)PhotonNetwork.room.CustomProperties[RoomProperty.StageId], factory.gettingGameInfo.remotePlayerUserId, OnGetGameInfo);
+            MainController.ServiceGame.GetGame((string)PhotonNetwork.room.CustomProperties[RoomProperty.StageId], MainController.Instance.playerData.userId, OnGetGameInfo);
         }
         protected void GettingGameInfoUpdate()
         {

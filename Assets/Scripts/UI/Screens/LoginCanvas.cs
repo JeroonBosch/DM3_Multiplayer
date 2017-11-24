@@ -26,12 +26,15 @@ namespace Com.Hypester.DM3
         protected override void Start()
         {
             base.Start();
-            
+
+            Debug.LogError("In Start()");
+
             loggingInText.enabled = false;
             alreadyConnected = false;
 
             if (((MainController.settingsService.lastLoginType == LoginType.FACEBOOK && FB.IsInitialized && FB.IsLoggedIn) || MainController.settingsService.lastLoginType == LoginType.DEVICE) && !string.IsNullOrEmpty(MainController.settingsService.hexaClash))
             {
+                // Debug.LogError("Already connected");
                 alreadyConnected = true;
                 if (PhotonNetwork.connected) { ConnectedToPhoton(); }
                 else
@@ -214,6 +217,21 @@ namespace Com.Hypester.DM3
                 MainController.settingsService.lastLoginType = LoginType.NONE;
                 UIEvent.Info("Login serialization failed", PopupType.Error);
                 Debug.Log("Something went wrong with serializing the loginObject.");
+                ResetLoginCanvas();
+                return;
+            } else if (!string.IsNullOrEmpty(loginObject.error)) {
+                Debug.LogError(loginObject.error);
+                // UIEvent.Info(loginObject.error + "\nTry again", PopupType.Error);
+
+                MainController.settingsService.mobileId = "";
+                ResetLoginCanvas(false);
+                if (MainController.settingsService.lastLoginType == LoginType.DEVICE)
+                {
+                    Login();
+                } else if (MainController.settingsService.lastLoginType == LoginType.FACEBOOK)
+                {
+                    LoginFB();
+                }
                 return;
             }
 
@@ -243,10 +261,11 @@ namespace Com.Hypester.DM3
 
         private void ConnectedToPhoton()
         {
-            if (alreadyConnected) { MainController.Instance.playerData.Broadcast(); }
+            // Debug.LogError("ConnectedToPhoton. Broadcasting");
             GoToScreen(FindObjectOfType<MainmenuCanvas>());
             connectingToPhoton = false;
             enabled = false;
+            if (alreadyConnected) { MainController.Instance.playerData.Broadcast(); }
         }
 
         private void FailedToConnectToPhoton(DisconnectCause cause)
@@ -258,12 +277,11 @@ namespace Com.Hypester.DM3
             UIEvent.Info("Failed to connect Photon. Matchmaking unavailable. Establishing connection.", PopupType.Warning);
         }
 
-		private void ResetLoginCanvas() {
+		private void ResetLoginCanvas(bool resetUI = true) {
 			MainController.ServicePlayer.Logout ();
-			MainController.settingsService.lastLoginType = LoginType.NONE;
 			connectingToPhoton = false;
 			enabled = true;
-			ShowLoginFields ();
+            if (resetUI) { MainController.settingsService.lastLoginType = LoginType.NONE; ShowLoginFields(); }
 		}
 
         private void HideLoginFields ()

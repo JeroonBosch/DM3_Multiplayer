@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using Lean.Touch;
 using System.Collections.Generic;
 using UnityEngine.EventSystems;
+using System;
 
 namespace Com.Hypester.DM3
 {
@@ -13,6 +14,14 @@ namespace Com.Hypester.DM3
         //Thus, this class also implements all the touch controls and actually calls RPC's of the GameHandler.
 
         [SerializeField] EndScreenCanvas endScreenCanvas;
+
+        [Header("TextPrefabs")]
+        [SerializeField] GameObject smallTextPopupPrefab;
+        [SerializeField] GameObject bigTextPopupPrefab;
+
+        [Header("TextLocations")]
+        [SerializeField] RectTransform localAvatarTop;
+        [SerializeField] RectTransform remoteAvatarBot;
 
         TileView startingTile = null;
         Dictionary<Vector2, TileView> _selectedTiles;
@@ -103,12 +112,126 @@ namespace Com.Hypester.DM3
         {
             LeanTouch.OnFingerDown += OnFingerDown;
             LeanTouch.OnFingerUp += OnFingerUp;
+
+            UIEvent.OnTurnChange += OnTurnChange;
+            UIEvent.OnBoosterTrigger += OnBoosterTrigger;
+            UIEvent.OnBoosterTriggerDouble += OnBoosterTriggerDouble;
+            UIEvent.OnBoosterTriggerTriple += OnBoosterTriggerTriple;
+            UIEvent.OnBoosterTriggerMulti += OnBoosterTriggerMulti;
+            UIEvent.OnOpponentTrapPlaced += OnOpponentTrapPlaced;
+            UIEvent.OnOpponentTrapTrigger += OnOpponentTrapTrigger;
+            UIEvent.OnLocalTrapTrigger += OnLocalTrapTrigger;
+            UIEvent.OnShield += OnShield;
+            UIEvent.OnHeal += OnHeal;
+            UIEvent.OnSkillNotFull += OnSkillNotFull;
         }
 
         private void OnDisable()
         {
             LeanTouch.OnFingerDown -= OnFingerDown;
             LeanTouch.OnFingerUp -= OnFingerUp;
+
+            UIEvent.OnTurnChange -= OnTurnChange;
+            UIEvent.OnBoosterTrigger -= OnBoosterTrigger;
+            UIEvent.OnBoosterTriggerDouble -= OnBoosterTriggerDouble;
+            UIEvent.OnBoosterTriggerTriple -= OnBoosterTriggerTriple;
+            UIEvent.OnBoosterTriggerMulti -= OnBoosterTriggerMulti;
+            UIEvent.OnOpponentTrapPlaced -= OnOpponentTrapPlaced;
+            UIEvent.OnOpponentTrapTrigger -= OnOpponentTrapTrigger;
+            UIEvent.OnLocalTrapTrigger -= OnLocalTrapTrigger;
+            UIEvent.OnShield -= OnShield;
+            UIEvent.OnHeal -= OnHeal;
+            UIEvent.OnSkillNotFull -= OnSkillNotFull;
+        }
+
+        private void OnBoosterTriggerDouble()
+        {
+            Debug.Log("Triggering double!");
+            TextPopup textPopup = Instantiate(bigTextPopupPrefab, this.transform, false).GetComponent<TextPopup>();
+            textPopup.textImage.sprite = MainController.Data.sprites.great;
+            textPopup.animator.SetTrigger("Popup");
+        }
+        private void OnBoosterTriggerTriple()
+        {
+            TextPopup textPopup = Instantiate(bigTextPopupPrefab, this.transform, false).GetComponent<TextPopup>();
+            textPopup.textImage.sprite = MainController.Data.sprites.super;
+            textPopup.animator.SetTrigger("Popup");
+        }
+        private void OnBoosterTriggerMulti()
+        {
+            TextPopup textPopup = Instantiate(bigTextPopupPrefab, this.transform, false).GetComponent<TextPopup>();
+            textPopup.textImage.sprite = MainController.Data.sprites.fantastic;
+            textPopup.animator.SetTrigger("Popup");
+        }
+
+        private void OnBoosterTrigger(Vector2 pos, int boosterLevel)
+        {
+            Transform parentTransform = PhotonController.Instance.GameController.transform;
+            TextPopup textPopup = Instantiate(bigTextPopupPrefab, PhotonController.Instance.GameController.transform, false).GetComponent<TextPopup>();
+            textPopup.textImage.sprite = MainController.Data.sprites.GetBoosterSpriteByLevel(boosterLevel);
+            textPopup.transform.localPosition = pos;
+            textPopup.transform.localRotation = parentTransform.localRotation;
+            textPopup.animator.SetTrigger("Popup");
+        }
+
+        private void OnLocalTrapTrigger(Vector2 pos)
+        {
+            Transform parentTransform = PhotonController.Instance.GameController.transform;
+            TextPopup textPopup = Instantiate(bigTextPopupPrefab, PhotonController.Instance.GameController.transform, false).GetComponent<TextPopup>();
+            textPopup.textImage.sprite = MainController.Data.sprites.trapTriggeredOuch;
+            textPopup.transform.localPosition = pos;
+            textPopup.transform.localRotation = parentTransform.localRotation;
+            textPopup.animator.SetTrigger("Popup");
+        }
+
+        private void OnOpponentTrapTrigger(Vector2 pos)
+        {
+            Transform parentTransform = PhotonController.Instance.GameController.transform;
+            TextPopup textPopup = Instantiate(bigTextPopupPrefab, PhotonController.Instance.GameController.transform, false).GetComponent<TextPopup>();
+            textPopup.textImage.sprite = MainController.Data.sprites.trapTriggered;
+            textPopup.transform.localPosition = pos;
+            textPopup.transform.localRotation = parentTransform.localRotation;
+            textPopup.animator.SetTrigger("Popup");
+        }
+
+        private void OnOpponentTrapPlaced()
+        {
+            TextPopup textPopup = Instantiate(bigTextPopupPrefab, this.transform, false).GetComponent<TextPopup>();
+            textPopup.textImage.sprite = MainController.Data.sprites.opponentPlacedTrap;
+            textPopup.animator.SetTrigger("Popup");
+        }
+
+        private void OnSkillNotFull(SkillColor color)
+        {
+            Vector2 pos = PhotonController.Instance.GameController.MyPlayer.playerInterface.GetSkillButtonBySkillColor(color).textPopupTransform.position;
+            TextPopup textPopup = Instantiate(smallTextPopupPrefab, this.transform, false).GetComponent<TextPopup>();
+            textPopup.textImage.sprite = MainController.Data.sprites.notFull;
+            textPopup.transform.position = pos;
+            textPopup.animator.SetTrigger("Popup");
+        }
+
+        private void OnTurnChange(bool localPlayer)
+        {
+            TextPopup textPopup = Instantiate(bigTextPopupPrefab, this.transform, false).GetComponent<TextPopup>();
+            textPopup.textImage.sprite = localPlayer ? MainController.Data.sprites.localTurn : MainController.Data.sprites.opponentTurn;
+            textPopup.animator.SetTrigger("Popup");
+        }
+
+        private void OnShield(bool localPlayer)
+        {
+            Vector2 pos = localPlayer ? localAvatarTop.position : remoteAvatarBot.position;
+            TextPopup textPopup = Instantiate(bigTextPopupPrefab, this.transform, false).GetComponent<TextPopup>();
+            textPopup.transform.position = pos;
+            textPopup.textImage.sprite = MainController.Data.sprites.shieldActivated;
+            textPopup.animator.SetTrigger("Popup");
+        }
+        private void OnHeal(bool localPlayer)
+        {
+            Vector2 pos = localPlayer ? localAvatarTop.position : remoteAvatarBot.position;
+            TextPopup textPopup = Instantiate(bigTextPopupPrefab, this.transform, false).GetComponent<TextPopup>();
+            textPopup.transform.position = pos;
+            textPopup.textImage.sprite = MainController.Data.sprites.healed;
+            textPopup.animator.SetTrigger("Popup");
         }
 
         void OnFingerDown(LeanFinger finger)

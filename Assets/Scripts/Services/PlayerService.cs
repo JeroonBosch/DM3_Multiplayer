@@ -120,6 +120,7 @@ namespace Com.Hypester.DM3
             public int wheelEnabled;
             public string chk;
             public string sid;
+            public string error;
         }
 
         // PING

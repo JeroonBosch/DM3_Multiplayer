@@ -50,7 +50,7 @@ namespace Com.Hypester.DM3
                 Debug.Log("Loading match-making. MaxPlayers(" + PhotonNetwork.room.MaxPlayers + ")");
             }
 
-            if (_connect && !PhotonNetwork.connected && !PhotonNetwork.connecting) { PhotonNetwork.ConnectUsingSettings("v0.2"); }
+            if (_connect && !PhotonNetwork.connected && !PhotonNetwork.connecting) { Debug.LogError("Ensuring connection"); PhotonNetwork.ConnectUsingSettings("v0.2"); }
         }
 
         private GameHandler GetGameController ()
@@ -141,7 +141,7 @@ namespace Com.Hypester.DM3
         {
             base.OnConnectedToPhoton();
 
-            Debug.Log("OnConnectedToPhoton");
+            Debug.LogError("OnConnectedToPhoton");
 
             NetworkEvent.ConnectedToPhoton();
         }

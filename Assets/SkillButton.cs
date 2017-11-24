@@ -7,6 +7,7 @@ namespace Com.Hypester.DM3
 {
     public class SkillButton : MonoBehaviour {
 
+        public Transform textPopupTransform;
         public SkillColor skillColor;
         public Wiggle wiggle;
 
