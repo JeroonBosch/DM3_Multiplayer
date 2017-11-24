@@ -166,6 +166,29 @@ namespace Com.Hypester.DM3
             List<TileView> toDestroy = new List<TileView>();
 
             if (_boosterLevel == 1) {
+
+                bool oddx = position.x % 2 != 0;
+
+                float posBotY = oddx ? position.y : (position.y+1);
+                float posTopY = oddx ? position.y-1 : position.y;
+
+                // Bottom
+                Debug.Log("posBotY" + posBotY);
+                TileView tileBottomLeft = grid.TileViewAtPos(new Vector2(position.x+1, posBotY));
+                if (tileBottomLeft != null && Exists(tileBottomLeft.position.x, tileBottomLeft.position.y) && !toDestroy.Contains(tileBottomLeft)) { toDestroy.Add(tileBottomLeft); }
+                TileView tileBottomRight = grid.TileViewAtPos(new Vector2(position.x - 1, posBotY));
+                if (tileBottomRight != null && Exists(tileBottomRight.position.x, tileBottomRight.position.y) && !toDestroy.Contains(tileBottomRight)) { toDestroy.Add(tileBottomRight); }
+
+                // Top
+                Debug.Log("posTopY" + posTopY);
+                TileView tileTopLeft = grid.TileViewAtPos(new Vector2(position.x+1, posTopY));
+                if (tileTopLeft != null && Exists(tileTopLeft.position.x, tileTopLeft.position.y) && !toDestroy.Contains(tileTopLeft)) { toDestroy.Add(tileTopLeft); }
+                TileView tileTopRight = grid.TileViewAtPos(new Vector2(position.x-1, posTopY));
+                if (tileTopRight != null && Exists(tileTopRight.position.x, tileTopRight.position.y) && !toDestroy.Contains(tileTopRight)) { toDestroy.Add(tileTopRight); }
+                
+            }
+            else if (_boosterLevel == 2)
+            {
                 List<TileView> adjacentInRadius = grid.FindAdjacentTiles(position, radius);
                 foreach (TileView tile in adjacentInRadius)
                 {
@@ -173,9 +196,7 @@ namespace Com.Hypester.DM3
                         if (!toDestroy.Contains(tile) && !(tile.position.x == position.x && tile.position.y == position.y))
                             toDestroy.Add(tile);
                 }
-            }
-            else if (_boosterLevel == 2)
-            {
+                /*
                 List<Vector2> positions = new List<Vector2>();
                 for (int i = -Constants.BoosterLevel2Vertical; i < (Constants.BoosterLevel2Vertical + 1); i++) //Vertical
                 {
@@ -212,6 +233,7 @@ namespace Com.Hypester.DM3
                     if (baseTile)// && !baseTile.isBeingDestroyed)
                         toDestroy.Add(baseTile);
                 }
+                */
             }
             else if (_boosterLevel == 3)
             {
@@ -239,7 +261,7 @@ namespace Com.Hypester.DM3
                 float diag1Start = Mathf.Floor((position.y + position.x * 0.5f) - 0.5f * oddx);
                 for (int i = 0; i < Constants.gridXsize; i++) //Diag.1 direction: \ topleft to bottomright
                 {
-                    if (Mathf.Abs(i - position.x) > Constants.BoosterLevel2Vertical) { continue; }
+                    if (Mathf.Abs(i - position.x) > 1) { continue; } // used to control the range of the diagonal
                     float px = i;
                     float py = Mathf.Floor(diag1Start + 0.5f - i * 0.5f);
                     if (Exists(px, py))
@@ -248,13 +270,12 @@ namespace Com.Hypester.DM3
                 float diag2Start = Mathf.Floor((position.y - position.x * 0.5f) - 0.5f * oddx);
                 for (int i = 0; i < Constants.gridXsize; i++) //Diag.2 direction: / bottomleft to topright
                 {
-                    if (Mathf.Abs(i - position.x) > Constants.BoosterLevel2Vertical) { continue; }
+                    if (Mathf.Abs(i - position.x) > 1) { continue; } // used to control the range of the diagonal
                     float px = i;
                     float py = Mathf.Floor(diag2Start + 0.5f + i * 0.5f);
                     if (Exists(px, py))
                         positions.Add(new Vector2(px, py));
                 }
-
 
                 for (int i = 0; i < positions.Count; i++)
                 {
@@ -262,6 +283,13 @@ namespace Com.Hypester.DM3
                     if (baseTile)// && !baseTile.isBeingDestroyed)
                         toDestroy.Add(baseTile);
                 }
+
+                TileView leftMostTile = grid.TileViewAtPos(new Vector2(position.x + 2, position.y));
+                if (leftMostTile != null && Exists(leftMostTile.position.x, leftMostTile.position.y) && !toDestroy.Contains(leftMostTile)) { toDestroy.Add(leftMostTile); }
+                TileView rightMostTile = grid.TileViewAtPos(new Vector2(position.x - 2, position.y));
+                if (rightMostTile != null && Exists(rightMostTile.position.x, rightMostTile.position.y) && !toDestroy.Contains(rightMostTile)) { toDestroy.Add(rightMostTile); }
+
+                /*
 
                 float newRadius = Mathf.Max(2f, radius);
                 List<TileView> adjacentInRadius = grid.FindAdjacentTiles(new Vector2(position.x, position.y), newRadius);
@@ -271,6 +299,8 @@ namespace Com.Hypester.DM3
                         if (!toDestroy.Contains(tile) && !(tile.position.x == position.x && tile.position.y == position.y))
                             toDestroy.Add(tile);
                 }
+
+                */
             }
 
             return toDestroy;

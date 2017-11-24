@@ -996,6 +996,7 @@ namespace Com.Hypester.DM3
                     if (baseTile.boosterLevel > 0)
                     {
                         // if (baseTile.boosterLevel < 4) { if (!boostedTiles.ContainsKey(baseTile.position)) { boosterCount++; Debug.Log("Adding to booster count"); } }
+                        Debug.Log("baseTile.boosterLevel > 0");
                         List<TileView> indivCollateral = baseTile.ListCollateralDamage(this, 1f);
                         foreach (TileView colTile in indivCollateral)
                         {

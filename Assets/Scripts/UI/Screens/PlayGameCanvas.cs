@@ -215,6 +215,13 @@ namespace Com.Hypester.DM3
             TextPopup textPopup = Instantiate(bigTextPopupPrefab, this.transform, false).GetComponent<TextPopup>();
             textPopup.textImage.sprite = localPlayer ? MainController.Data.sprites.localTurn : MainController.Data.sprites.opponentTurn;
             textPopup.animator.SetTrigger("Popup");
+
+            PlayerInterface playerInterface = localPlayer ? PhotonController.Instance.GameController.MyPlayer.playerInterface : PhotonController.Instance.GameController.EnemyPlayer.playerInterface;
+            if (playerInterface != null)
+            {
+                playerInterface.avatarImageAnimator.SetTrigger("Wobble");
+                playerInterface.avatarBorderAnimator.SetTrigger("Wobble");
+            }
         }
 
         private void OnShield(bool localPlayer)
@@ -267,7 +274,7 @@ namespace Com.Hypester.DM3
                             if (TileView.areaList.Count > 2)
                             {
                                 startingTile = tv;
-                                _selectedTiles.Add(tv.position, tv);
+                                if (!_selectedTiles.ContainsKey(tv.position)) { _selectedTiles.Add(tv.position, tv); }
                                 foreach (TileView t in TileView.areaList)
                                 {
                                     if (!_selectedTiles.ContainsKey(t.position)) { _selectedTiles.Add(t.position, t); } // TODO: The key should not be in there. Optimize this.

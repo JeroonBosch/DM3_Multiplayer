@@ -15,7 +15,7 @@
         public const int RedPowerReq = 9;
         public const int YellowPowerReq = 12;
 
-        public const float BoosterCollateralDamage = 3f;
+        public const float BoosterCollateralDamage = 5f;
         public const int HealPower = 75;
         public const int FireballPower = 90;
 

@@ -13,6 +13,9 @@ namespace Com.Hypester.DM3
         //public string avatarString;
         public GameObject shieldEffect;
 
+        public Animator avatarImageAnimator;
+        public Animator avatarBorderAnimator;
+
         public Image playerAvatarImage;
         public Image playerBorderImage;
         public GameObject avatarGameObject;

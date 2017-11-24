@@ -78,7 +78,7 @@ namespace Com.Hypester.DM3
                 Vector2 p1 = new Vector2(_startPosition.x + 1.5f * _randomDirection, _startPosition.y);
                 Vector2 p2 = new Vector2(_endPosition.x + 1.5f * _randomDirection, _endPosition.y);
                 Vector3 p3 = _endPosition;
-                _rt.position = CalculateBezierPoint(t, p0, p1, p2, p3);
+                if (_rt != null) { _rt.position = CalculateBezierPoint(t, p0, p1, p2, p3); } // TODO: this is null in rare cases
             }
         }
 
