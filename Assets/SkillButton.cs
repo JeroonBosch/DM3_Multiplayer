@@ -1,12 +1,11 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 namespace Com.Hypester.DM3
 {
     public class SkillButton : MonoBehaviour {
 
+        public Animator animator;
         public Transform textPopupTransform;
         public SkillColor skillColor;
         public Wiggle wiggle;

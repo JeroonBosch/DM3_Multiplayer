@@ -93,7 +93,8 @@ namespace Com.Hypester.DM3
         {
             _damageApplied = true;
 
-            _targetPlayer.FindInterface().AnimateHealth(); 
+            _targetPlayer.playerInterface.AnimateHealth();
+            _targetPlayer.playerInterface.AnimateAvatar();
 
             if (GameObject.FindGameObjectsWithTag("ReceiveDamageEffect").Length < 15) { 
                 GameObject explosion = Instantiate(Resources.Load("ParticleEffects/PlayerReceiveDamage")) as GameObject;

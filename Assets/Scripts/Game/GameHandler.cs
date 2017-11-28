@@ -923,7 +923,7 @@ namespace Com.Hypester.DM3
 
                         float damage = (_selectedTiles.Count * 5) + _collateralTiles.Count * Constants.BoosterCollateralDamage;
                         float calculatedDamage = targetPlayerHealth - damage;
-                        player.FindInterface().SetHitpoints(calculatedDamage);
+                        player.playerInterface.SetHitpoints(calculatedDamage);
                     }
                 }
             }
@@ -948,8 +948,8 @@ namespace Com.Hypester.DM3
         public void RPC_InitiateCombo(Vector2 startingPos)
         {
             bool trapped = false;
-            //Both host and client execute this command.
-            if (IsGameRelevant())
+            
+            if (IsGameRelevant()) //Both host and client execute this if statement.
             {
                 Player targetPlayer = GetNextPlayer(_curPlayer);
                 if (targetPlayer.localID == 0)
@@ -957,8 +957,6 @@ namespace Com.Hypester.DM3
                 else
                     targetPlayer.playerInterface.SetHitpoints(healthPlayerTwo);
 
-
-                trapped = false;
                 List<Vector2> trapPos = new List<Vector2>();
                 foreach (KeyValuePair<Vector2, TileView> kvp in _selectedTiles)
                 {
@@ -985,12 +983,12 @@ namespace Com.Hypester.DM3
                 }
 
                 // int boosterCount = 0;
+                //Dictionary<Vector2, TileView> boostedTiles = new Dictionary<Vector2, TileView>();
                 int count = 0;
                 int highestCount = 0;
-                Dictionary<Vector2, TileView> boostedTiles = new Dictionary<Vector2, TileView>();
                 foreach (KeyValuePair<Vector2, TileView> kvp in _selectedTiles)
                 {
-                    CreateTileAttackPlayerEffect(kvp.Key, count, trapped);
+                    CreateTileAttackPlayerEffect(kvp.Key, count, false, trapped);
                     TileView baseTile = TileViewAtPos(kvp.Key);
 
                     if (baseTile.boosterLevel > 0)
@@ -1009,7 +1007,6 @@ namespace Com.Hypester.DM3
                     }
 
                     count++;
-
                     if (count > highestCount)
                         highestCount = count;
                 }
@@ -1067,14 +1064,9 @@ namespace Com.Hypester.DM3
             TileView.areaList.Clear();
         }
 
-        private void CreateTileAttackPlayerEffect(Vector2 pos, int count, bool trapped)
-        {
-            CreateTileAttackPlayerEffect(pos, count, false, trapped);
-        }
-
         private void CreateTileAttackPlayerEffect(Vector2 pos, int count, bool collateral, bool trapped)
         {
-            GameObject go = Instantiate(tileDebrisPrefab);
+            
             Player targetPlayer = null;
             foreach (Player player in PlayerManager.instance.GetAllPlayers().Values)
             {
@@ -1085,6 +1077,10 @@ namespace Com.Hypester.DM3
             }
 
             TileView baseTile = TileViewAtPos(pos);
+
+            if (targetPlayer == null || baseTile == null) { Debug.LogWarning("Could not find player(" + (targetPlayer == null).ToString() + ") or tile(" + (baseTile == null).ToString() + ")"); }
+
+            GameObject go = Instantiate(tileDebrisPrefab);
             go.transform.position = baseTile.transform.position;
             go.GetComponent<TileExplosion>().Init(targetPlayer, count, baseTile.HexSprite(TileTypes.EColor.yellow + baseTile.color));
 
@@ -1212,8 +1208,8 @@ namespace Com.Hypester.DM3
                     photonView.RPC("RPC_ShieldMessage", PhotonTargets.All, 0, damage);
                 }
 
-                GetPlayerByID(playerNumber).FindInterface().SetHitpoints(healthPlayerOne);
-                GetPlayerByID(playerNumber).FindInterface().UpdateShadowhealth(healthPlayerOne);
+                GetPlayerByID(playerNumber).playerInterface.SetHitpoints(healthPlayerOne);
+                GetPlayerByID(playerNumber).playerInterface.UpdateShadowhealth(healthPlayerOne);
                 photonView.RPC("RPC_UpdateHealth", PhotonTargets.Others, playerNumber, healthPlayerOne);
             }
             else
@@ -1230,8 +1226,8 @@ namespace Com.Hypester.DM3
                     photonView.RPC("RPC_ShieldMessage", PhotonTargets.All, 1, damage);
                 }
 
-                GetPlayerByID(playerNumber).FindInterface().SetHitpoints(healthPlayerTwo);
-                GetPlayerByID(playerNumber).FindInterface().UpdateShadowhealth(healthPlayerTwo);
+                GetPlayerByID(playerNumber).playerInterface.SetHitpoints(healthPlayerTwo);
+                GetPlayerByID(playerNumber).playerInterface.UpdateShadowhealth(healthPlayerTwo);
                 photonView.RPC("RPC_UpdateHealth", PhotonTargets.Others, playerNumber, healthPlayerTwo);
             }
 
@@ -1249,8 +1245,8 @@ namespace Com.Hypester.DM3
         {
             if (IsGameRelevant())
             {
-                GetPlayerByID(playerNumber).FindInterface().SetHitpoints(hitpoints);
-                GetPlayerByID(playerNumber).FindInterface().UpdateShadowhealth(hitpoints);
+                GetPlayerByID(playerNumber).playerInterface.SetHitpoints(hitpoints);
+                GetPlayerByID(playerNumber).playerInterface.UpdateShadowhealth(hitpoints);
             }
         }
 
@@ -1435,6 +1431,8 @@ namespace Com.Hypester.DM3
             fireball.name = "Fireball" + fireballOwner.localID;
             fireball.transform.position = startingPos;
             fireball.target = enemyAvatarTransform;
+
+            fireball.Init();
         }
 
         [PunRPC]
@@ -1509,13 +1507,13 @@ namespace Com.Hypester.DM3
 
                 if (MyPlayer.localID == 0)
                 {
-                    MyPlayer.FindInterface().UpdateShadowhealth(healthPlayerOne);
-                    EnemyPlayer.FindInterface().UpdateShadowhealth(healthPlayerTwo);
+                    MyPlayer.playerInterface.UpdateShadowhealth(healthPlayerOne);
+                    EnemyPlayer.playerInterface.UpdateShadowhealth(healthPlayerTwo);
                 }
                 else
                 {
-                    MyPlayer.FindInterface().UpdateShadowhealth(healthPlayerTwo);
-                    EnemyPlayer.FindInterface().UpdateShadowhealth(healthPlayerOne);
+                    MyPlayer.playerInterface.UpdateShadowhealth(healthPlayerTwo);
+                    EnemyPlayer.playerInterface.UpdateShadowhealth(healthPlayerOne);
                 }
             }
         }

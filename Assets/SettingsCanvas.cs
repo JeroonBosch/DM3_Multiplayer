@@ -38,7 +38,7 @@ namespace Com.Hypester.DM3
 
         public void SignOutFromFacebook()
         {
-            // TODO: Sign out from facebook
+            MainController.ServicePlayer.Logout();
         }
 
         public void PreviousScreen()

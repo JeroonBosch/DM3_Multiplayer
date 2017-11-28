@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections;
+using Facebook.Unity;
 
 namespace Com.Hypester.DM3
 {
@@ -38,8 +39,15 @@ namespace Com.Hypester.DM3
             AsyncServerRequest(URL_LOGIN, parameters, requestCallback, 3, true);
         }
 		public void Logout() {
-			NetworkService.DestroySession ();
+            /*
+            if (MainController.settingsService.lastLoginType == LoginType.FACEBOOK) // For logout from the Facebook session we don't remove the session data, a player continues a game with the mobile_id.
+            {
+                FB.LogOut();
+            }
+            NetworkService.DestroySession ();
+            */
 		}
+
         public void Ping(Delegates.ServiceCallback<PingRequestObject> pingCallback)
         {
             AsyncServerRequest<PingRequestObject>(URL_PING, null, (success, message, result) =>

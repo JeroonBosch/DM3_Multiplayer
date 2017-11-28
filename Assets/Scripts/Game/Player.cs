@@ -160,19 +160,6 @@ namespace Com.Hypester.DM3
             img.sprite = Sprite.Create(www.texture, new Rect(0, 0, www.texture.width, www.texture.height), new Vector2(0, 0));
         }
 
-        public PlayerInterface FindInterface ()
-        {
-            PlayerInterface playerInterface = null;
-
-            foreach (PlayerInterface tryInterface in FindObjectsOfType<PlayerInterface>())
-            {
-                if ((photonView.isMine && tryInterface.owner == PlayerInterface.Owner.Local) || (!photonView.isMine && tryInterface.owner == PlayerInterface.Owner.Remote))
-                    return tryInterface;
-            }
-
-            return playerInterface;
-        }
-
         public float GetHealth ()
         {
             if (localID == 0)

@@ -19,6 +19,7 @@ namespace Com.Hypester.DM3
         public Image playerAvatarImage;
         public Image playerBorderImage;
         public GameObject avatarGameObject;
+        [SerializeField] Text playerNameText;
         [SerializeField] GameObject _health;
         [SerializeField] GameObject _shadowHealth;
         [SerializeField] GameObject _timer;
@@ -42,6 +43,7 @@ namespace Com.Hypester.DM3
                     MainController.ServiceAsset.StartCoroutine(MainController.ServiceAsset.ImageFromURL(localPlayer.GetPlayerId(), localPlayer.profilePicURL, OnLoadPlayerProfileImage));
                 }
                 if (!string.IsNullOrEmpty(localPlayer.avatarBorderSyscode)) { playerBorderImage.sprite = MainController.Data.sprites.GetAvatarBorderEntry(localPlayer.avatarBorderSyscode).normal; }
+                if (!string.IsNullOrEmpty(localPlayer.profileName)) { playerNameText.text = localPlayer.profileName; }
             }
             else {
                 localPlayer.opponent.playerInterface = this;
@@ -52,6 +54,7 @@ namespace Com.Hypester.DM3
                     MainController.ServiceAsset.StartCoroutine(MainController.ServiceAsset.ImageFromURL(localPlayer.opponent.GetPlayerId(), localPlayer.opponent.profilePicURL, OnLoadPlayerProfileImage));
                 }
                 if (!string.IsNullOrEmpty(localPlayer.opponent.avatarBorderSyscode)) { playerBorderImage.sprite = MainController.Data.sprites.GetAvatarBorderEntry(localPlayer.opponent.avatarBorderSyscode).normal; }
+                if (!string.IsNullOrEmpty(localPlayer.opponent.profileName)) { playerNameText.text = localPlayer.opponent.profileName; }
             }
         }
 
@@ -152,6 +155,16 @@ namespace Com.Hypester.DM3
                     _animateHealth = true;
             }
                 
+        }
+        public void AnimateAvatar()
+        {
+            avatarBorderAnimator.SetTrigger("WobbleRotation");
+            avatarImageAnimator.SetTrigger("WobbleRotation");
+        }
+
+        public void AnimateSkillButton(SkillColor color)
+        {
+            GetSkillButtonBySkillColor(color).animator.SetTrigger("SmallPop");
         }
 
         public GameObject GetTimer()

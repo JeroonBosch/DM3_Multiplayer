@@ -19,11 +19,12 @@ namespace Com.Hypester.DM3
         private float _travellingFor = 0f;
         private float _randomDirection;
 
-        //private bool _damageApplied = false;
+        private bool _damageApplied = false;
         private int _count = 1;
         private float _timeToDelay;
         private float _delayTimer;
         private bool _playing = false;
+        private SkillColor skillColor;
         private Color _color;
 
         public void Init(Player targetPlayer, int count, int color)
@@ -32,7 +33,7 @@ namespace Com.Hypester.DM3
             GameObject powerObject = null;
             _targetPlayer = targetPlayer;
 
-            SkillColor skillColor = ColorUtility.IntToSkillColor(color);
+            skillColor = ColorUtility.IntToSkillColor(color);
             PlayerInterface targetPlayerInterface = targetPlayer.playerInterface;
             powerObject = targetPlayerInterface.GetSkillButtonBySkillColor(skillColor).gameObject;
             _color = ColorUtility.GetUnityColorBySkillColor(skillColor);
@@ -51,11 +52,11 @@ namespace Com.Hypester.DM3
             Destroy(gameObject, _travelTime + _timeToDelay);
         }
 
-        /*private void OnDestroy()
+        private void OnDestroy()
         {
             if (!_damageApplied)
                 ApplyDamage();
-        }*/
+        }
 
         // Update is called once per frame
         private void Update()
@@ -99,17 +100,11 @@ namespace Com.Hypester.DM3
             return p;
         }
 
-        /*private void ApplyDamage()
+        private void ApplyDamage()
         {
             _damageApplied = true;
 
-            if (GameObject.FindGameObjectsWithTag("ReceiveDamageEffect").Length < 15) { 
-                GameObject explosion = Instantiate(Resources.Load("ParticleEffects/PlayerReceiveDamage")) as GameObject;
-
-                float randomX = Random.Range(-.5f, .5f);
-                float randomY = Random.Range(-.5f, .5f);
-                explosion.transform.position = new Vector2 (_endPosition.x + randomX, _endPosition.y + randomY);
-            }
-        }*/
+            _targetPlayer.playerInterface.AnimateSkillButton(skillColor);
+        }
     }
 }
