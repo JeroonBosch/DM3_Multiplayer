@@ -13,9 +13,9 @@ namespace Com.Hypester.DM3
         private float _travelTime = 1.2f;
         private float _randomDirection;
         bool isInited = false;
+        bool reachedDestination = false;
 
-
-        // private float _speed = 12f;
+        private float _speed = 20f;
         int targetRetries = 20;
 
         public void Init()
@@ -33,6 +33,7 @@ namespace Com.Hypester.DM3
 
         private void MoveTowardsTarget()
         {
+            if (reachedDestination) { return; }
             if (target == null) { Debug.LogWarning("Target is null."); targetRetries -= 1; if (targetRetries < 0) { Destroy(gameObject); } }
 
             targetRetries = 10;
@@ -48,11 +49,9 @@ namespace Com.Hypester.DM3
             Vector3 p3 = _endPosition;
             transform.position = CalculateBezierPoint(t, p0, p1, p2, p3);
 
-            // float step = _speed * Time.deltaTime;
-            // transform.position = Vector3.MoveTowards(transform.position, target.position, step);
-
-            if (Vector3.Distance(transform.position, target.transform.position) <= 0.05f)
+            if (Vector3.Distance(transform.position, _endPosition) <= 0.1f || _travellingFor >= _travelTime)
             {
+                reachedDestination = true;
                 ownerPlayer.opponent.playerInterface.AnimateAvatar();
                 Debug.Log("Fireball reached the target!");
                 if (PhotonNetwork.isMasterClient)
