@@ -123,7 +123,7 @@ namespace Com.Hypester.DM3
         }
         public SkillButton GetSkillButtonBySkillColor(SkillColor skillColor)
         {
-            return skillButtonsDict[skillColor];
+            return (skillButtonsDict.ContainsKey(skillColor) ? skillButtonsDict[skillColor] : null);
         }
 
         public void SetHitpoints(float hitpoints)

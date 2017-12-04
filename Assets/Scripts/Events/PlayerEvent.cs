@@ -27,7 +27,15 @@ namespace Com.Hypester.DM3
 
         public static event StatAction OnCoinAmountChange;
         public static event StatAction OnTrophyAmountChange;
-        public static event StatAction OnXpAmountChange;
+        public static event StatAction OnXPLevelChange;
+        public static event StatAction OnXPLevelGainChange;
+        public static event StatAction OnXPLevelGainCurrentChange;
+        public static event StatAction OnMatchesTotalChange;
+        public static event StatAction OnMatchesWinsChange;
+        public static event StatAction OnTournamentGamesChange;
+        public static event StatAction OnTournamentWinsChange;
+        public static event StatAction OnTotalWinningsChange;
+        public static event StatAction OnWeeklyRankChange;
         public static event StatAction OnUnspentSkillPointAmountChange;
 
         public static event SkillStatAction OnSkillLevelChange;
@@ -44,6 +52,7 @@ namespace Com.Hypester.DM3
         {
             if (OnProfileNameChange != null) OnProfileNameChange(value);
         }
+
         public static void CoinAmountChange(int amount)
         {
             if (OnCoinAmountChange != null) OnCoinAmountChange(amount);
@@ -52,9 +61,42 @@ namespace Com.Hypester.DM3
         {
             if (OnTrophyAmountChange != null) OnTrophyAmountChange(amount);
         }
-        public static void XpAmountChange(int amount)
+        public static void MatchesTotalChange(int amount)
         {
-            if (OnXpAmountChange != null) OnXpAmountChange(amount);
+            if (OnMatchesTotalChange != null) OnMatchesTotalChange(amount);
+        }
+        public static void MatchesWinsChange(int amount)
+        {
+            if (OnMatchesWinsChange != null) OnMatchesWinsChange(amount);
+        }
+        public static void TournamentGamesChange(int amount)
+        {
+            if (OnTournamentGamesChange != null) OnTournamentGamesChange(amount);
+        }
+        public static void TournamentWinsChange(int amount)
+        {
+            if (OnTournamentWinsChange != null) OnTournamentWinsChange(amount);
+        }
+        public static void TotalWinningsChange(int amount)
+        {
+            if (OnTotalWinningsChange != null) OnTotalWinningsChange(amount);
+        }
+        public static void WeeklyRankChange(int amount)
+        {
+            if (OnWeeklyRankChange != null) OnWeeklyRankChange(amount);
+        }
+
+        public static void XPLevelChange(int amount)
+        {
+            if (OnXPLevelChange != null) OnXPLevelChange(amount);
+        }
+        public static void XPLevelGainChange(int amount)
+        {
+            if (OnXPLevelGainChange != null) OnXPLevelGainChange(amount);
+        }
+        public static void XPLevelGainCurrentChange(int amount)
+        {
+            if (OnXPLevelGainCurrentChange != null) OnXPLevelGainCurrentChange(amount);
         }
         public static void UnspentSkillPointAmountChange(int amount)
         {

@@ -56,7 +56,7 @@ namespace Com.Hypester.DM3
                     state = State.Locked;
                     ToggleLockIcon(false);
                 }
-                if (MainController.Instance.playerData.xp < requiredXp)
+                if (MainController.Instance.playerData.XPLevel < requiredXp)
                 {
                     state = State.RestrictedByXp;
                     ToggleLockIcon(true);

@@ -290,7 +290,7 @@ namespace Com.Hypester.DM3
             MainController.ServiceAsset.StartCoroutine(MainController.ServiceAsset.ImageFromURL(PhotonNetwork.player.ID, MainController.Instance.playerData.pictureURL, OnLoadLocalPlayerProfileImage));
             SetLocalPlayerAvatarBorder(MainController.Instance.playerData.avatarBorderSyscode);
             SetLocalPlayerName(MainController.Instance.playerData.profileName);
-            SetLocalPlayerXpText(MainController.Instance.playerData.xp.ToString());
+            SetLocalPlayerXpText(MainController.Instance.playerData.XPLevel.ToString());
         }
         private void ResetRemotePlayerData()
         {

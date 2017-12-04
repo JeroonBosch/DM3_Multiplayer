@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace Com.Hypester.DM3
@@ -34,7 +35,15 @@ namespace Com.Hypester.DM3
             PlayerEvent.OnProfileImageChange += OnProfileImageChange;
             PlayerEvent.OnAvatarBorderChange += SetPlayerAvatarBorder;
             PlayerEvent.OnProfileNameChange += SetProfileName;
-            PlayerEvent.OnXpAmountChange += XpAmountChange;
+            PlayerEvent.OnXPLevelChange += XPLevelChange;
+            PlayerEvent.OnXPLevelGainChange += XPLevelGainChange;
+            PlayerEvent.OnXPLevelGainCurrentChange += XPLevelGainCurrentChange;
+            PlayerEvent.OnMatchesTotalChange += OnMatchesTotalChange;
+            PlayerEvent.OnMatchesWinsChange += OnMatchesWinsChange;
+            PlayerEvent.OnTournamentGamesChange += OnTournamentGamesChange;
+            PlayerEvent.OnTournamentWinsChange += OnTournamentWinsChange;
+            PlayerEvent.OnTotalWinningsChange += OnTotalWinningsChange;
+            PlayerEvent.OnWeeklyRankChange += OnWeeklyRankChange;
             PlayerEvent.OnUnspentSkillPointAmountChange += UnspentSkillPointAmountChange;
             PlayerEvent.OnSkillLevelChange += SkillLevelChange;
 
@@ -46,33 +55,73 @@ namespace Com.Hypester.DM3
             PlayerEvent.OnProfileImageChange -= OnProfileImageChange;
             PlayerEvent.OnAvatarBorderChange -= SetPlayerAvatarBorder;
             PlayerEvent.OnProfileNameChange -= SetProfileName;
-            PlayerEvent.OnXpAmountChange -= XpAmountChange;
+            PlayerEvent.OnXPLevelChange -= XPLevelChange;
+            PlayerEvent.OnXPLevelGainChange -= XPLevelGainChange;
+            PlayerEvent.OnXPLevelGainCurrentChange -= XPLevelGainCurrentChange;
+            PlayerEvent.OnMatchesTotalChange -= OnMatchesTotalChange;
+            PlayerEvent.OnMatchesWinsChange -= OnMatchesWinsChange;
+            PlayerEvent.OnTournamentGamesChange -= OnTournamentGamesChange;
+            PlayerEvent.OnTournamentWinsChange -= OnTournamentWinsChange;
+            PlayerEvent.OnTotalWinningsChange -= OnTotalWinningsChange;
+            PlayerEvent.OnWeeklyRankChange -= OnWeeklyRankChange;
             PlayerEvent.OnUnspentSkillPointAmountChange -= UnspentSkillPointAmountChange;
             PlayerEvent.OnSkillLevelChange -= SkillLevelChange;
 
             base.OnDisable();
         }
 
-        void XpAmountChange(int amount)
+        void XPLevelChange(int amount)
         {
             SetPlayerXpLevel(amount);
         }
+        private void XPLevelGainChange(int amount)
+        {
+            SetXpProgress(MainController.Instance.playerData.XPLevelGainCurrent, amount);
+        }
+        private void XPLevelGainCurrentChange(int amount)
+        {
+            SetXpProgress(amount, MainController.Instance.playerData.XPLevelGain);
+        }
+        private void OnMatchesTotalChange(int amount)
+        {
+            if (MainController.Instance != null && MainController.Instance.playerData != null)
+            {
+                SetGamesWonText(MainController.Instance.playerData.MatchesWins, amount);
+            }
+        }
+        private void OnMatchesWinsChange(int amount)
+        {
+            if (MainController.Instance != null && MainController.Instance.playerData != null)
+            {
+                SetGamesWonText(amount, MainController.Instance.playerData.MatchesTotal);
+            }
+        }
+        private void OnTournamentGamesChange(int amount)
+        {
+            if (MainController.Instance != null && MainController.Instance.playerData != null)
+            {
+                SetTournamentsWonText(MainController.Instance.playerData.TournamentWins, amount);
+            }
+        }
+        private void OnTournamentWinsChange(int amount)
+        {
+            if (MainController.Instance != null && MainController.Instance.playerData != null)
+            {
+                SetTournamentsWonText(amount, MainController.Instance.playerData.TournamentGames);
+            }
+        }
+        private void OnTotalWinningsChange(int amount)
+        {
+            SetWinningsText(amount);
+        }
+        private void OnWeeklyRankChange(int amount)
+        {
+            SetRankText(amount);
+        }
+
         void UnspentSkillPointAmountChange(int amount)
         {
             SetPlayerSkillLevel(amount);
-        }
-
-        public override void Show()
-        {
-            base.Show();
-
-            // Receive these values from the server and set them.
-            SetXpProgress(247);
-
-            SetGamesWonText(33, 67);
-            SetTournamentsWonText(12, 24);
-            SetWinningsText(91);
-            SetRankText(7451);
         }
 
         public void OnProfileImageChange(Texture2D newImage)
@@ -101,28 +150,28 @@ namespace Com.Hypester.DM3
         {
             playerUnspentSkillPointText.text = playerSkillLevel.ToString();
         }
-        public void SetXpProgress(int newProgress)
+        public void SetXpProgress(int newProgress, int requiredXp)
         {
-            float requiredProgress = 1000; // TODO: Retrieve this value from server.
-
-            float xValue = (float)newProgress / (float)requiredProgress;
+            if (requiredXp == 0) { return; }
+            float xValue = (float)newProgress / (float)requiredXp;
             Vector3 newScale = new Vector3(xValue, XpProgressBar.localScale.y, XpProgressBar.localScale.z);
             XpProgressBar.localScale = newScale;
 
-            XpProgressText.text = newProgress.ToString() + "/" + requiredProgress.ToString();
+            XpProgressText.text = newProgress.ToString() + "/" + requiredXp.ToString();
         }
 
         public void SetGamesWonText(int wonAmount, int totalAmount)
         {
+            Debug.Log("here");
             gamesWonText.text = "Games won: " + wonAmount.ToString() + " of " + totalAmount.ToString();
         }
         public void SetTournamentsWonText(int wonAmount, int totalAmount)
         {
-            gamesWonText.text = "Tournaments won: " + wonAmount.ToString() + " of " + totalAmount.ToString();
+            tournamentsWonText.text = "Tournaments won: " + wonAmount.ToString() + " of " + totalAmount.ToString();
         }
         public void SetWinningsText(int totalAmount)
         {
-            gamesWonText.text = "Total winnings: " + totalAmount.ToString();
+            winningsText.text = "Total winnings: " + totalAmount.ToString();
         }
         public void SetRankText(int rank)
         {

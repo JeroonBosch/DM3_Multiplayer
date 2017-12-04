@@ -29,7 +29,7 @@ namespace Com.Hypester.DM3
 
         protected override void OnEnable()
         {
-            PlayerEvent.OnXpAmountChange += XpAmountChange;
+            PlayerEvent.OnXPLevelChange += XpAmountChange;
             PlayerEvent.OnUnspentSkillPointAmountChange += UnspentSkillPointAmountChange;
             PlayerEvent.OnSkillLevelChange += SkillLevelChange;
 
@@ -39,7 +39,7 @@ namespace Com.Hypester.DM3
         protected override void OnDisable()
         {
             PlayerEvent.OnCoinAmountChange += CoinAmountChange;
-            PlayerEvent.OnXpAmountChange -= XpAmountChange;
+            PlayerEvent.OnXPLevelChange -= XpAmountChange;
             PlayerEvent.OnUnspentSkillPointAmountChange -= UnspentSkillPointAmountChange;
             PlayerEvent.OnSkillLevelChange -= SkillLevelChange;
 
@@ -100,7 +100,8 @@ namespace Com.Hypester.DM3
         {
             base.Show();
 
-            MainController.ServiceEconomy.LoadShop(OnShopLoaded);
+            InitializeSkills();
+            // MainController.ServiceEconomy.LoadShop(OnShopLoaded);
 
             /*
             blueSkills.Add(new SkillLevelInfo("Blue (shield)", "blue", "10% Less blue required to activate", 1, 500, 10, 2, new List<float>() { 1, 1 }));
@@ -217,6 +218,66 @@ namespace Com.Hypester.DM3
             */
         }
 
+        private void InitializeSkills()
+        {
+            PlayerData playerData = MainController.Instance.playerData;
+
+            foreach (PlayerService.Skill skill in MainController.Data.temporary.skills)
+            {
+                if (skill.levels == null || skill.levels.Count <= 0) { Debug.LogError("No level information for " + skill.name); continue; }
+
+                GameObject skillList = Instantiate(skillLevelListPrefab, this.transform, false);
+                skillList.name = skill.syscode + "List";
+                Transform contentTransform = skillList.GetComponentInChildren<VerticalLayoutGroup>().transform;
+
+                foreach (PlayerService.Level skillLevel in skill.levels)
+                {
+                    SkillLevelEntry sle = Instantiate(skillLevelEntryPrefab, contentTransform, false).GetComponent<SkillLevelEntry>();
+
+                    sle.syscode = skill.syscode;
+                    sle.description = skillLevel.description;
+                    sle.level = skillLevel.level;
+                    sle.coinCost = int.Parse(skillLevel.coins);
+                    sle.skillCost = int.Parse(skillLevel.skills);
+                    sle.requiredXp = int.Parse(skillLevel.xp);
+
+                    sle.SetLevelText("Level " + skillLevel.level.ToString());
+                    sle.SetDescription(skillLevel.description);
+                    sle.SetLevelImage(MainController.Data.sprites.GetSkillSprite(skill.syscode, skillLevel.level - 1));
+                    if (playerData.GetSkillLevel(skill.syscode) >= skillLevel.level) // Player has unlocked this already.
+                    {
+                        sle.UnlockSkill();
+                        sle.state = SkillLevelEntry.State.Unlocked;
+                    }
+                    else
+                    {
+                        sle.SetCoinCost(int.Parse(skillLevel.coins));
+                        sle.SetSkillCost(int.Parse(skillLevel.skills));
+                        if (playerData.XPLevel < int.Parse(skillLevel.xp)) // Restricted for player due to xp requirement.
+                        {
+                            sle.ToggleLockIcon(true);
+                            // sle.ToggleXpRequirementText(true, int.Parse(skillLevel.xp));
+                            sle.state = SkillLevelEntry.State.RestrictedByXp;
+                        }
+                        else if (playerData.GetSkillLevel(skill.syscode) < skillLevel.level - 1)
+                        {
+                            sle.ToggleLockIcon(true);
+                            sle.ToggleXpRequirementText(false, 0);
+                            sle.state = SkillLevelEntry.State.RestrictedByPrevious;
+                        }
+                        else
+                        {
+                            sle.state = SkillLevelEntry.State.Locked;
+                        }
+                    }
+                }
+                skillLevelLists.Add(skill.syscode, skillList);
+                skillList.SetActive(false);
+            }
+
+            SelectSkill("blue");
+        }
+
         private void OnShopLoaded(bool isSuccess, string errorMessage, EconomyService.ShopRequestObject shop)
         {
             // TODO: error popup events
@@ -274,7 +335,7 @@ namespace Com.Hypester.DM3
                     {
                         sle.SetCoinCost(int.Parse(skillLevel.coins));
                         sle.SetSkillCost(int.Parse(skillLevel.skills));
-                        if (playerData.xp < int.Parse(skillLevel.xp)) // Restricted for player due to xp requirement.
+                        if (playerData.XPLevel < int.Parse(skillLevel.xp)) // Restricted for player due to xp requirement.
                         {
                             sle.ToggleLockIcon(true);
                             // sle.ToggleXpRequirementText(true, int.Parse(skillLevel.xp));

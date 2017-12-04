@@ -205,6 +205,7 @@ namespace Com.Hypester.DM3
         void PlayerLogin(LoginType loginType, PlayerService.LoginRequestObject loginObject)
         {
             Data.temporary.stages = loginObject.stages;
+            Data.temporary.skills = loginObject.skills;
 
             List<PlayerStatsInfo> randomPsi = new List<PlayerStatsInfo>();
             PlayerStatsInfo psi1 = new PlayerStatsInfo(Random.Range(1, 4), Random.Range(10, 3000), Random.Range(1, 30), Random.Range(0, 2), Random.Range(0, 2), Random.Range(0, 2), Random.Range(0, 2));
@@ -227,12 +228,27 @@ namespace Com.Hypester.DM3
             if (loginObject.user != null) { playerData.SetProfileName(loginObject.user.first_name); }
             playerData.SetUserId(loginObject.user_id);
             playerData.SetCoins(loginObject.coins);
-            playerData.SetXp(loginObject.XPlevel);
+            playerData.SetXPLevel(loginObject.XPlevel);
+            playerData.SetXPLevelGain(loginObject.XPlevelGain);
+            playerData.SetXPLevelGainCurrent(loginObject.XPlevelGainCurrent);
             playerData.SetUnspentSkill(loginObject.skillPoints);
-            playerData.SetSkillLevel("blue", psi.bluePowerLevel);
-            playerData.SetSkillLevel("green", psi.greenPowerLevel);
-            playerData.SetSkillLevel("red", psi.redPowerLevel);
-            playerData.SetSkillLevel("yellow", psi.yellowPowerLevel);
+
+            if (loginObject.skills != null && loginObject.skills.Count > 0)
+            {
+                PlayerService.Skill blueSkill = loginObject.skills.Where(s => s.syscode == "blue").FirstOrDefault(); if (blueSkill != null) { playerData.SetSkillLevel("blue", blueSkill.level); }
+                PlayerService.Skill greenSkill = loginObject.skills.Where(s => s.syscode == "green").FirstOrDefault(); if (greenSkill != null) { playerData.SetSkillLevel("green", greenSkill.level); }
+                PlayerService.Skill redSkill = loginObject.skills.Where(s => s.syscode == "red").FirstOrDefault(); if (redSkill != null) { playerData.SetSkillLevel("red", redSkill.level); }
+                PlayerService.Skill yellowSkill = loginObject.skills.Where(s => s.syscode == "yellow").FirstOrDefault(); if (yellowSkill != null) { playerData.SetSkillLevel("yellow", yellowSkill.level); }
+            }
+            if (loginObject.stat != null)
+            {
+                playerData.SetMatchesTotal(loginObject.stat.games);
+                playerData.SetMatchesWins(loginObject.stat.wins);
+                playerData.SetTournamentGames(loginObject.stat.tournament_games);
+                playerData.SetTournamentGames(loginObject.stat.tournament_wins);
+                playerData.SetTotalWinnings(loginObject.stat.coins_won);
+                playerData.SetWeeklyRank(loginObject.stat.week_ranking);
+            }
         }
     }
 
@@ -249,7 +265,17 @@ namespace Com.Hypester.DM3
 
         public int coins { get; private set; }
         public int trophies { get; private set; }
-        public int xp { get; private set; }
+        public int XPLevel { get; private set; }
+        public int XPLevelGain { get; private set; }
+        public int XPLevelGainCurrent { get; private set; }
+
+        public int MatchesTotal { get; private set; } // all single matches (normal game matches + each match in tournament mode). Does not include Whole tourna wins
+        public int MatchesWins { get; private set; }  // all wins of the previous matches
+        public int TournamentGames { get; private set; } // the whole tournament games
+        public int TournamentWins { get; private set; } // the whole tournament game wins
+        public int TotalWinnings { get; private set; } // amount of coins won
+        public int WeeklyRank { get; private set; }
+
         public int unspentSkill { get; private set; }
         public int blueSkill { get; private set; }
         public int greenSkill { get; private set; }
@@ -327,10 +353,51 @@ namespace Com.Hypester.DM3
             trophies = value;
             PlayerEvent.TrophyAmountChange(value);
         }
-        public void SetXp(int value)
+        public void SetMatchesTotal(int value)
         {
-            xp = value;
-            PlayerEvent.XpAmountChange(value);
+            MatchesTotal = value;
+            PlayerEvent.MatchesTotalChange(value);
+        }
+        public void SetMatchesWins(int value)
+        {
+            MatchesWins = value;
+            PlayerEvent.MatchesWinsChange(value);
+        }
+        public void SetTournamentGames(int value)
+        {
+            TournamentGames = value;
+            PlayerEvent.TournamentGamesChange(value);
+        }
+        public void SetTournamentWins(int value)
+        {
+            TournamentWins = value;
+            PlayerEvent.TournamentWinsChange(value);
+        }
+        public void SetTotalWinnings(int value)
+        {
+            TotalWinnings = value;
+            PlayerEvent.TotalWinningsChange(value);
+        }
+        public void SetWeeklyRank(int value)
+        {
+            WeeklyRank = value;
+            PlayerEvent.WeeklyRankChange(value);
+        }
+
+        public void SetXPLevel(int value)
+        {
+            XPLevel = value;
+            PlayerEvent.XPLevelChange(value);
+        }
+        public void SetXPLevelGain(int value)
+        {
+            XPLevelGain = value;
+            PlayerEvent.XPLevelGainChange(value);
+        }
+        public void SetXPLevelGainCurrent(int value)
+        {
+            XPLevelGainCurrent = value;
+            PlayerEvent.XPLevelGainCurrentChange(value);
         }
         public void SetUnspentSkill(int value)
         {
@@ -356,7 +423,15 @@ namespace Com.Hypester.DM3
             SetAvatarBorder(AvatarBorder);
             SetCoins(coins);
             SetTrophies(trophies);
-            SetXp(xp);
+            SetXPLevel(XPLevel);
+            SetXPLevelGain(XPLevelGain);
+            SetXPLevelGainCurrent(XPLevelGainCurrent);
+            SetMatchesTotal(MatchesTotal);
+            SetMatchesWins(MatchesWins);
+            SetTournamentGames(TournamentGames);
+            SetTournamentWins(TournamentWins);
+            SetTotalWinnings(TotalWinnings);
+            SetWeeklyRank(WeeklyRank);
             SetUnspentSkill(unspentSkill);
             SetSkillLevel("red", redSkill);
             SetSkillLevel("green", greenSkill);

@@ -191,7 +191,7 @@ namespace Com.Hypester.DM3
 
             playerProps.Add(PlayerProperty.AvatarBorderSyscode, playerData.avatarBorderSyscode);
             playerProps.Add(PlayerProperty.UserId, playerData.userId);
-            playerProps.Add(PlayerProperty.XpLevel, playerData.xp);
+            playerProps.Add(PlayerProperty.XpLevel, playerData.XPLevel);
             playerProps.Add(PlayerProperty.BlueSkillLevel, playerData.blueSkill);
             playerProps.Add(PlayerProperty.GreenSkillLevel, playerData.greenSkill);
             playerProps.Add(PlayerProperty.RedSkillLevel, playerData.redSkill);

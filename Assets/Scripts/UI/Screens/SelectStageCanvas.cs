@@ -11,10 +11,14 @@ namespace Com.Hypester.DM3
         [SerializeField] GameObject coverForeground;
         [SerializeField] StageCarousel stageCarousel;
 
+        public Canvas canvas;
+        public bool isInitialized = false;
+
         protected override void Start()
         {
             base.Start();
 
+            canvas = GetComponent<Canvas>();
             PhotonNetwork.autoJoinLobby = false;
             PhotonNetwork.automaticallySyncScene = true;
             coverForeground.SetActive(false);
@@ -22,10 +26,17 @@ namespace Com.Hypester.DM3
 
         public override void Show()
         {
+            isInitialized = false;
             base.Show();
             stageCarousel.InitializeCarousel();
+            Invoke("InitFinal", 0.1f);
         }
 
+        void InitFinal()
+        {
+            isInitialized = true;
+        }
+        
         public override void Hide()
         {
             base.Hide();

@@ -66,12 +66,10 @@ namespace Com.Hypester.DM3
             public string id;
             public string first_name;
             public string last_name;
-            public object country_id;
-            public string last_login;
-            public string active;
-            public string add_time;
-            public string country;
+            public string country_id;
+            public bool country;
             public string pic;
+            public string frame_id;
         }
 
         [Serializable]
@@ -82,6 +80,7 @@ namespace Com.Hypester.DM3
             public string last_name;
             public string xplevel;
             public string pic;
+            public string frame_id;
         }
 
         [Serializable]
@@ -91,6 +90,10 @@ namespace Com.Hypester.DM3
             public string fullHealth;
             public string friendAskCoins;
             public string friendSendCoins;
+            public string booster_01;
+            public string booster_02;
+            public string booster_03;
+            public string initial_coins;
         }
 
         [Serializable]
@@ -108,16 +111,56 @@ namespace Com.Hypester.DM3
         }
 
         [Serializable]
+        public class Stat
+        {
+            public int games;
+            public int wins;
+            public int losses;
+            public int tournament_wins;
+            public int tournament_games;
+            public int coins_won;
+            public int week_ranking;
+        }
+
+        [Serializable]
+        public class Level
+        {
+            public string id;
+            public int level;
+            public string description;
+            public string xp;
+            public string skills;
+            public string coins;
+        }
+
+        [Serializable]
+        public class Skill
+        {
+            public string name;
+            public string syscode;
+            public int level;
+            public int maxlevel;
+            public object description;
+            public List<int> currLevel;
+            public List<Level> levels;
+        }
+
+        [Serializable]
         public class LoginRequestObject
         {
+            public int verified;
+            public string mobile_id;
             public User user;
             public List<Fakeuser> fakeusers;
             public Settings settings;
             public List<object> messages;
             public List<Stage> stages;
-            public string mobile_id;
             public string hexaclash;
+            public Stat stat;
+            public List<Skill> skills;
+            public string sid;
             public int hourBonus;
+            public bool newFrameUnlocked;
             public int experience;
             public int XPlevel;
             public int XPlevelGain;
@@ -126,8 +169,8 @@ namespace Com.Hypester.DM3
             public int coins;
             public string user_id;
             public int wheelEnabled;
+            public string SESSION_ID_IS_THIS;
             public string chk;
-            public string sid;
             public string error;
         }
 

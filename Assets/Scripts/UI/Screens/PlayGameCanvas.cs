@@ -23,6 +23,8 @@ namespace Com.Hypester.DM3
         [SerializeField] RectTransform localAvatarTop;
         [SerializeField] RectTransform remoteAvatarBot;
 
+        [SerializeField] GameObject gameBoardCover;
+
         TileView startingTile = null;
         Dictionary<Vector2, TileView> _selectedTiles;
         LeanFinger _finger;
@@ -106,6 +108,7 @@ namespace Com.Hypester.DM3
                 if (gh.GameID != PhotonController.Instance.gameID_requested)
                     gh.Hide();
             }
+            gameBoardCover.SetActive(!PhotonController.Instance.GameController.IsMyTurn());
         }
 
         private void OnEnable()
@@ -215,6 +218,8 @@ namespace Com.Hypester.DM3
             TextPopup textPopup = Instantiate(bigTextPopupPrefab, this.transform, false).GetComponent<TextPopup>();
             textPopup.textImage.sprite = localPlayer ? MainController.Data.sprites.localTurn : MainController.Data.sprites.opponentTurn;
             textPopup.animator.SetTrigger("Popup");
+
+            gameBoardCover.SetActive(!localPlayer);
 
             PlayerInterface playerInterface = localPlayer ? PhotonController.Instance.GameController.MyPlayer.playerInterface : PhotonController.Instance.GameController.EnemyPlayer.playerInterface;
             if (playerInterface != null)

@@ -17,7 +17,7 @@ namespace Com.Hypester.DM3
             PlayerEvent.OnProfileImageChange += SetProfileImage;
             PlayerEvent.OnAvatarBorderChange += OnAvatarBorderChange;
             PlayerEvent.OnProfileNameChange += SetProfileName;
-            PlayerEvent.OnXpAmountChange += XpAmountChange;
+            PlayerEvent.OnXPLevelChange += XpAmountChange;
             PlayerEvent.OnUnspentSkillPointAmountChange += UnspentSkillPointAmountChange;
 
             base.OnEnable();
@@ -28,7 +28,7 @@ namespace Com.Hypester.DM3
             PlayerEvent.OnProfileImageChange -= SetProfileImage;
             PlayerEvent.OnAvatarBorderChange -= OnAvatarBorderChange;
             PlayerEvent.OnProfileNameChange -= SetProfileName;
-            PlayerEvent.OnXpAmountChange -= XpAmountChange;
+            PlayerEvent.OnXPLevelChange -= XpAmountChange;
             PlayerEvent.OnUnspentSkillPointAmountChange -= UnspentSkillPointAmountChange;
 
             base.OnDisable();

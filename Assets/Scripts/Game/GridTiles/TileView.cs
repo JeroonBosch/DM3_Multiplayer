@@ -173,14 +173,12 @@ namespace Com.Hypester.DM3
                 float posTopY = oddx ? position.y-1 : position.y;
 
                 // Bottom
-                Debug.Log("posBotY" + posBotY);
                 TileView tileBottomLeft = grid.TileViewAtPos(new Vector2(position.x+1, posBotY));
                 if (tileBottomLeft != null && Exists(tileBottomLeft.position.x, tileBottomLeft.position.y) && !toDestroy.Contains(tileBottomLeft)) { toDestroy.Add(tileBottomLeft); }
                 TileView tileBottomRight = grid.TileViewAtPos(new Vector2(position.x - 1, posBotY));
                 if (tileBottomRight != null && Exists(tileBottomRight.position.x, tileBottomRight.position.y) && !toDestroy.Contains(tileBottomRight)) { toDestroy.Add(tileBottomRight); }
 
                 // Top
-                Debug.Log("posTopY" + posTopY);
                 TileView tileTopLeft = grid.TileViewAtPos(new Vector2(position.x+1, posTopY));
                 if (tileTopLeft != null && Exists(tileTopLeft.position.x, tileTopLeft.position.y) && !toDestroy.Contains(tileTopLeft)) { toDestroy.Add(tileTopLeft); }
                 TileView tileTopRight = grid.TileViewAtPos(new Vector2(position.x-1, posTopY));

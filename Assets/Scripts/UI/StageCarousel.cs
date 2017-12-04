@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using Lean.Touch;
+using System;
 
 namespace Com.Hypester.DM3
 {
@@ -35,11 +36,13 @@ namespace Com.Hypester.DM3
         private void OnEnable()
         {
             LeanTouch.OnFingerSwipe += OnFingerSwipe;
+            LeanTouch.OnFingerTap += OnFingerTap;
         }
 
         private void OnDisable()
         {
             LeanTouch.OnFingerSwipe -= OnFingerSwipe;
+            LeanTouch.OnFingerTap -= OnFingerTap;
         }
 
         IEnumerator SmoothMove(Vector2 startpos , Vector2 endpos, float seconds)
@@ -56,6 +59,7 @@ namespace Com.Hypester.DM3
 
         private void OnFingerSwipe(LeanFinger finger)
         {
+            if (canvas.enabled == false) { return; }
             var swipe = finger.SwipeScreenDelta;
 
             if (swipe.x < -Mathf.Abs(swipe.y))
@@ -68,7 +72,21 @@ namespace Com.Hypester.DM3
                 SelectPrevious();
             }
         }
-        
+
+        private void OnFingerTap(LeanFinger finger)
+        {
+            if (!canvas.canvas.enabled || !canvas.isInitialized) { return; }
+            RaycastHit2D hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(finger.LastScreenPosition), -Vector2.up);
+            if (hit.collider != null && hit.collider.name == "InfoPanel")
+            {
+                Button button = hit.collider.GetComponent<Button>();
+                if (button != null && button.onClick != null)
+                {
+                    hit.collider.GetComponent<Button>().onClick.Invoke();
+                }
+            }
+        }
+
         public void SelectNext ()
         {
             if (_moveCoroutine != null) {

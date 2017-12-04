@@ -16,7 +16,6 @@ namespace Com.Hypester.DM3
             }
             set
             {
-                Debug.Log("Now in state: " + value.ToString());
                 m_state = value;
             }
         }

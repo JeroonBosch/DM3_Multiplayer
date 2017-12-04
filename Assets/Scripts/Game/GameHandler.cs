@@ -994,15 +994,15 @@ namespace Com.Hypester.DM3
                     if (baseTile.boosterLevel > 0)
                     {
                         // if (baseTile.boosterLevel < 4) { if (!boostedTiles.ContainsKey(baseTile.position)) { boosterCount++; Debug.Log("Adding to booster count"); } }
-                        Debug.Log("baseTile.boosterLevel > 0");
                         List<TileView> indivCollateral = baseTile.ListCollateralDamage(this, 1f);
                         foreach (TileView colTile in indivCollateral)
                         {
                             // if (colTile.boosterLevel > 0 & colTile.boosterLevel < 4) { if (!boostedTiles.ContainsKey(colTile.position)) { boosterCount++; Debug.Log("Adding to booster count"); } }
-                            CreateTileAttackPlayerEffect(colTile.position, count + Mathf.RoundToInt(colTile.DistanceToTile(baseTile) / Constants.DistanceBetweenTiles), true, trapped);
+                            int hCount = count + Mathf.RoundToInt(colTile.DistanceToTile(baseTile) / Constants.DistanceBetweenTiles);
+                            CreateTileAttackPlayerEffect(colTile.position, hCount, true, trapped);
 
-                            if (count + Mathf.RoundToInt(colTile.DistanceToTile(baseTile) / Constants.DistanceBetweenTiles) > highestCount)
-                                highestCount = count + Mathf.RoundToInt(colTile.DistanceToTile(baseTile) / Constants.DistanceBetweenTiles);
+                            if (hCount > highestCount)
+                                highestCount = hCount;
                         }
                     }
 
@@ -1030,6 +1030,7 @@ namespace Com.Hypester.DM3
 
             if (IsGameMaster())
             {
+                Debug.LogError("IsGameMaster()");
                 trapped = false;
                 //Only master client will update the _grid and then sync it.
                 int color = _selectedTiles[startingPos].color;
@@ -1044,6 +1045,7 @@ namespace Com.Hypester.DM3
                 {
                     DestroyTileAtPosition(kvp.Key);
                 }
+                Debug.LogError("DestroyedAll()");
 
                 CreateBooster(startingPos, _selectedTiles.Count, color);
 
@@ -1058,7 +1060,7 @@ namespace Com.Hypester.DM3
                     FillPowerBar(1, color, _selectedTiles.Count);
                 }
             }
-
+            
             EndTurn();
             _selectedTiles.Clear();
             TileView.areaList.Clear();
@@ -1094,6 +1096,7 @@ namespace Com.Hypester.DM3
             }
 
             //Explosion effect
+            /*
             GameObject expl = null;
             if (baseTile.boosterLevel == 1) {
                 expl = Instantiate(boosterExplosion1Prefab);
@@ -1109,10 +1112,12 @@ namespace Com.Hypester.DM3
             else if (baseTile.boosterLevel >= 4)
                 expl = Instantiate(boosterExplosionTrapPrefab);
 
-            GameObject timedEff = Instantiate(tileDestroyedTimerPrefab) as GameObject;
-            timedEff.GetComponent<TimedEffect>().createAfterTime = count * Constants.DelayAfterTileDestruction;
-            timedEff.GetComponent<TimedEffect>().basetileToHide = baseTile;
+            */
+            TimedEffect timedEff = Instantiate(tileDestroyedTimerPrefab).GetComponent<TimedEffect>();
+            timedEff.createAfterTime = count * Constants.DelayAfterTileDestruction;
+            timedEff.basetileToHide = baseTile;
 
+            /*
             if (expl != null)
             {
                 if (baseTile.boosterLevel < 4 && baseTile.boosterLevel > 0)
@@ -1121,6 +1126,7 @@ namespace Com.Hypester.DM3
                 }
                 expl.transform.position = baseTile.transform.position;
             }
+            */
             timedEff.transform.position = baseTile.transform.position;
         }
 

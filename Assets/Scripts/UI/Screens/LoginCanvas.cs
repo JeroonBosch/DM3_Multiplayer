@@ -249,7 +249,7 @@ namespace Com.Hypester.DM3
             }
 
             PlayerEvent.PlayerLogin(MainController.settingsService.lastLoginType, loginObject); // Player has logged in already. We have the info from the server.
-
+            
             if (PhotonNetwork.connected) { ConnectedToPhoton(); }
             else
             {

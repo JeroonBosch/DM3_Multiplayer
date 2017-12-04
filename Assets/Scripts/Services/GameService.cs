@@ -62,61 +62,62 @@ namespace Com.Hypester.DM3
         [Serializable]
         public class Opponent
         {
-            public string id { get; set; }
-            public string first_name { get; set; }
-            public string last_name { get; set; }
-            public int XPlevel { get; set; }
-            public string pic { get; set; }
-            public string frame_id { get; set; }
+            public string id;
+            public string first_name;
+            public string last_name;
+            public int XPlevel;
+            public string pic;
+            public string frame_id;
         }
 
         [Serializable]
         public class Stage
         {
-            public string id { get; set; }
-            public string name { get; set; }
-            public string syscode { get; set; }
-            public string buyin { get; set; }
-            public string reward { get; set; }
-            public string xp { get; set; }
+            public string id;
+            public string name;
+            public string syscode;
+            public string buyin;
+            public string reward;
+            public string xp;
         }
 
         [Serializable]
         public class Game
         {
-            public int id { get; set; }
-            public Opponent opponent { get; set; }
-            public Stage stage { get; set; }
+            public int id;
+            public Opponent opponent;
+            public Stage stage;
         }
 
         [Serializable]
         public class Skill
         {
-            public string name { get; set; }
-            public string syscode { get; set; }
-            public int level { get; set; }
-            public int maxlevel { get; set; }
-            public object description { get; set; }
-            public List<int> currLevel { get; set; }
+            public string name;
+            public string syscode;
+            public int level;
+            public int maxlevel;
+            public object description;
+            public List<int> currLevel;
         }
 
         [Serializable]
         public class GetGameRequestObject
         {
-            public int verified { get; set; }
-            public Game game { get; set; }
-            public List<Skill> skills { get; set; }
-            public int hourBonus { get; set; }
-            public bool newFrameUnlocked { get; set; }
-            public int experience { get; set; }
-            public int XPlevel { get; set; }
-            public int XPlevelGain { get; set; }
-            public int XPlevelGainCurrent { get; set; }
-            public int skillPoints { get; set; }
-            public int coins { get; set; }
-            public string user_id { get; set; }
-            public int wheelEnabled { get; set; }
-            public string chk { get; set; }
+            public int verified;
+            public Game game;
+            public List<Skill> skills;
+            public int hourBonus;
+            public bool newFrameUnlocked;
+            public int experience;
+            public int XPlevel;
+            public int XPlevelGain;
+            public int XPlevelGainCurrent;
+            public int skillPoints;
+            public int coins;
+            public string user_id;
+            public int wheelEnabled;
+            public string SESSION_ID_IS_THIS;
+            public string chk;
         }
         [Serializable]
         public class StartGameRequestObject
