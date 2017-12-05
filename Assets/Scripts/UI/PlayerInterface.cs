@@ -44,6 +44,12 @@ namespace Com.Hypester.DM3
                 }
                 if (!string.IsNullOrEmpty(localPlayer.avatarBorderSyscode)) { playerBorderImage.sprite = MainController.Data.sprites.GetAvatarBorderEntry(localPlayer.avatarBorderSyscode).normal; }
                 if (!string.IsNullOrEmpty(localPlayer.profileName)) { playerNameText.text = localPlayer.profileName; }
+
+                foreach (KeyValuePair<SkillColor, SkillButton> kvp in skillButtonsDict)
+                {
+                    if (MainController.Instance == null || MainController.Instance.playerData == null) { break; }
+                    kvp.Value.SetSkillIcon(MainController.Data.sprites.GetSkillSpriteBySkillColor(kvp.Key, MainController.Instance.playerData.GetSkillLevelBySkillColor(kvp.Key)));
+                }
             }
             else {
                 localPlayer.opponent.playerInterface = this;

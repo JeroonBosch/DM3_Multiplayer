@@ -11,9 +11,14 @@ namespace Com.Hypester.DM3
         private const string URL_STAGES = "/api/stages";
         private const string URL_BUYCOINS = "/api/tmpBuy";
 
-        public void LoadShop(Delegates.ServiceCallback<ShopRequestObject> loadCallback)
+        public void LoadShop(Delegates.ServiceCallback<ShopRequestObject> loadCallback, string newLevelId = "")
         {
             var parameters = new Dictionary<string, object>();
+
+            if (!string.IsNullOrEmpty(newLevelId))
+            {
+                parameters.Add("upgrade", newLevelId);
+            }
 
             Delegates.ServiceCallback<ShopRequestObject> requestCallback = (success, message, result) =>
             {
@@ -82,7 +87,7 @@ namespace Com.Hypester.DM3
             public int level;
             public int maxlevel;
             public object description;
-            public List<int> currLevel;
+            public List<float> currLevel;
             public List<Level> levels;
         }
 

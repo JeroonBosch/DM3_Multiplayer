@@ -25,9 +25,9 @@ namespace Com.Hypester.DM3
             PhotonController.Instance.GameController.photonView.RPC("RPC_PowerClicked", PhotonTargets.All, skillColor);
         }
 
-        public void SetSkillIcon()
+        public void SetSkillIcon(Sprite value)
         {
-
+            if (value != null) { buttonSkillIcon.sprite = value; }
         }
         public void SetSkillChargeText(string value)
         {

@@ -1096,7 +1096,7 @@ namespace Com.Hypester.DM3
             }
 
             //Explosion effect
-            /*
+            
             GameObject expl = null;
             if (baseTile.boosterLevel == 1) {
                 expl = Instantiate(boosterExplosion1Prefab);
@@ -1112,7 +1112,7 @@ namespace Com.Hypester.DM3
             else if (baseTile.boosterLevel >= 4)
                 expl = Instantiate(boosterExplosionTrapPrefab);
 
-            */
+            
             TimedEffect timedEff = Instantiate(tileDestroyedTimerPrefab).GetComponent<TimedEffect>();
             timedEff.createAfterTime = count * Constants.DelayAfterTileDestruction;
             timedEff.basetileToHide = baseTile;

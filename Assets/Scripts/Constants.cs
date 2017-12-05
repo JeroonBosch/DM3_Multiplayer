@@ -28,8 +28,8 @@
 
         public const int AmountOfColors = 4;
         public const int BoosterOneThreshhold = 5;
-        public const int BoosterTwoThreshhold = 8;
-        public const int BoosterThreeThreshhold = 10;
+        public const int BoosterTwoThreshhold = 11;
+        public const int BoosterThreeThreshhold = 14;
 
         public const int BoosterLevel2Vertical = 3;
 

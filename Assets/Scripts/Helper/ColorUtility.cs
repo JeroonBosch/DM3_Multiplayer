@@ -24,6 +24,26 @@ public class ColorUtility : MonoBehaviour {
         }
         return skillColor;
     }
+    public static string GetSkillSyscodeBySkillColor(SkillColor color)
+    {
+        string skillSyscode = "";
+        switch (color)
+        {
+            case SkillColor.Red:
+                skillSyscode = "red";
+                break;
+            case SkillColor.Green:
+                skillSyscode = "green";
+                break;
+            case SkillColor.Blue:
+                skillSyscode = "blue";
+                break;
+            case SkillColor.Yellow:
+                skillSyscode = "yellow";
+                break;
+        }
+        return skillSyscode;
+    }
 
     public static SkillColor IntToSkillColor(int skillInt)
     {

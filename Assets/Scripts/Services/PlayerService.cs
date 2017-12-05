@@ -36,7 +36,7 @@ namespace Com.Hypester.DM3
                     loadCallback(success, message, result);
                 }
             };
-            AsyncServerRequest(URL_LOGIN, parameters, requestCallback, 3, true);
+            AsyncServerRequest(URL_LOGIN, parameters, requestCallback, 3, false);
         }
 		public void Logout() {
             /*
@@ -67,7 +67,7 @@ namespace Com.Hypester.DM3
             public string first_name;
             public string last_name;
             public string country_id;
-            public bool country;
+            public string country;
             public string pic;
             public string frame_id;
         }
@@ -142,7 +142,7 @@ namespace Com.Hypester.DM3
             public int maxlevel;
             public object description;
             public List<int> currLevel;
-            public List<Level> levels;
+            public List<EconomyService.Level> levels;
         }
 
         [Serializable]
@@ -157,7 +157,7 @@ namespace Com.Hypester.DM3
             public List<Stage> stages;
             public string hexaclash;
             public Stat stat;
-            public List<Skill> skills;
+            public List<EconomyService.Skill> skills;
             public string sid;
             public int hourBonus;
             public bool newFrameUnlocked;

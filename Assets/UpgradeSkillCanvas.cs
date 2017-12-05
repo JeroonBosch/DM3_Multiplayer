@@ -85,7 +85,7 @@ namespace Com.Hypester.DM3
             {
                 int maxLevel = Constants.MaxSkillLevel;
                 chosenText.text = amount.ToString() + "/" + maxLevel.ToString();
-                chosenIcon.sprite = MainController.Data.sprites.GetSkillSprite(skillColor, amount);
+                chosenIcon.sprite = MainController.Data.sprites.GetSkillSpriteBySyscode(skillColor, amount);
             }
         }
 
@@ -222,7 +222,7 @@ namespace Com.Hypester.DM3
         {
             PlayerData playerData = MainController.Instance.playerData;
 
-            foreach (PlayerService.Skill skill in MainController.Data.temporary.skills)
+            foreach (EconomyService.Skill skill in MainController.Data.temporary.skills)
             {
                 if (skill.levels == null || skill.levels.Count <= 0) { Debug.LogError("No level information for " + skill.name); continue; }
 
@@ -230,7 +230,7 @@ namespace Com.Hypester.DM3
                 skillList.name = skill.syscode + "List";
                 Transform contentTransform = skillList.GetComponentInChildren<VerticalLayoutGroup>().transform;
 
-                foreach (PlayerService.Level skillLevel in skill.levels)
+                foreach (EconomyService.Level skillLevel in skill.levels)
                 {
                     SkillLevelEntry sle = Instantiate(skillLevelEntryPrefab, contentTransform, false).GetComponent<SkillLevelEntry>();
 
@@ -243,8 +243,8 @@ namespace Com.Hypester.DM3
 
                     sle.SetLevelText("Level " + skillLevel.level.ToString());
                     sle.SetDescription(skillLevel.description);
-                    sle.SetLevelImage(MainController.Data.sprites.GetSkillSprite(skill.syscode, skillLevel.level - 1));
-                    if (playerData.GetSkillLevel(skill.syscode) >= skillLevel.level) // Player has unlocked this already.
+                    sle.SetLevelImage(MainController.Data.sprites.GetSkillSpriteBySyscode(skill.syscode, skillLevel.level - 1));
+                    if (playerData.GetSkillLevelBySyscode(skill.syscode) >= skillLevel.level) // Player has unlocked this already.
                     {
                         sle.UnlockSkill();
                         sle.state = SkillLevelEntry.State.Unlocked;
@@ -259,7 +259,7 @@ namespace Com.Hypester.DM3
                             // sle.ToggleXpRequirementText(true, int.Parse(skillLevel.xp));
                             sle.state = SkillLevelEntry.State.RestrictedByXp;
                         }
-                        else if (playerData.GetSkillLevel(skill.syscode) < skillLevel.level - 1)
+                        else if (playerData.GetSkillLevelBySyscode(skill.syscode) < skillLevel.level - 1)
                         {
                             sle.ToggleLockIcon(true);
                             sle.ToggleXpRequirementText(false, 0);
@@ -325,8 +325,8 @@ namespace Com.Hypester.DM3
 
                     sle.SetLevelText("Level " + skillLevel.level.ToString());
                     sle.SetDescription(skillLevel.description);
-                    sle.SetLevelImage(MainController.Data.sprites.GetSkillSprite(skill.syscode, skillLevel.level-1));
-                    if (playerData.GetSkillLevel(skill.syscode) >= skillLevel.level) // Player has unlocked this already.
+                    sle.SetLevelImage(MainController.Data.sprites.GetSkillSpriteBySyscode(skill.syscode, skillLevel.level-1));
+                    if (playerData.GetSkillLevelBySyscode(skill.syscode) >= skillLevel.level) // Player has unlocked this already.
                     {
                         sle.UnlockSkill();
                         sle.state = SkillLevelEntry.State.Unlocked;
@@ -341,7 +341,7 @@ namespace Com.Hypester.DM3
                             // sle.ToggleXpRequirementText(true, int.Parse(skillLevel.xp));
                             sle.state = SkillLevelEntry.State.RestrictedByXp;
                         }
-                        else if (playerData.GetSkillLevel(skill.syscode) < skillLevel.level - 1)
+                        else if (playerData.GetSkillLevelBySyscode(skill.syscode) < skillLevel.level - 1)
                         {
                             sle.ToggleLockIcon(true);
                             sle.ToggleXpRequirementText(false, 0);

@@ -97,7 +97,7 @@ namespace Com.Hypester.DM3
             public int level;
             public int maxlevel;
             public object description;
-            public List<int> currLevel;
+            public List<float> currLevel;
         }
 
         [Serializable]

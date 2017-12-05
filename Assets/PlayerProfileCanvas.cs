@@ -205,7 +205,7 @@ namespace Com.Hypester.DM3
             {
                 int maxLevel = Constants.MaxSkillLevel;
                 chosenText.text = amount.ToString() + "/" + maxLevel.ToString();
-                chosenIcon.sprite = MainController.Data.sprites.GetSkillSprite(skillColor, amount);
+                chosenIcon.sprite = MainController.Data.sprites.GetSkillSpriteBySyscode(skillColor, amount);
             }
         }
 

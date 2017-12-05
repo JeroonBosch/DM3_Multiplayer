@@ -16,7 +16,7 @@ namespace Com.Hypester.DM3
             }
             else {
                 Debug.Log("Purchased " + amount.ToString() + " coins.");
-                MainController.ServiceEconomy.BuyCoinsTemp(amount, 0, OnBuyCoins);
+                MainController.ServiceEconomy.BuyCoinsTemp(amount, amount, OnBuyCoins);
             }
         }
 
@@ -46,6 +46,7 @@ namespace Com.Hypester.DM3
                 if (customInfo.TryGetValue("purchase_amount", out purchaseAmount))
                 {
                     MainController.Instance.playerData.AddCoins((int)purchaseAmount);
+                    MainController.Instance.playerData.AddUnspentSkillPoints((int)purchaseAmount);
                     UIEvent.CoinPurchase(true, (int)purchaseAmount);
                 }
             }

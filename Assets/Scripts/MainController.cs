@@ -235,10 +235,10 @@ namespace Com.Hypester.DM3
 
             if (loginObject.skills != null && loginObject.skills.Count > 0)
             {
-                PlayerService.Skill blueSkill = loginObject.skills.Where(s => s.syscode == "blue").FirstOrDefault(); if (blueSkill != null) { playerData.SetSkillLevel("blue", blueSkill.level); }
-                PlayerService.Skill greenSkill = loginObject.skills.Where(s => s.syscode == "green").FirstOrDefault(); if (greenSkill != null) { playerData.SetSkillLevel("green", greenSkill.level); }
-                PlayerService.Skill redSkill = loginObject.skills.Where(s => s.syscode == "red").FirstOrDefault(); if (redSkill != null) { playerData.SetSkillLevel("red", redSkill.level); }
-                PlayerService.Skill yellowSkill = loginObject.skills.Where(s => s.syscode == "yellow").FirstOrDefault(); if (yellowSkill != null) { playerData.SetSkillLevel("yellow", yellowSkill.level); }
+                EconomyService.Skill blueSkill = loginObject.skills.Where(s => s.syscode == "blue").FirstOrDefault(); if (blueSkill != null) { playerData.SetSkillLevel("blue", blueSkill.level); }
+                EconomyService.Skill greenSkill = loginObject.skills.Where(s => s.syscode == "green").FirstOrDefault(); if (greenSkill != null) { playerData.SetSkillLevel("green", greenSkill.level); }
+                EconomyService.Skill redSkill = loginObject.skills.Where(s => s.syscode == "red").FirstOrDefault(); if (redSkill != null) { playerData.SetSkillLevel("red", redSkill.level); }
+                EconomyService.Skill yellowSkill = loginObject.skills.Where(s => s.syscode == "yellow").FirstOrDefault(); if (yellowSkill != null) { playerData.SetSkillLevel("yellow", yellowSkill.level); }
             }
             if (loginObject.stat != null)
             {
@@ -292,9 +292,9 @@ namespace Com.Hypester.DM3
             PlayerEvent.ProfileNameChange(profileName);
         }
 
-        public int GetSkillLevel(string skillColor)
+        public int GetSkillLevelBySyscode(string syscode)
         {
-            switch (skillColor)
+            switch (syscode)
             {
                 case "blue":
                     return blueSkill;
@@ -303,6 +303,22 @@ namespace Com.Hypester.DM3
                 case "red":
                     return redSkill;
                 case "yellow":
+                    return yellowSkill;
+                default:
+                    return 0;
+            }
+        }
+        public int GetSkillLevelBySkillColor(SkillColor color)
+        {
+            switch (color)
+            {
+                case SkillColor.Blue:
+                    return blueSkill;
+                case SkillColor.Green:
+                    return greenSkill;
+                case SkillColor.Red:
+                    return redSkill;
+                case SkillColor.Yellow:
                     return yellowSkill;
                 default:
                     return 0;

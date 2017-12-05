@@ -142,8 +142,8 @@ namespace Com.Hypester.DM3
             uspnl.coinCost = coinCost;
             uspnl.skillCost = skillCost;
 
-            uspnl.currentLevelIcon.sprite = MainController.Data.sprites.GetSkillSprite(syscode, currentLevel);
-            uspnl.nextLevelIcon.sprite = MainController.Data.sprites.GetSkillSprite(syscode, currentLevel+1);
+            uspnl.currentLevelIcon.sprite = MainController.Data.sprites.GetSkillSpriteBySyscode(syscode, currentLevel);
+            uspnl.nextLevelIcon.sprite = MainController.Data.sprites.GetSkillSpriteBySyscode(syscode, currentLevel+1);
             uspnl.msgTitle.text = "Upgrade to Level " + (currentLevel + 1).ToString();
             uspnl.msgBody.text = description;
             uspnl.coinCostText.text = coinCost.ToString();
@@ -165,7 +165,7 @@ namespace Com.Hypester.DM3
 
             if (success)
             {
-                csps.msgIcon.sprite = MainController.Data.sprites.GetSkillSprite(syscode, newLevel);
+                csps.msgIcon.sprite = MainController.Data.sprites.GetSkillSpriteBySyscode(syscode, newLevel);
                 csps.msgTitle.text = "Upgrade successful!";
                 csps.msgBody.text = "You have reached " + syscode + " skill level " + newLevel.ToString();
                 csps.buttonText.text = "Nice!";

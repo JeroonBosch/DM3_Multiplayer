@@ -93,8 +93,20 @@ namespace Com.Hypester.DM3
             }
             Debug.LogError("DONE");
             wwwReq = new WWW(reqUrl, postData, headers);
+            //float timer = 0;
+            //float timeOut = 60;
+            //failed = false;
 
             yield return wwwReq;
+
+            /*
+            while(!wwwReq.isDone)
+            {
+                if (timer > timeOut) { Debug.Log("TIMEOUT"); failed = true; break; }
+                timer += Time.deltaTime;
+                yield return null;
+            }
+            */
 
             pending = false;
             OnRequestCompleted(requestCallback);
@@ -105,6 +117,7 @@ namespace Com.Hypester.DM3
             Debug.Log("OnRequestCompleted");
             if (wwwReq != null)
             {
+                Debug.Log(wwwReq.bytesDownloaded);
                 Debug.Log("wwwReq != null");
                 wwwError = wwwReq.error;
 
@@ -143,7 +156,11 @@ namespace Com.Hypester.DM3
                         }
                         if (requestCallback != null)
                         {
-                            requestCallback(false, wwwError);
+                            if (!string.IsNullOrEmpty(wwwError))
+                            {
+                                requestCallback(false, wwwError);
+                            }
+                            else { requestCallback(false, "Failed to login"); }
                         }
                     }
                     else

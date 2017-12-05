@@ -63,7 +63,7 @@ namespace Com.Hypester.DM3
             collateralTiles.Init();
         }
         
-        public Sprite GetSkillSprite(string syscode, int level)
+        public Sprite GetSkillSpriteBySyscode(string syscode, int level)
         {
             Sprite skillSprite = null;
             switch (syscode)
@@ -78,6 +78,26 @@ namespace Com.Hypester.DM3
                     skillSprite = redSprites[level];
                     break;
                 case "yellow":
+                    skillSprite = yellowSprites[level];
+                    break;
+            }
+            return skillSprite;
+        }
+        public Sprite GetSkillSpriteBySkillColor(SkillColor color, int level)
+        {
+            Sprite skillSprite = null;
+            switch (color)
+            {
+                case SkillColor.Blue:
+                    skillSprite = blueSprites[level];
+                    break;
+                case SkillColor.Green:
+                    skillSprite = greenSprites[level];
+                    break;
+                case SkillColor.Red:
+                    skillSprite = redSprites[level];
+                    break;
+                case SkillColor.Yellow:
                     skillSprite = yellowSprites[level];
                     break;
             }
