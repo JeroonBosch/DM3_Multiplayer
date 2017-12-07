@@ -6,13 +6,18 @@ namespace Com.Hypester.DM3
 {
     public class TileView : MonoBehaviour
     {
-        [SerializeField] Image tileImage;
-
         [SerializeField] GameObject booster1;
         [SerializeField] GameObject booster2;
         [SerializeField] GameObject booster3;
         [SerializeField] GameObject boosterTrap;
         [SerializeField] GameObject boosterTrapHover;
+        [SerializeField] GameObject boosterDiagonal;
+
+        [SerializeField] Image tileImage;
+        float activeSaturation = 0.5f;
+        float deactiveSaturation = 0.19f;
+        float activeContrast = 0.5f;
+        float deactiveContrast = 0.38f;
 
         public static List<TileView> areaList = new List<TileView>();
 
@@ -82,13 +87,16 @@ namespace Com.Hypester.DM3
                     boosterPrefab = booster1;
                     break;
                 case 2:
-                    boosterPrefab = booster2;
+                    boosterPrefab = boosterDiagonal;
                     break;
                 case 3:
-                    boosterPrefab = booster3;
+                    boosterPrefab = booster2;
                     break;
                 case 4:
+                    boosterPrefab = booster3;
+                    break;
                 case 5:
+                case 6:
                     boosterPrefab = boosterTrap;
                     break;
             }
@@ -98,8 +106,8 @@ namespace Com.Hypester.DM3
             _boosterObj.transform.SetParent(transform, false);
             _boosterObj.transform.rotation = Quaternion.identity;
 
-            if (_boosterLevel == 4) { _boosterObj.GetComponent<TrapBooster>().ownerPlayer = 0; }
-            else if (_boosterLevel == 5) { _boosterObj.GetComponent<TrapBooster>().ownerPlayer = 1; }
+            if (_boosterLevel == 5) { _boosterObj.GetComponent<TrapBooster>().ownerPlayer = 0; }
+            else if (_boosterLevel == 6) { _boosterObj.GetComponent<TrapBooster>().ownerPlayer = 1; }
         }
 
         public void TrapHovered ()
@@ -187,6 +195,30 @@ namespace Com.Hypester.DM3
             }
             else if (_boosterLevel == 2)
             {
+                List<Vector2> positions = new List<Vector2>();
+
+                bool odd = (position.x % 2 == 1);
+                float oddx = odd ? 1f : 0;
+
+                float diag1Start = Mathf.Floor((position.y + position.x * 0.5f) - 0.5f * oddx);
+                for (int i = 0; i < Constants.gridXsize; i++) //Diag.1 direction: \ topleft to bottomright
+                {
+                    // if (Mathf.Abs(i - position.x) > 1) { continue; } // used to control the range of the diagonal
+                    float px = i;
+                    float py = Mathf.Floor(diag1Start + 0.5f - i * 0.5f);
+                    if (Exists(px, py))
+                        positions.Add(new Vector2(px, py));
+                }
+
+                for (int i = 0; i < positions.Count; i++)
+                {
+                    TileView baseTile = grid.TileViewAtPos(positions[i]);
+                    if (baseTile)// && !baseTile.isBeingDestroyed)
+                        toDestroy.Add(baseTile);
+                }
+            }
+            else if (_boosterLevel == 3)
+            {
                 List<TileView> adjacentInRadius = grid.FindAdjacentTiles(position, radius);
                 foreach (TileView tile in adjacentInRadius)
                 {
@@ -233,7 +265,7 @@ namespace Com.Hypester.DM3
                 }
                 */
             }
-            else if (_boosterLevel == 3)
+            else if (_boosterLevel == 4)
             {
                 List<Vector2> positions = new List<Vector2>();
 
@@ -347,6 +379,13 @@ namespace Com.Hypester.DM3
         public Sprite HexSpriteCollateral(TileTypes.EColor color)
         {
             return MainController.Data.sprites.GetCollateralSprite(color);
+        }
+
+        public void ToggleTileState(bool activate)
+        {
+            Debug.Log(activate);
+            tileImage.material.SetFloat("_Saturation", (activate ? activeSaturation : deactiveSaturation));
+            tileImage.material.SetFloat("_Contrast", (activate ? activeContrast : activeSaturation));
         }
         #endregion
     }

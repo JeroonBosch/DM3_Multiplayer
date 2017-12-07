@@ -78,7 +78,8 @@ namespace Com.Hypester.DM3
         public static event PopupTextAction OnOpponentTrapPlaced;
         public static event PopupTextTileAction OnOpponentTrapTrigger;
         public static event PopupTextTileAction OnLocalTrapTrigger;
-        public static event PopupTextPlayerAction OnShield;
+        public static event PopupTextPlayerAction OnShieldActivate;
+        public static event PopupTextPlayerAction OnShieldHit;
         public static event PopupTextPlayerAction OnHeal;
         public static event PopupTextSkillAction OnSkillNotFull;
 
@@ -120,9 +121,13 @@ namespace Com.Hypester.DM3
         {
             if (OnLocalTrapTrigger != null) { OnLocalTrapTrigger(tilePos); }
         }
-        public static void Shield(bool localPlayer)
+        public static void ShieldActivate(bool localPlayer)
         {
-            if (OnShield != null) { OnShield(localPlayer); }
+            if (OnShieldActivate != null) { OnShieldActivate(localPlayer); }
+        }
+        public static void ShieldHit(bool localPlayer)
+        {
+            if (OnShieldHit != null) { OnShieldHit(localPlayer); }
         }
         public static void Heal(bool localPlayer)
         {

@@ -48,6 +48,7 @@ namespace Com.Hypester.DM3
         public Sprite trapTriggered;
         public Sprite trapTriggeredOuch;
         public Sprite shieldActivated;
+        public Sprite shieldBlocked;
         public Sprite healed;
         public Sprite notFull;
 

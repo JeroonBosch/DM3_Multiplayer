@@ -108,7 +108,8 @@ namespace Com.Hypester.DM3
                 if (gh.GameID != PhotonController.Instance.gameID_requested)
                     gh.Hide();
             }
-            gameBoardCover.SetActive(!PhotonController.Instance.GameController.IsMyTurn());
+
+            ToggleTiles(PhotonController.Instance.GameController.IsMyTurn());
         }
 
         private void OnEnable()
@@ -124,7 +125,8 @@ namespace Com.Hypester.DM3
             UIEvent.OnOpponentTrapPlaced += OnOpponentTrapPlaced;
             UIEvent.OnOpponentTrapTrigger += OnOpponentTrapTrigger;
             UIEvent.OnLocalTrapTrigger += OnLocalTrapTrigger;
-            UIEvent.OnShield += OnShield;
+            UIEvent.OnShieldActivate += OnShieldActivate;
+            UIEvent.OnShieldHit += OnShieldHit;
             UIEvent.OnHeal += OnHeal;
             UIEvent.OnSkillNotFull += OnSkillNotFull;
         }
@@ -142,7 +144,8 @@ namespace Com.Hypester.DM3
             UIEvent.OnOpponentTrapPlaced -= OnOpponentTrapPlaced;
             UIEvent.OnOpponentTrapTrigger -= OnOpponentTrapTrigger;
             UIEvent.OnLocalTrapTrigger -= OnLocalTrapTrigger;
-            UIEvent.OnShield -= OnShield;
+            UIEvent.OnShieldActivate -= OnShieldActivate;
+            UIEvent.OnShieldHit -= OnShieldHit;
             UIEvent.OnHeal -= OnHeal;
             UIEvent.OnSkillNotFull -= OnSkillNotFull;
         }
@@ -219,7 +222,7 @@ namespace Com.Hypester.DM3
             textPopup.textImage.sprite = localPlayer ? MainController.Data.sprites.localTurn : MainController.Data.sprites.opponentTurn;
             textPopup.animator.SetTrigger("Popup");
 
-            gameBoardCover.SetActive(!localPlayer);
+            ToggleTiles(localPlayer);
 
             PlayerInterface playerInterface = localPlayer ? PhotonController.Instance.GameController.MyPlayer.playerInterface : PhotonController.Instance.GameController.EnemyPlayer.playerInterface;
             if (playerInterface != null)
@@ -229,12 +232,20 @@ namespace Com.Hypester.DM3
             }
         }
 
-        private void OnShield(bool localPlayer)
+        private void OnShieldActivate(bool localPlayer)
         {
             Vector2 pos = localPlayer ? localAvatarTop.position : remoteAvatarBot.position;
             TextPopup textPopup = Instantiate(bigTextPopupPrefab, this.transform, false).GetComponent<TextPopup>();
             textPopup.transform.position = pos;
             textPopup.textImage.sprite = MainController.Data.sprites.shieldActivated;
+            textPopup.animator.SetTrigger("Popup");
+        }
+        private void OnShieldHit(bool localPlayer)
+        {
+            Vector2 pos = localPlayer ? localAvatarTop.position : remoteAvatarBot.position;
+            TextPopup textPopup = Instantiate(bigTextPopupPrefab, this.transform, false).GetComponent<TextPopup>();
+            textPopup.transform.position = pos;
+            textPopup.textImage.sprite = MainController.Data.sprites.shieldBlocked;
             textPopup.animator.SetTrigger("Popup");
         }
         private void OnHeal(bool localPlayer)
@@ -361,6 +372,16 @@ namespace Com.Hypester.DM3
             TileView prevTile = PhotonController.Instance.GameController.TileViewAtPos(position2);
 
             return newTile.IsAdjacentTo(prevTile);
+        }
+
+        void ToggleTiles(bool activate)
+        {
+            if (PhotonController.Instance == null || PhotonController.Instance.GameController == null) { return; }
+            foreach (KeyValuePair<Vector2, TileView> kvp in PhotonController.Instance.GameController.GetAllBaseTiles())
+            {
+                TileView tile = kvp.Value; if (tile == null) { continue; }
+                tile.ToggleTileState(activate);
+            }
         }
 
 

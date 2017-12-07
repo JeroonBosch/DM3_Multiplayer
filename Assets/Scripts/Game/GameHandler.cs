@@ -756,6 +756,8 @@ namespace Com.Hypester.DM3
             return tv;
         }
 
+        public Dictionary<Vector2, TileView> GetAllBaseTiles() { return _baseTiles; }
+
         [PunRPC]
         public void RPC_SendTile(Tile tile)
         {
@@ -960,7 +962,7 @@ namespace Com.Hypester.DM3
                 List<Vector2> trapPos = new List<Vector2>();
                 foreach (KeyValuePair<Vector2, TileView> kvp in _selectedTiles)
                 {
-                    if (TileViewAtPos(kvp.Key).boosterLevel >= 4) {
+                    if (TileViewAtPos(kvp.Key).boosterLevel >= 5) {
                         trapped = true;
                         trapPos.Add(kvp.Value.transform.localPosition);
                     }
@@ -1037,7 +1039,7 @@ namespace Com.Hypester.DM3
                 foreach (KeyValuePair<Vector2, TileView> kvp in _selectedTiles)
                 {
                     DestroyTileAtPosition(kvp.Key);
-                    if (TileViewAtPos(kvp.Key).boosterLevel >= 4)
+                    if (TileViewAtPos(kvp.Key).boosterLevel >= 5)
                         trapped = true;
                 }
 
@@ -1098,18 +1100,18 @@ namespace Com.Hypester.DM3
             //Explosion effect
             
             GameObject expl = null;
-            if (baseTile.boosterLevel == 1) {
+            if (baseTile.boosterLevel == 1 || baseTile.boosterLevel == 2) {
                 expl = Instantiate(boosterExplosion1Prefab);
-            }
-            else if (baseTile.boosterLevel == 2)
-            {
-                expl = Instantiate(boosterExplosion2Prefab);
             }
             else if (baseTile.boosterLevel == 3)
             {
+                expl = Instantiate(boosterExplosion2Prefab);
+            }
+            else if (baseTile.boosterLevel == 4)
+            {
                 expl = Instantiate(boosterExplosion3Prefab);
             }
-            else if (baseTile.boosterLevel >= 4)
+            else if (baseTile.boosterLevel >= 5)
                 expl = Instantiate(boosterExplosionTrapPrefab);
 
             
@@ -1139,8 +1141,10 @@ namespace Com.Hypester.DM3
         private void CreateBooster(Vector2 pos, int comboCount, int color)
         {
             if (comboCount >= Constants.BoosterThreeThreshhold)
-                _grid.data[(int)pos.x, (int)pos.y].boosterLevel = 3;
+                _grid.data[(int)pos.x, (int)pos.y].boosterLevel = 4;
             else if (comboCount >= Constants.BoosterTwoThreshhold)
+                _grid.data[(int)pos.x, (int)pos.y].boosterLevel = 3;
+            else if (comboCount >= Constants.BoosterDiagonalThreshhold)
                 _grid.data[(int)pos.x, (int)pos.y].boosterLevel = 2;
             else if (comboCount >= Constants.BoosterOneThreshhold)
                 _grid.data[(int)pos.x, (int)pos.y].boosterLevel = 1;
@@ -1170,7 +1174,6 @@ namespace Com.Hypester.DM3
                 {
                     P1_ShieldActive = false;
                     photonView.RPC("RPC_ShieldEffect", PhotonTargets.All, 0);
-                    photonView.RPC("RPC_ShieldMessage", PhotonTargets.All, 0, damage);
                 }
             }
             else
@@ -1186,7 +1189,6 @@ namespace Com.Hypester.DM3
                 {
                     P2_ShieldActive = false;
                     photonView.RPC("RPC_ShieldEffect", PhotonTargets.All, 1);
-                    photonView.RPC("RPC_ShieldMessage", PhotonTargets.All, 1, damage);
                 }
 
             }
@@ -1211,7 +1213,6 @@ namespace Com.Hypester.DM3
                 {
                     P1_ShieldActive = false;
                     photonView.RPC("RPC_ShieldEffect", PhotonTargets.All, 0);
-                    photonView.RPC("RPC_ShieldMessage", PhotonTargets.All, 0, damage);
                 }
 
                 GetPlayerByID(playerNumber).playerInterface.SetHitpoints(healthPlayerOne);
@@ -1229,7 +1230,6 @@ namespace Com.Hypester.DM3
                 {
                     P2_ShieldActive = false;
                     photonView.RPC("RPC_ShieldEffect", PhotonTargets.All, 1);
-                    photonView.RPC("RPC_ShieldMessage", PhotonTargets.All, 1, damage);
                 }
 
                 GetPlayerByID(playerNumber).playerInterface.SetHitpoints(healthPlayerTwo);
@@ -1495,7 +1495,7 @@ namespace Com.Hypester.DM3
         {
             if (IsGameMaster())
             {
-                _grid.data[(int)pos.x, (int)pos.y].boosterLevel = 4 + creatorPlayer;
+                _grid.data[(int)pos.x, (int)pos.y].boosterLevel = 5 + creatorPlayer;
                 Tile tile = _grid.data[(int)pos.x, (int)pos.y];
                 photonView.RPC("RPC_SendTile", PhotonTargets.All, tile);
             }
@@ -1628,6 +1628,8 @@ namespace Com.Hypester.DM3
                 else
                     effectPosition = EnemyPlayer.playerInterface.avatarGameObject.transform.position;
                 effect.transform.position = effectPosition;
+
+                UIEvent.ShieldHit(targetPlayer == MyPlayer.localID);
             }
         }
 
@@ -1640,7 +1642,7 @@ namespace Com.Hypester.DM3
                 {
                     MyPlayer.playerInterface.shieldEffect.SetActive(true);
                     // _gameContext.ShowText("Shield is now active. Next damage is blocked.");
-                    UIEvent.Shield(true);
+                    UIEvent.ShieldActivate(true);
                 }
             }
         }
@@ -1724,24 +1726,6 @@ namespace Com.Hypester.DM3
             {
                 if (comboDamage > 300)
                     iOSHapticFeedback.Instance.Trigger(iOSHapticFeedback.iOSFeedbackType.ImpactHeavy);
-            }
-        }
-
-        [PunRPC]
-        private void RPC_ShieldMessage(int targetPlayer, float damage)
-        {
-            if (IsGameRelevant())
-            {
-                if (_myPlayer.localID == targetPlayer)
-                {
-                    _gameContext.ShowText("You blocked " + damage + " damage with your shield!");
-                    _gameContext.ShowMyText("Blocked!");
-                }
-                else
-                {
-                    _gameContext.ShowText(_enemyPlayer.GetName() + " blocked " + damage + " damage with a shield!");
-                    _gameContext.ShowEnemyText("Blocked!");
-                }
             }
         }
 
