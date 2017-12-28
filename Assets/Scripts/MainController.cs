@@ -223,7 +223,7 @@ namespace Com.Hypester.DM3
 
             PlayerService.User user = loginObject.user;
 
-            playerData.avatarBorderSyscode = "frame0" + (Random.Range(1, 7)).ToString();
+            playerData.avatarBorderSyscode = "frame01"; // + (Random.Range(1, 7)).ToString();
             playerData.SetAvatarBorder((Data.sprites.GetAvatarBorderEntry(playerData.avatarBorderSyscode)).normal);
             if (loginObject.user != null) { playerData.SetProfileName(loginObject.user.first_name); }
             playerData.SetUserId(loginObject.user_id);

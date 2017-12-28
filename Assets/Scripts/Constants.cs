@@ -9,7 +9,7 @@
         public const int MaxSkillLevel = 6;
         
         //Game variables
-        public const int PlayerStartHP = 1000;
+        public const int PlayerStartHP = 800;
         public const int BluePowerReq = 12;
         public const int GreenPowerReq = 9;
         public const int RedPowerReq = 9;

@@ -68,6 +68,7 @@ namespace Com.Hypester.DM3
             if (player.CustomProperties.ContainsKey(PlayerProperty.ProfileImageUrl)) { props.Add(PlayerProperty.ProfileImageUrl, null); }
             if (player.CustomProperties.ContainsKey(PlayerProperty.XpLevel)) { props.Add(PlayerProperty.XpLevel, null); }
             if (player.CustomProperties.ContainsKey(PlayerProperty.State)) { props.Add(PlayerProperty.State, null); }
+            if (player.CustomProperties.ContainsKey(PlayerProperty.GameId)) { props.Add(PlayerProperty.GameId, null); }
             if (player.CustomProperties.ContainsKey(PlayerProperty.BlueSkillLevel)) { props.Add(PlayerProperty.BlueSkillLevel, null); }
             if (player.CustomProperties.ContainsKey(PlayerProperty.GreenSkillLevel)) { props.Add(PlayerProperty.GreenSkillLevel, null); }
             if (player.CustomProperties.ContainsKey(PlayerProperty.RedSkillLevel)) { props.Add(PlayerProperty.RedSkillLevel, null); }

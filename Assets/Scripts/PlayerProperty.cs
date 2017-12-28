@@ -8,6 +8,8 @@
         public const string XpLevel = "d";
         public const string State = "e";
 
+        public const string GameId = "g0";
+
         public const string BlueSkillLevel = "s0";
         public const string GreenSkillLevel = "s1";
         public const string RedSkillLevel = "s2";

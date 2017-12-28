@@ -224,6 +224,7 @@ namespace Com.Hypester.DM3
             factory.startingGame.gameId = result.game.id;
             Hashtable props = new Hashtable();
             props.Add(PlayerProperty.State, PlayerState.GettingGameInfoWaitForOther);
+            props.Add(PlayerProperty.GameId, result.game.id);
             PhotonNetwork.player.SetCustomProperties(props);
         }
         protected void StartingGameStart()

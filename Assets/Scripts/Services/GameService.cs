@@ -87,6 +87,9 @@ namespace Com.Hypester.DM3
             public int id;
             public Opponent opponent;
             public Stage stage;
+            public int reward;
+            public int skillPoints;
+            public int experience;
         }
 
         [Serializable]
@@ -124,10 +127,25 @@ namespace Com.Hypester.DM3
         {
 
         }
+
+        // End Game
         [Serializable]
         public class SetGameRequestObject
         {
-
+            public int verified;
+            public Game game;
+            public int hourBonus;
+            public bool newFrameUnlocked;
+            public int experience;
+            public int XPlevel;
+            public int XPlevelGain;
+            public int XPlevelGainCurrent;
+            public int skillPoints;
+            public int coins;
+            public string user_id;
+            public int wheelEnabled;
+            public string SESSION_ID_IS_THIS;
+            public string chk;
         }
     }
 }

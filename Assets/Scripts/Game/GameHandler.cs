@@ -1092,13 +1092,13 @@ namespace Com.Hypester.DM3
 
             if (!collateral)
             {
-                GameObject boosterFiller = Instantiate(boosterFillerPrefab);
-                boosterFiller.transform.position = baseTile.transform.position;
-                boosterFiller.GetComponent<BoosterFiller>().Init(targetPlayer.opponent, count, baseTile.color);
+                //GameObject boosterFiller = Instantiate(boosterFillerPrefab);
+                //boosterFiller.transform.position = baseTile.transform.position;
+                //boosterFiller.GetComponent<BoosterFiller>().Init(targetPlayer.opponent, count, baseTile.color);
             }
 
             //Explosion effect
-            
+
             GameObject expl = null;
             if (baseTile.boosterLevel == 1 || baseTile.boosterLevel == 2) {
                 expl = Instantiate(boosterExplosion1Prefab);

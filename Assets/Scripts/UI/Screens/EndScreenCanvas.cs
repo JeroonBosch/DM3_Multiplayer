@@ -2,6 +2,7 @@
 using UnityEngine.UI;
 using System.Collections.Generic;
 using System;
+using ExitGames.Client.Photon;
 
 namespace Com.Hypester.DM3
 {
@@ -46,6 +47,20 @@ namespace Com.Hypester.DM3
                 }
                 // TODO: Add gains here when connected to CMS.
             }
+
+            object gameId;
+            if (PhotonNetwork.player.CustomProperties.TryGetValue(PlayerProperty.GameId, out gameId))
+            {
+                Debug.Log("Got the value!");
+                if (gameId != null) {
+                    MainController.ServiceGame.SetGame(((int)gameId).ToString(), PhotonController.Instance.GameController.MyPlayer.GetHealth().ToString(), PhotonController.Instance.GameController.EnemyPlayer.GetHealth().ToString(), OnSetGame);
+                }
+            }
+        }
+
+        private void OnSetGame(bool success, string message, GameService.SetGameRequestObject response)
+        {
+            Debug.Log("OnSetGame!!!!!");
         }
 
         private void OnLoadPlayerProfileImage(Sprite obj, int playerId)
